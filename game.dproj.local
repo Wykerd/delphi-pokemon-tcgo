@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2019/07/22 17:24:26.994.pas,C:\Users\danie\Documents\RAD Studio\Projects\Unit2.pas=C:\Users\danie\Documents\RAD Studio\Projects\server.pas</Transaction>
+    <Transaction>2019/07/22 17:38:11.469.pas,C:\Users\danie\Documents\RAD Studio\Projects\Unit1.pas=C:\Users\danie\Documents\RAD Studio\Projects\launcher.pas</Transaction>
+    <Transaction>2019/07/22 17:38:11.469.dfm,C:\Users\danie\Documents\RAD Studio\Projects\Unit1.dfm=C:\Users\danie\Documents\RAD Studio\Projects\launcher.dfm</Transaction>
+    <Transaction>2019/07/22 17:38:51.588.pas,C:\Users\danie\Documents\RAD Studio\Projects\server.pas=E:\IT_PAT_2019\server.pas</Transaction>
+    <Transaction>2019/07/22 17:38:53.417.pas,C:\Users\danie\Documents\RAD Studio\Projects\launcher.pas=E:\IT_PAT_2019\launcher.pas</Transaction>
+    <Transaction>2019/07/22 17:38:53.417.dfm,C:\Users\danie\Documents\RAD Studio\Projects\launcher.dfm=E:\IT_PAT_2019\launcher.dfm</Transaction>
+    <Transaction>2019/07/22 17:39:04.420.dproj,C:\Users\danie\Documents\RAD Studio\Projects\Project1.dproj=E:\IT_PAT_2019\game.dproj</Transaction>
+    <Transaction>2019/07/22 18:00:26.393.pas,E:\IT_PAT_2019\Unit1.pas=E:\IT_PAT_2019\client.pas</Transaction>
+  </Transactions>
+</BorlandProject>
