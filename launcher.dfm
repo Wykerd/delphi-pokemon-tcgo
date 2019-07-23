@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 550
+  ClientHeight = 510
   ClientWidth = 635
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -11,6 +11,8 @@ object Form1: TForm1
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnClose = FormClose
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object btnStart: TButton
@@ -22,7 +24,6 @@ object Form1: TForm1
     Caption = 'Start Server'
     TabOrder = 0
     OnClick = btnStartClick
-    ExplicitTop = -6
   end
   object btnJoin: TButton
     Left = 0
@@ -46,7 +47,9 @@ object Form1: TForm1
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ScrollBars = ssVertical
     TabOrder = 2
+    OnChange = redDebugChange
   end
   object redClient: TRichEdit
     Left = 0
@@ -60,7 +63,8 @@ object Form1: TForm1
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ScrollBars = ssVertical
     TabOrder = 3
-    ExplicitTop = 362
+    OnChange = redClientChange
   end
 end
