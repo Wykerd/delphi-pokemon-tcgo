@@ -15,6 +15,9 @@ type
     //Helper to find a JSON pair based on the pair string part
     function Get(const PairName: UnicodeString): TJSONPair; overload;
   end;
+  // //
+
+  TObjProcedure = procedure of object;
 
 // String manipulation functions
 function strJoin (const arr : array of string; const delim: string): string;

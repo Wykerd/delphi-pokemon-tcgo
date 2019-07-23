@@ -4,30 +4,46 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, server, ComCtrls, client, DBXJSON, helpers;
+  Dialogs, StdCtrls, server, ComCtrls, client, DBXJSON, helpers, ExtCtrls,
+  userWizard;
 
 type
-  TForm1 = class(TForm)
+  TfrmLauncher = class(TForm)
     btnStart: TButton;
     btnJoin: TButton;
     redDebug: TRichEdit;
     redClient: TRichEdit;
+    pnlUser: TPanel;
+    btnUser: TButton;
+    lblUser: TLabel;
+    lblUID: TLabel;
     procedure btnStartClick(Sender: TObject);
     procedure btnJoinClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure redDebugChange(Sender: TObject);
     procedure redClientChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure btnUserClick(Sender: TObject);
   private
     { Private declarations }
     jsCredentials : TJSONObject;
     bLaunchable : boolean;
+    FUID: string;
+    FUsername: string;
+    procedure SetUID(const Value: string);
+    procedure SetUsername(const Value: string);
+    procedure SetLaunchable(const Value : boolean);
   public
     { Public declarations }
+    procedure LoadCredentials;
+  published
+    property Username : string read FUsername write SetUsername;
+    property UID : string read FUID write SetUID;
+    property Launchable : boolean read bLaunchable write SetLaunchable;
   end;
 
 var
-  Form1: TForm1;
+  frmLauncher: TfrmLauncher;
   Server: TServer;
   Client: TClient;
 
@@ -35,7 +51,7 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.btnJoinClick(Sender: TObject);
+procedure TfrmLauncher.btnJoinClick(Sender: TObject);
 begin
   if not bLaunchable then
   begin
@@ -48,10 +64,9 @@ begin
 
   // Start the connection to the client
   Client.Start(InputBox('Host', 'Enter the IP for server', 'localhost'), 8080);
-  // Client.CreateCredentials('Wykerd');
 end;
 
-procedure TForm1.btnStartClick(Sender: TObject);
+procedure TfrmLauncher.btnStartClick(Sender: TObject);
 begin
   TButton(Sender).Enabled := false;
   Server := TServer.Create(Self);
@@ -59,7 +74,15 @@ begin
   Server.Start(8080);
 end;
 
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TfrmLauncher.btnUserClick(Sender: TObject);
+begin
+  if Launchable then
+    frmUserEditor.LaunchWizard(Username, UID, loadcredentials)
+  else
+    frmUserEditor.LaunchWizard(loadCredentials);
+end;
+
+procedure TfrmLauncher.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if Client <> nil then
   begin
@@ -71,7 +94,12 @@ begin
   if Server <> nil then Server.Destroy;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TfrmLauncher.FormCreate(Sender: TObject);
+begin
+  LoadCredentials;
+end;
+
+procedure TfrmLauncher.LoadCredentials;
 var
   auth : TJSONObject;
 begin
@@ -81,23 +109,57 @@ begin
   jsCredentials := TClient.GetCredentials(GetCurrentDir + '\auth.json') as TJSONObject;
 
   // Validate credentials object
-  if jsCredentials <> nil then
-    showmessage(jsCredentials.ToString);
+  if jsCredentials = nil then
+    exit;
+  if jsCredentials.Get('auth') = nil then
+    exit;
+
+  auth := TJSONObject(jsCredentials.Get('auth').JsonValue);
+
+  if auth.Get('uid') = nil then
+    exit;
+  if auth.Get('username') = nil then
+    exit;
+
+  Username := auth.Get('username').JsonValue.Value;
+  UID := auth.Get('uid').JsonValue.Value;
 
   // Pass
   bLaunchable := true;
 end;
 
-procedure TForm1.redClientChange(Sender: TObject);
+procedure TfrmLauncher.redClientChange(Sender: TObject);
 begin
   // Log the debug to a file in event of crashed
   redClient.Lines.SaveToFile('client_log.rtf');
 end;
 
-procedure TForm1.redDebugChange(Sender: TObject);
+procedure TfrmLauncher.redDebugChange(Sender: TObject);
 begin
   // Log the debug to a file in event of crashed
   redDebug.Lines.SaveToFile('server_log.rtf');
+end;
+
+procedure TfrmLauncher.SetLaunchable(const Value: boolean);
+begin
+  bLaunchable := Value;
+  if Value then
+    pnlUser.Caption := ''
+  else
+    pnlUser.Caption := 'Click the button to create an account!';
+
+end;
+
+procedure TfrmLauncher.SetUID(const Value: string);
+begin
+  FUID := Value;
+  lblUID.Caption := 'User ID:' + #9 + Value;
+end;
+
+procedure TfrmLauncher.SetUsername(const Value: string);
+begin
+  FUsername := Value;
+  lblUser.Caption := 'Username:' + #9 + Value;
 end;
 
 end.

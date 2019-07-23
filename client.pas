@@ -28,12 +28,13 @@ type
     procedure Start (Host: string; Port: integer);
     property Debug : TRichEdit read FDebug write SetDebug;
     procedure Authenticate;
-    procedure CreateCredentials(sUsername : string);
     property AuthLock : string read FAuthLock write SetAuthLock;
     property Authenticated : boolean read FAuthenticated write SetAuthenticated;
     property Credentials : TJSONPair read FCredentials write SetCredentials;
   public
     class function GetCredentials (AuthPath : string)  : TJSONObject;
+    class procedure CreateCredentials(sUsername, AuthLock : string); overload;
+    class procedure CreateCredentials(sUsername, sUID, AuthLock : string); overload;
   end;
 
 implementation
@@ -165,7 +166,31 @@ begin
   Credentials := nil;
 end;
 
-procedure TClient.CreateCredentials(sUsername: string);
+// Use an pre-existing UID
+class procedure TClient.CreateCredentials(sUsername, sUID, AuthLock : string);
+var
+  tF: TextFile;
+  JSONRoot, JSONAuth : TJSONObject;
+begin
+  JSONRoot := TJSONObject.Create;
+  JSONAuth := TJSONObject.Create;
+  try
+    // Build the JSON object
+    JSONAuth.AddPair(TJSONPair.Create('username', sUsername));
+    JSONAuth.AddPair(TJSONPair.Create('uid', sUID));
+    JSONRoot.AddPair(TJSONPair.Create('auth', JSONAuth));
+
+    // Save the authentication as a json file
+    assignfile(tF, AuthLock);
+    rewrite(tF);
+    Writeln(tf, JSONRoot.ToString);
+    closefile(tf);
+  finally
+    JSONRoot.Free;
+  end;
+end;
+
+class procedure TClient.CreateCredentials(sUsername, AuthLock: string);
 var
   tF: TextFile;
   _sUID : string;
@@ -184,10 +209,9 @@ begin
     // If an id could not be generated terminate the program
     // Happens so rarely should not cause any problems
     Showmessage('Error creating UID, Try again!');
-    println('error', 'An error occured while creating an UID');
     Halt;
   end;
-  
+
   JSONRoot := TJSONObject.Create;
   JSONAuth := TJSONObject.Create;
   try

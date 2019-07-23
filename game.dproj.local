@@ -15,5 +15,7 @@
     <Transaction>2019/07/22 21:34:53.254.xml,E:\IT_PAT_2019_\Untitled1.xml=E:\IT_PAT_2019_\config.xml</Transaction>
     <Transaction>2019/07/22 21:54:36.706.xml,E:\IT_PAT_2019_\config.xml=</Transaction>
     <Transaction>2019/07/22 22:51:25.044.pas,E:\IT_PAT_2019_\Unit1.pas=E:\IT_PAT_2019_\helpers.pas</Transaction>
+    <Transaction>2019/07/23 21:49:20.972.pas,E:\IT_PAT_2019_\Unit1.pas=E:\IT_PAT_2019_\userWizard.pas</Transaction>
+    <Transaction>2019/07/23 21:49:20.972.dfm,E:\IT_PAT_2019_\Unit1.dfm=E:\IT_PAT_2019_\userWizard.dfm</Transaction>
   </Transactions>
 </BorlandProject>

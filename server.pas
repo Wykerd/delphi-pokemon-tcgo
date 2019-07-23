@@ -5,12 +5,14 @@ interface
 uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdCustomTCPServer, IdTCPServer, IdContext,
-  ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers;
+  ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, DBXJSON,
+  IdIOHandlerSocket, StrUtils;
 
 type
   TServer = class(TIdTCPServer)
   private
     FDebug: TRichEdit;
+    FSessions : array of string;
     procedure Execute(AContext: TIdContext);
     procedure Connected(AContext: TIdContext);
     procedure Disconnected(AContext: TIdContext);
@@ -22,8 +24,8 @@ type
     constructor Create(AOwner: TComponent);
     procedure Start(Port: integer);
     procedure Broadcast(s: string);
-    procedure RunCommand(cmd : TStrArr);
-    procedure ClientLogin(username, uid : string);
+    procedure RunCommand(CMD: TJSONObject);
+    procedure ClientLogin(username, uid : string; callback : TIdIOHandlerSocket);
     property Debug: TRichEdit read FDebug write SetDebug;
   end;
 
@@ -52,41 +54,60 @@ begin
   end;
 end;
 
-procedure TServer.ClientLogin(username, uid: string);
-begin
-    if dmDB.tblUsers.Locate('UID', uid, []) then
-    begin
-      // user found
-      println('login', 'User found and logged in');
-      // check that username is up to date on server side
-      with dmDB do
-      begin
-        tblUsers.Filter := 'UID=' + QuotedStr(uid);
-        tblUsers.Filtered := true;
-        tblUsers.First;
-        if tblUsers['UserName'] <> username then
-        begin
-          tblUsers.Edit;
-          tblUsers['UserName'] := username;
-          tblUsers.Post;
-          println('login', 'Username did not match server and is now updated');
-        end;
-      end;
-    end
-    else
-    begin
-      with dmDB do
-      begin
-        tblUsers.Last;
-        tblUsers.Insert;
-        tblUsers['UserName'] := username;
-        tblUsers['UID'] := uid;
-        tblUsers.Post;
-      end;
-      println('login', 'User created!');
-    end;
-    BroadCast('JOIN|' + username);
+procedure TServer.ClientLogin(username, uid: string; callback : TIdIOHandlerSocket);
+var
+  // Dummy varable
+  i : byte;
+  procedure Authenticated;
+  begin
+    setlength(FSessions, length(FSessions) + 1);
+    FSessions[High(FSessions)] := uid;
+    callback.WriteLn('{"action":"authenticate","success":"true"}');
   end;
+begin
+  if MatchStr(uid, FSessions) then
+  begin
+    println('login', 'Another user with that ID is already authenticated!');
+    callback.WriteLn('{"action":"authenticate","success":"false"}');
+    exit;
+  end;
+  if dmDB.tblUsers.Locate('UID', uid, []) then
+  begin
+    // user found
+    println('login', 'User found and logged in');
+    Authenticated;
+    // check that username is up to date on server side
+    with dmDB do
+    begin
+      tblUsers.Filter := 'UID=' + QuotedStr(uid);
+      tblUsers.Filtered := true;
+      tblUsers.First;
+      if tblUsers['UserName'] <> username then
+      begin
+        tblUsers.Edit;
+        tblUsers['UserName'] := username;
+        tblUsers.Post;
+        println('login', 'Username did not match server and is now updated');
+        Authenticated;
+      end;
+    end;
+  end
+  else
+  begin
+    with dmDB do
+    begin
+      tblUsers.Last;
+      tblUsers.Insert;
+      tblUsers['UserName'] := username;
+      tblUsers['UID'] := uid;
+      tblUsers.Post;
+    end;
+    println('login', 'User created!');
+    Authenticated;
+
+  end;
+  BroadCast('{"action":"join","message":"' + username + ' has joined the game"}');
+end;
 
 procedure TServer.Connected(AContext: TIdContext);
 begin
@@ -96,6 +117,7 @@ end;
 constructor TServer.Create(AOwner: TComponent);
 begin
   inherited;
+  SetLength(FSessions, 0);
   OnExecute := Execute;
   OnConnect := Connected;
   Debug := TRichEdit.Create(nil);
@@ -109,10 +131,96 @@ end;
 procedure TServer.Execute(AContext: TIdContext);
 var
   req: string;
+  JSON, Auth : TJSONObject;
+  action : string;
+  sUsername, sUID : string;
 begin
   req := AContext.Connection.Socket.ReadLn;
   println('incoming', req);
-  //
+
+  // Check to see if it is valid json
+  JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(req),0));
+  if JSON.ToString <> '{}' then
+  begin
+    // Check if payload is authenticated.
+    if JSON.Get('auth') = nil then
+    begin
+      println('client', '401 Unauthorized, request has no auth property');
+      // Directly write json string to limit memory and code lines
+      AContext.Connection.Socket.WriteLn('{"action":"error",'+
+      '"error-details":"401 Unauthorized, request has no auth property"}');
+      exit;
+    end;
+
+    Auth := TJSONObject(JSON.Get('auth').JsonValue);
+
+    if Auth.Get('uid') = nil then
+    begin
+      println('client', '401 Unauthorized, request has no uid');
+      // Directly write json string to limit memory and code lines
+      AContext.Connection.Socket.WriteLn('{"action":"error",'+
+      '"error-details":"401 Unauthorized, request has no uid"}');
+      exit;
+    end;
+
+    sUID := Auth.Get('uid').JsonValue.Value;
+
+    if sUID = '' then
+    begin
+      println('client', '401 Unauthorized, request has no uid');
+      // Directly write json string to limit memory and code lines
+      AContext.Connection.Socket.WriteLn('{"action":"error",'+
+      '"error-details":"401 Unauthorized, request has no uid"}');
+      exit;
+    end;
+
+    if Auth.Get('username') = nil then
+    begin
+      println('client', '400 Bad Payload, request has no username');
+      // Directly write json string to limit memory and code lines
+      AContext.Connection.Socket.WriteLn('{"action":"error",'+
+      '"error-details":"400 Bad Payload, request has no username"}');
+      exit;
+    end;
+
+    sUsername := Auth.Get('username').JsonValue.Value;
+
+    if sUsername = '' then
+    begin
+      println('client', '400 Bad Payload, request has no username');
+      // Directly write json string to limit memory and code lines
+      AContext.Connection.Socket.WriteLn('{"action":"error",'+
+      '"error-details":"400 Bad Payload, request has no username"}');
+      exit;
+    end;
+
+    if JSON.Get('action') <> nil then
+    begin
+      action := JSON.get('action').JsonValue.Value;
+
+      //{"action":"authenticate","auth":{"username":"Wykerd","uid":"{3AA29A4C-C2FB-48BF-A541-2B93E19FE957}"}}
+      // Check which action to execute
+      if action = 'authenticate' then
+        ClientLogin(sUsername, sUID, AContext.Connection.Socket)
+      else // If all else fails
+      begin
+        println('client', '404 Not Found, the spesified action was not found');
+        // Directly write json string to limit memory and code lines
+        AContext.Connection.Socket.WriteLn('{"action":"error",'+
+        '"error-details":"404 Not Found, the spesified action was not found"}');
+        exit;
+      end; // end all else failed
+      // End Check for action //
+    end
+    else
+    begin
+      println('client', '400 Bad Payload, requires action property');
+      AContext.Connection.Socket.WriteLn('{"action":"error",'+
+      '"error-details":"400 Bad Payload, requires action property"}');
+      exit;
+    end;
+  end;
+
 end;
 
 procedure TServer.println(t, s: string);
@@ -121,22 +229,9 @@ begin
   Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
 end;
 
-procedure TServer.RunCommand(cmd: TStrArr);
-var
-  i : integer;
+procedure TServer.RunCommand(CMD: TJSONObject);
 begin
-  if length(cmd) < 2 then
-    exit;
 
-  if cmd[1] = 'login' then
-  begin
-    if length(cmd) <> 4 then
-    begin
-      println('warning', 'Invalid parameters');
-      exit;
-    end;
-    ClientLogin(cmd[2], cmd[3]);
-  end;
 end;
 
 procedure TServer.SetDebug(const Value: TRichEdit);
