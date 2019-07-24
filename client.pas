@@ -237,8 +237,47 @@ begin
 end;
 
 procedure TClient.Run(Sender: TIdThreadComponent);
+var
+  req : string;
+  JSON : TJSONObject;
+  action : string;
 begin
-  println('incoming', IOHandler.ReadLn());
+  req := IOHandler.ReadLn();
+  println('incoming', req);
+
+  // Check to see if it is valid json
+  JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(req),0));
+  if JSON.ToString <> '{}' then
+  begin
+    // Check if payload has action
+    if JSON.Get('action') = nil then
+    begin
+      println('server', 'ERROR: no action in payload from server!');
+      exit;
+    end;
+    action := JSON.get('action').JsonValue.Value;
+
+    // Run the actions //
+    if action = 'authenticate' then
+    begin
+      if JSON.Get('success') <> nil then
+      begin
+        if JSON.Get('success').JsonValue.Value = 'true' then
+        begin
+          println('auth', 'Successfully authenticated');
+          Authenticated := true;
+        end
+        else
+          println('auth', 'Could not authenticate');
+      end;
+    end; // end authenticate
+
+    // End actions //
+  end
+  else
+  begin
+    println('server', 'Invalid JSON from server');
+  end;
 end;
 
 procedure TClient.SetAuthenticated(const Value: boolean);
