@@ -31,6 +31,7 @@ type
     property AuthLock : string read FAuthLock write SetAuthLock;
     property Authenticated : boolean read FAuthenticated write SetAuthenticated;
     property Credentials : TJSONPair read FCredentials write SetCredentials;
+    procedure ExecuteAction (JSON : TJSONObject);
   public
     class function GetCredentials (AuthPath : string)  : TJSONObject;
     class procedure CreateCredentials(sUsername, AuthLock : string); overload;
@@ -50,6 +51,43 @@ end;
 procedure TClient.Disconnected(Sender: TObject);
 begin
   println('status', 'Disconnected');
+end;
+
+procedure TClient.ExecuteAction(JSON: TJSONObject);
+var
+  action : string;
+begin
+  if JSON.ToString <> '{}' then
+  begin
+    // Check if payload has action
+    if JSON.Get('action') = nil then
+    begin
+      println('action', 'ERROR: no action in payload!');
+      exit;
+    end;
+    action := JSON.get('action').JsonValue.Value;
+
+    // Run the actions //
+    if action = 'authenticate' then
+    begin
+      if JSON.Get('success') <> nil then
+      begin
+        if JSON.Get('success').JsonValue.Value = 'true' then
+        begin
+          println('auth', 'Successfully authenticated');
+          Authenticated := true;
+        end
+        else
+          println('auth', 'Could not authenticate');
+      end;
+    end; // end authenticate
+
+    // End actions //
+  end
+  else
+  begin
+    println('action', 'Invalid JSON payload');
+  end;
 end;
 
 class function TClient.GetCredentials (AuthPath : string) : TJSONObject;
@@ -240,44 +278,13 @@ procedure TClient.Run(Sender: TIdThreadComponent);
 var
   req : string;
   JSON : TJSONObject;
-  action : string;
 begin
   req := IOHandler.ReadLn();
   println('incoming', req);
 
   // Check to see if it is valid json
   JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(req),0));
-  if JSON.ToString <> '{}' then
-  begin
-    // Check if payload has action
-    if JSON.Get('action') = nil then
-    begin
-      println('server', 'ERROR: no action in payload from server!');
-      exit;
-    end;
-    action := JSON.get('action').JsonValue.Value;
-
-    // Run the actions //
-    if action = 'authenticate' then
-    begin
-      if JSON.Get('success') <> nil then
-      begin
-        if JSON.Get('success').JsonValue.Value = 'true' then
-        begin
-          println('auth', 'Successfully authenticated');
-          Authenticated := true;
-        end
-        else
-          println('auth', 'Could not authenticate');
-      end;
-    end; // end authenticate
-
-    // End actions //
-  end
-  else
-  begin
-    println('server', 'Invalid JSON from server');
-  end;
+  ExecuteAction(JSON);
 end;
 
 procedure TClient.SetAuthenticated(const Value: boolean);
