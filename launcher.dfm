@@ -26,7 +26,6 @@ object frmLauncher: TfrmLauncher
     Caption = 'Start Server'
     TabOrder = 0
     OnClick = btnStartClick
-    ExplicitWidth = 635
   end
   object btnJoin: TButton
     Left = 0
@@ -37,7 +36,6 @@ object frmLauncher: TfrmLauncher
     Caption = 'Join Server'
     TabOrder = 1
     OnClick = btnJoinClick
-    ExplicitWidth = 635
   end
   object redDebug: TRichEdit
     Left = 0
@@ -54,7 +52,6 @@ object frmLauncher: TfrmLauncher
     ScrollBars = ssVertical
     TabOrder = 2
     OnChange = redDebugChange
-    ExplicitTop = 229
   end
   object redClient: TRichEdit
     Left = 0
@@ -71,8 +68,6 @@ object frmLauncher: TfrmLauncher
     ScrollBars = ssVertical
     TabOrder = 3
     OnChange = redClientChange
-    ExplicitTop = 330
-    ExplicitWidth = 635
   end
   object pnlUser: TPanel
     Left = 0

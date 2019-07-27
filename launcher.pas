@@ -64,6 +64,7 @@ begin
 
   // Start the connection to the client
   Client.Start(InputBox('Host', 'Enter the IP for server', 'localhost'), 8080);
+  Client.UI.Show;
 end;
 
 procedure TfrmLauncher.btnStartClick(Sender: TObject);
@@ -84,14 +85,22 @@ end;
 
 procedure TfrmLauncher.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  if Server <> nil then
+  begin
+    // Fixes weird issue where program freezes because client disconnects
+    // as the server gets destroyed
+    Server.OnDisconnect := nil;
+    //
+    Server.Active := false;
+    Server.Destroy;
+  end;
+
   if Client <> nil then
   begin
     Client.IOHandler.InputBuffer.clear;
     Client.Disconnect;
     Client.Destroy;
   end;
-
-  if Server <> nil then Server.Destroy;
 end;
 
 procedure TfrmLauncher.FormCreate(Sender: TObject);

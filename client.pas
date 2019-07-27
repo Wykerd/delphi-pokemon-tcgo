@@ -5,7 +5,7 @@ interface
 uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdContext, IdThreadComponent, ComCtrls,
-  Graphics, SysUtils, helpers, DBXJSON;
+  Graphics, SysUtils, helpers, DBXJSON, clientUI;
 
 type
   TClient = class (TIdTCPClient)
@@ -15,6 +15,7 @@ type
     FAuthLock: string;
     FAuthenticated: boolean;
     FCredentials: TJSONPair;
+    FUI: TClientUI;
     procedure SetDebug(const Value: TRichEdit);
     procedure Run (Sender: TIdThreadComponent);
     procedure println (t, s : string);
@@ -23,6 +24,7 @@ type
     procedure SetAuthLock(const Value: string);
     procedure SetAuthenticated(const Value: boolean);
     procedure SetCredentials(const Value: TJSONPair);
+    procedure SetUI(const Value: TClientUI);
   published
     constructor Create (AOwner: TComponent);
     procedure Start (Host: string; Port: integer);
@@ -32,6 +34,8 @@ type
     property Authenticated : boolean read FAuthenticated write SetAuthenticated;
     property Credentials : TJSONPair read FCredentials write SetCredentials;
     procedure ExecuteAction (JSON : TJSONObject);
+    property UI : TClientUI read FUI write SetUI;
+    procedure SendChat (s: string);
   public
     class function GetCredentials (AuthPath : string)  : TJSONObject;
     class procedure CreateCredentials(sUsername, AuthLock : string); overload;
@@ -56,8 +60,9 @@ end;
 procedure TClient.ExecuteAction(JSON: TJSONObject);
 var
   action : string;
+  data: TJSONObject;
 begin
-  if JSON.ToString <> '{}' then
+  if JSON <> nil then
   begin
     // Check if payload has action
     if JSON.Get('action') = nil then
@@ -65,14 +70,29 @@ begin
       println('action', 'ERROR: no action in payload!');
       exit;
     end;
+    // Check for data
+    if JSON.Get('data') = nil then
+    begin
+      println('action', 'ERROR: no data property in payload');
+      exit;
+    end;
+
+    data := TJSONObject(JSON.Get('data').JsonValue);
+
+    if data = nil then
+    begin
+      println('action', 'ERROR: empty data property in payload');
+      exit;
+    end;
+    //
     action := JSON.get('action').JsonValue.Value;
 
     // Run the actions //
     if action = 'authenticate' then
     begin
-      if JSON.Get('success') <> nil then
+      if data.Get('success') <> nil then
       begin
-        if JSON.Get('success').JsonValue.Value = 'true' then
+        if data.Get('success').JsonValue.Value = 'true' then
         begin
           println('auth', 'Successfully authenticated');
           Authenticated := true;
@@ -82,11 +102,19 @@ begin
       end;
     end; // end authenticate
 
+    if (action = 'join') OR (action = 'chat') then
+    begin
+      if data.Get('message') <> nil then
+      begin
+        UI.IncomingChat(data.Get('message').JsonValue.Value);
+      end;
+    end;
+
     // End actions //
   end
   else
   begin
-    println('action', 'Invalid JSON payload');
+    println('action', 'ERROR: Invalid JSON payload');
   end;
 end;
 
@@ -202,6 +230,8 @@ begin
   AuthLock := GetCurrentDir + '\auth.json';
   Authenticated := false;
   Credentials := nil;
+  UI := TClientUI.CreateNew(Self, 0);
+  UI.OnChat := SendChat;
 end;
 
 // Use an pre-existing UID
@@ -287,6 +317,28 @@ begin
   ExecuteAction(JSON);
 end;
 
+procedure TClient.SendChat(s: string);
+var
+  JSONReq, JSONData: TJSONObject;
+begin
+  JSONReq := TJSONObject.Create;
+
+  JSONReq.AddPair(TJSONPair.Create('action', 'chat'));
+
+  // Authenticate the payload
+  JSONReq.AddPair(Credentials);
+
+  // Build the payload data
+  JSONData := TJSONObject.Create;
+  JSONData.AddPair(TJSONPair.create('message', s));
+
+  JSONReq.AddPair(TJSONPair.create('data', JSONData));
+
+  IOHandler.WriteLn(JSONReq.ToString);
+
+  JSONReq.Free;
+end;
+
 procedure TClient.SetAuthenticated(const Value: boolean);
 begin
   FAuthenticated := Value;
@@ -305,6 +357,11 @@ end;
 procedure TClient.SetDebug(const Value: TRichEdit);
 begin
   FDebug := Value;
+end;
+
+procedure TClient.SetUI(const Value: TClientUI);
+begin
+  FUI := Value;
 end;
 
 procedure TClient.Start(Host: string; Port: integer);

@@ -56,6 +56,7 @@
 			<DCCReference Include="userWizard.pas">
 				<Form>frmUserEditor</Form>
 			</DCCReference>
+			<DCCReference Include="clientUI.pas"/>
 			<None Include=".gitignore"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

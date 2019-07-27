@@ -7,7 +7,8 @@ uses
   client in 'client.pas',
   dbUnit in 'dbUnit.pas' {dmDB: TDataModule},
   helpers in 'helpers.pas',
-  userWizard in 'userWizard.pas' {frmUserEditor};
+  userWizard in 'userWizard.pas' {frmUserEditor},
+  clientUI in 'clientUI.pas';
 
 {$R *.res}
 

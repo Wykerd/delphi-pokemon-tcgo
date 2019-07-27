@@ -3,7 +3,7 @@ unit helpers;
 interface
 
 uses
-  Classes, DBXJSON;
+  Classes, DBXJSON, SysUtils;
 
 type
   TStrArr = array of string;
@@ -18,6 +18,17 @@ type
   // //
 
   TObjProcedure = procedure of object;
+
+  // Code pulled from StackOverflow by user who copied it from an newer version
+  // of delphi as this version doesn't include this class
+  TAnonymousThread = class(TThread)
+  private
+    FProc: TProc;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(const AProc: TProc);
+  end;
 
 // String manipulation functions
 function strJoin (const arr : array of string; const delim: string): string;
@@ -81,6 +92,20 @@ begin
       Exit(Candidate);
   end;
   Result := nil;
+end;
+
+{ TAnonymousThread }
+
+constructor TAnonymousThread.Create(const AProc: TProc);
+begin
+  inherited Create(True);
+  FreeOnTerminate := True;
+  FProc := AProc;
+end;
+
+procedure TAnonymousThread.Execute;
+begin
+  FProc();
 end;
 
 end.

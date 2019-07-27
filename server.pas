@@ -25,6 +25,7 @@ type
     procedure Start(Port: integer);
     procedure Broadcast(s: string);
     procedure RunCommand(CMD: TJSONObject);
+    procedure ProcessAction(action: string; data: TJSONObject; username, uid : string);
     procedure ClientLogin(username, uid : string; callback : TIdIOHandlerSocket);
     property Debug: TRichEdit read FDebug write SetDebug;
   end;
@@ -37,13 +38,11 @@ procedure TServer.Broadcast(s: string);
 var
   tmpList: TList;
   contexClient: TIdContext;
-  nClients: integer;
   i: integer;
 begin
   tmpList := Contexts.LockList;
 
   try
-    i := 0;
     for I := 0 to tmpList.Count - 1 do
     begin
       contexClient := tmpList[i];
@@ -62,13 +61,13 @@ var
   begin
     setlength(FSessions, length(FSessions) + 1);
     FSessions[High(FSessions)] := uid;
-    callback.WriteLn('{"action":"authenticate","success":"true"}');
+    callback.WriteLn('{"action":"authenticate","data":{"success":"true"}}');
   end;
 begin
   if MatchStr(uid, FSessions) then
   begin
     println('login', 'Another user with that ID is already authenticated!');
-    callback.WriteLn('{"action":"authenticate","success":"false"}');
+    callback.WriteLn('{"action":"authenticate","data":{"success":"false"}}');
     exit;
   end;
   if dmDB.tblUsers.Locate('UID', uid, []) then
@@ -106,7 +105,7 @@ begin
     Authenticated;
 
   end;
-  BroadCast('{"action":"join","message":"' + username + ' has joined the game"}');
+  BroadCast('{"action":"join","data":{"message":"' + username + ' has joined the game"}}');
 end;
 
 procedure TServer.Connected(AContext: TIdContext);
@@ -120,6 +119,8 @@ begin
   SetLength(FSessions, 0);
   OnExecute := Execute;
   OnConnect := Connected;
+  OnStatus := Status;
+  OnDisconnect := Disconnected;
   Debug := TRichEdit.Create(nil);
 end;
 
@@ -140,7 +141,7 @@ begin
 
   // Check to see if it is valid json
   JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(req),0));
-  if JSON.ToString <> '{}' then
+  if JSON <> nil then
   begin
     // Check if payload is authenticated.
     if JSON.Get('auth') = nil then
@@ -148,7 +149,7 @@ begin
       println('client', '401 Unauthorized, request has no auth property');
       // Directly write json string to limit memory and code lines
       AContext.Connection.Socket.WriteLn('{"action":"error",'+
-      '"error-details":"401 Unauthorized, request has no auth property"}');
+      '"data":{"details":"401 Unauthorized, request has no auth property"}}');
       exit;
     end;
 
@@ -159,7 +160,7 @@ begin
       println('client', '401 Unauthorized, request has no uid');
       // Directly write json string to limit memory and code lines
       AContext.Connection.Socket.WriteLn('{"action":"error",'+
-      '"error-details":"401 Unauthorized, request has no uid"}');
+      '"data":{"details":"401 Unauthorized, request has no uid"}}');
       exit;
     end;
 
@@ -170,7 +171,7 @@ begin
       println('client', '401 Unauthorized, request has no uid');
       // Directly write json string to limit memory and code lines
       AContext.Connection.Socket.WriteLn('{"action":"error",'+
-      '"error-details":"401 Unauthorized, request has no uid"}');
+      '"data":{"details":"401 Unauthorized, request has no uid"}}');
       exit;
     end;
 
@@ -179,7 +180,7 @@ begin
       println('client', '400 Bad Payload, request has no username');
       // Directly write json string to limit memory and code lines
       AContext.Connection.Socket.WriteLn('{"action":"error",'+
-      '"error-details":"400 Bad Payload, request has no username"}');
+      '"data":{"details":"400 Bad Payload, request has no username"}}');
       exit;
     end;
 
@@ -190,7 +191,7 @@ begin
       println('client', '400 Bad Payload, request has no username');
       // Directly write json string to limit memory and code lines
       AContext.Connection.Socket.WriteLn('{"action":"error",'+
-      '"error-details":"400 Bad Payload, request has no username"}');
+      '"data":{"details":"400 Bad Payload, request has no username"}}');
       exit;
     end;
 
@@ -201,15 +202,33 @@ begin
       //{"action":"authenticate","auth":{"username":"Wykerd","uid":"{3AA29A4C-C2FB-48BF-A541-2B93E19FE957}"}}
       // Check which action to execute
       if action = 'authenticate' then
-        ClientLogin(sUsername, sUID, AContext.Connection.Socket)
+      begin
+        ClientLogin(sUsername, sUID, AContext.Connection.Socket);
+      end
+      // If not in current game actions can't be executed by server
+      else if not MatchStr(sUID, FSessions) then
+      begin
+        println('client', 'An unauthorized user made an request to the server');
+        // Directly write json string to limit memory and code lines
+        AContext.Connection.Socket.WriteLn('{"action":"error",'+
+        '"data":{"details":"401 Unauthorized"}}');
+      end
+      else
+      begin
+        if JSON.Get('data') <> nil then
+          ProcessAction(action, TJSONObject(JSON.Get('data').JsonValue), sUsername, sUID);
+      end;
+      (*
       else // If all else fails
       begin
         println('client', '404 Not Found, the spesified action was not found');
         // Directly write json string to limit memory and code lines
         AContext.Connection.Socket.WriteLn('{"action":"error",'+
-        '"error-details":"404 Not Found, the spesified action was not found"}');
+        '"data":{"details":"404 Not Found, the spesified action was not found"}}');
         exit;
       end; // end all else failed
+      *)
+
       // End Check for action //
     end
     else
@@ -229,6 +248,16 @@ begin
   Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
 end;
 
+procedure TServer.ProcessAction(action: string; data: TJSONObject; username, uid : string);
+begin
+  if action = 'chat' then
+  begin
+    if data.Get('message') <> nil then
+      BroadCast('{"action":"chat","data":{"message":"' + username + ': '
+         + data.Get('message').JsonValue.Value + '"}}');
+  end;
+end;
+
 procedure TServer.RunCommand(CMD: TJSONObject);
 begin
 
@@ -243,13 +272,16 @@ procedure TServer.Start(Port: integer);
 begin
   Self.DefaultPort := Port;
   Active := true;
-  println('status', 'server started');
+  println('status', 'Server started');
+
+  // Get the local IP address of the computer for LAN games
   TIdStack.IncUsage;
   try
      println('info', 'Hosting on ' + GStack.LocalAddress + ':' + Inttostr(Port));
   finally
     TIdStack.DecUsage;
   end;
+
 end;
 
 procedure TServer.Status(ASender: TObject; const AStatus: TIdStatus;

@@ -17,5 +17,20 @@
     <Transaction>2019/07/22 22:51:25.044.pas,E:\IT_PAT_2019_\Unit1.pas=E:\IT_PAT_2019_\helpers.pas</Transaction>
     <Transaction>2019/07/23 21:49:20.972.pas,E:\IT_PAT_2019_\Unit1.pas=E:\IT_PAT_2019_\userWizard.pas</Transaction>
     <Transaction>2019/07/23 21:49:20.972.dfm,E:\IT_PAT_2019_\Unit1.dfm=E:\IT_PAT_2019_\userWizard.dfm</Transaction>
+    <Transaction>2019/07/25 11:12:09.800.pas,E:\IT_PAT_2019_\Unit1.pas=E:\IT_PAT_2019_\gameUI.pas</Transaction>
+    <Transaction>2019/07/25 11:18:29.281.pas,E:\IT_PAT_2019_\gameUI.pas=E:\IT_PAT_2019_\clientUI.pas</Transaction>
   </Transactions>
+	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path=".gitignore"/>
+    <File Path="client.pas"/>
+    <File Path="dbUnit.pas"/>
+    <File Path="dbUnit.dfm"/>
+    <File Path="helpers.pas"/>
+    <File Path="launcher.pas"/>
+    <File Path="launcher.dfm"/>
+    <File Path="server.pas"/>
+    <File Path="userWizard.pas"/>
+    <File Path="userWizard.dfm"/>
+    <File Path="clientUI.pas"/>
+  </ProjectSortOrder>
 </BorlandProject>
