@@ -335,8 +335,6 @@ begin
   JSONReq.AddPair(TJSONPair.create('data', JSONData));
 
   IOHandler.WriteLn(JSONReq.ToString);
-
-  JSONReq.Free;
 end;
 
 procedure TClient.SetAuthenticated(const Value: boolean);
