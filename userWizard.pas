@@ -58,6 +58,7 @@ procedure TfrmUserEditor.LaunchWizard(callback: TObjProcedure);
 begin
   btnUpdate.Enabled := false;
   call := callback;
+  show;
 end;
 
 end.

@@ -13,14 +13,17 @@ type
   private
     FState: TJSONObject;
     FOnChat: TChatEvent;
+    FChatMemo: TMemo;
     procedure SetOnChat(const Value: TChatEvent);
     procedure SetState(const Value: TJSONObject);
     procedure OpenChat(sender: Tobject);
+    procedure SetChatMemo(const Value: TMemo);
   published
     constructor CreateNew (AOwner: TComponent; Dummy: integer); override;
     property State : TJSONObject read FState write SetState;
     property OnChat : TChatEvent read FOnChat write SetOnChat;
     procedure IncomingChat (s : string);
+    property ChatMemo : TMemo read FChatMemo write SetChatMemo;
   end;
 
 implementation
@@ -31,16 +34,24 @@ constructor TClientUI.CreateNew(AOwner: TComponent; Dummy: integer);
 begin
   inherited;
   OnClick := OpenChat;
+  ChatMemo := TMemo.Create(self);
+  ChatMemo.Align := alBottom;
+  ChatMemo.Parent := self;
 end;
 
 procedure TClientUI.IncomingChat(s: string);
 begin
-  Showmessage(s);
+  ChatMemo.Lines.Add(s);
 end;
 
 procedure TClientUI.OpenChat(sender: Tobject);
 begin
   OnChat(Inputbox('Chat', 'Enter message', ''));
+end;
+
+procedure TClientUI.SetChatMemo(const Value: TMemo);
+begin
+  FChatMemo := Value;
 end;
 
 procedure TClientUI.SetOnChat(const Value: TChatEvent);

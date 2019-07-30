@@ -6,7 +6,7 @@ uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdCustomTCPServer, IdTCPServer, IdContext,
   ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, DBXJSON,
-  IdIOHandlerSocket, StrUtils;
+  IdIOHandlerSocket, StrUtils, IdSync;
 
 type
   TServer = class(TIdTCPServer)
@@ -135,6 +135,7 @@ var
   JSON, Auth : TJSONObject;
   action : string;
   sUsername, sUID : string;
+  sync : TPrintSync;
 begin
   req := AContext.Connection.Socket.ReadLn;
   println('incoming', req);
@@ -218,18 +219,8 @@ begin
         if JSON.Get('data') <> nil then
           ProcessAction(action, TJSONObject(JSON.Get('data').JsonValue), sUsername, sUID);
       end;
-      (*
-      else // If all else fails
-      begin
-        println('client', '404 Not Found, the spesified action was not found');
-        // Directly write json string to limit memory and code lines
-        AContext.Connection.Socket.WriteLn('{"action":"error",'+
-        '"data":{"details":"404 Not Found, the spesified action was not found"}}');
-        exit;
-      end; // end all else failed
-      *)
-
       // End Check for action //
+
     end
     else
     begin
@@ -243,9 +234,17 @@ begin
 end;
 
 procedure TServer.println(t, s: string);
+var
+  sync : TPrintSync;
 begin
-  Debug.SelAttributes.Color := clRed;
-  Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
+  sync := TPrintSync.Create;
+  try
+    sync.printstr := '[' + uppercase(t) + '] ' + s;
+    sync.memo := Debug;
+    sync.Synchronize;
+  finally
+    sync.Free;
+  end;
 end;
 
 procedure TServer.ProcessAction(action: string; data: TJSONObject; username, uid : string);

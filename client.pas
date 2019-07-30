@@ -300,7 +300,6 @@ end;
 
 procedure TClient.println(t, s: string);
 begin
-  Debug.SelAttributes.Color := clGreen;
   Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
 end;
 

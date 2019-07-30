@@ -52,6 +52,8 @@ object frmLauncher: TfrmLauncher
     ScrollBars = ssVertical
     TabOrder = 2
     OnChange = redDebugChange
+    ExplicitLeft = -8
+    ExplicitTop = 204
   end
   object redClient: TRichEdit
     Left = 0
@@ -97,8 +99,6 @@ object frmLauncher: TfrmLauncher
       Caption = 'Update Or Create User'
       TabOrder = 0
       OnClick = btnUserClick
-      ExplicitLeft = 2
-      ExplicitTop = 54
     end
   end
 end

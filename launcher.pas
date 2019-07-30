@@ -90,17 +90,13 @@ begin
     // Fixes weird issue where program freezes because client disconnects
     // as the server gets destroyed
     Server.OnDisconnect := nil;
-    //
+    Server.OnExecute := nil;
     Server.Active := false;
     Server.Destroy;
   end;
 
   if Client <> nil then
-  begin
-    Client.IOHandler.InputBuffer.clear;
-    Client.Disconnect;
     Client.Destroy;
-  end;
 end;
 
 procedure TfrmLauncher.FormCreate(Sender: TObject);

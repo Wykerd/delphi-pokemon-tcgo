@@ -3,7 +3,7 @@ unit helpers;
 interface
 
 uses
-  Classes, DBXJSON, SysUtils;
+  Classes, DBXJSON, SysUtils, IdSync, ComCtrls;
 
 type
   TStrArr = array of string;
@@ -28,6 +28,14 @@ type
     procedure Execute; override;
   public
     constructor Create(const AProc: TProc);
+  end;
+
+  TPrintSync = class (TIdSync)
+  protected
+    procedure DoSynchronize; override;
+  public
+    printstr : string;
+    memo : TRichEdit;
   end;
 
 // String manipulation functions
@@ -106,6 +114,14 @@ end;
 procedure TAnonymousThread.Execute;
 begin
   FProc();
+end;
+
+{ TPrintSync }
+
+procedure TPrintSync.DoSynchronize;
+begin
+  inherited;
+  memo.Lines.Add(printstr);
 end;
 
 end.
