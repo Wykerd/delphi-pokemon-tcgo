@@ -8,7 +8,8 @@ uses
   dbUnit in 'dbUnit.pas' {dmDB: TDataModule},
   helpers in 'helpers.pas',
   userWizard in 'userWizard.pas' {frmUserEditor},
-  clientUI in 'clientUI.pas';
+  clientUI in 'clientUI.pas',
+  serverConfig in 'serverConfig.pas';
 
 {$R *.res}
 

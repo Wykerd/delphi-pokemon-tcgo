@@ -19,8 +19,15 @@
     <Transaction>2019/07/23 21:49:20.972.dfm,E:\IT_PAT_2019_\Unit1.dfm=E:\IT_PAT_2019_\userWizard.dfm</Transaction>
     <Transaction>2019/07/25 11:12:09.800.pas,E:\IT_PAT_2019_\Unit1.pas=E:\IT_PAT_2019_\gameUI.pas</Transaction>
     <Transaction>2019/07/25 11:18:29.281.pas,E:\IT_PAT_2019_\gameUI.pas=E:\IT_PAT_2019_\clientUI.pas</Transaction>
+    <Transaction>2019/07/30 21:58:53.817.pas,E:\IT_PAT_2019_\Unit1.pas=E:\IT_PAT_2019_\serverConfig.pas</Transaction>
+    <Transaction>2019/07/30 22:07:05.906.json,E:\IT_PAT_2019_\config.json=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="client"/>
+    <File Path="client\auth.json"/>
+    <File Path="client\server-list.json"/>
+    <File Path="server"/>
+    <File Path="server\config.json"/>
     <File Path=".gitignore"/>
     <File Path="client.pas"/>
     <File Path="dbUnit.pas"/>
@@ -32,5 +39,6 @@
     <File Path="userWizard.pas"/>
     <File Path="userWizard.dfm"/>
     <File Path="clientUI.pas"/>
+    <File Path="serverConfig.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

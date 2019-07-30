@@ -57,7 +57,11 @@
 				<Form>frmUserEditor</Form>
 			</DCCReference>
 			<DCCReference Include="clientUI.pas"/>
+			<DCCReference Include="serverConfig.pas"/>
 			<None Include=".gitignore"/>
+			<None Include="client\auth.json"/>
+			<None Include="server\config.json"/>
+			<None Include="client\server-list.json"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

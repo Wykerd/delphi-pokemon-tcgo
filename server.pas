@@ -6,13 +6,14 @@ uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdCustomTCPServer, IdTCPServer, IdContext,
   ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, DBXJSON,
-  IdIOHandlerSocket, StrUtils;
+  IdIOHandlerSocket, StrUtils, Windows, serverConfig;
 
 type
   TServer = class(TIdTCPServer)
   private
     FDebug: TRichEdit;
     FSessions : array of string;
+    FConfig: TServerConfig;
     procedure Execute(AContext: TIdContext);
     procedure Connected(AContext: TIdContext);
     procedure Disconnected(AContext: TIdContext);
@@ -20,11 +21,13 @@ type
       const AStatusText: string);
     procedure SetDebug(const Value: TRichEdit);
     procedure println(t, s: string);
+    procedure SetConfig(const Value: TServerConfig);
   published
     constructor Create(AOwner: TComponent);
-    procedure Start(Port: integer);
+    procedure Start;
     procedure Broadcast(s: string);
     procedure RunCommand(CMD: TJSONObject);
+    property Config : TServerConfig read FConfig write SetConfig;
     procedure ProcessAction(action: string; data: TJSONObject; username, uid : string);
     procedure ClientLogin(username, uid : string; callback : TIdIOHandlerSocket);
     property Debug: TRichEdit read FDebug write SetDebug;
@@ -122,6 +125,7 @@ begin
   OnStatus := Status;
   OnDisconnect := Disconnected;
   Debug := TRichEdit.Create(nil);
+  Config := TServerConfig.Create;
 end;
 
 procedure TServer.Disconnected(AContext: TIdContext);
@@ -204,6 +208,11 @@ begin
       begin
         ClientLogin(sUsername, sUID, AContext.Connection.Socket);
       end
+      // get server info for server list
+      else if action = 'info' then
+      begin
+        AContext.Connection.Socket.WriteLn('{"action":"info","data":' + Config.Listing.ToString + '}');
+      end
       // If not in current game actions can't be executed by server
       else if not MatchStr(sUID, FSessions) then
       begin
@@ -257,21 +266,26 @@ begin
 
 end;
 
+procedure TServer.SetConfig(const Value: TServerConfig);
+begin
+  FConfig := Value;
+end;
+
 procedure TServer.SetDebug(const Value: TRichEdit);
 begin
   FDebug := Value;
 end;
 
-procedure TServer.Start(Port: integer);
+procedure TServer.Start;
 begin
-  Self.DefaultPort := Port;
+  Self.DefaultPort := Config.Port;
   Active := true;
   println('status', 'Server started');
 
   // Get the local IP address of the computer for LAN games
   TIdStack.IncUsage;
   try
-     println('info', 'Hosting on ' + GStack.LocalAddress + ':' + Inttostr(Port));
+     println('info', 'Hosting on ' + GStack.LocalAddress + ':' + Inttostr(Config.Port));
   finally
     TIdStack.DecUsage;
   end;

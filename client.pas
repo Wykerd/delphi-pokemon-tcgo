@@ -98,6 +98,7 @@ begin
         if data.Get('success').JsonValue.Value = 'true' then
         begin
           println('auth', 'Successfully authenticated');
+          IOHandler.WriteLn('{"action":"info","auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
           Authenticated := true;
         end
         else
@@ -123,15 +124,15 @@ end;
 
 class function TClient.GetCredentials (AuthPath : string) : TJSONObject;
 var
-  tF : textfile;
+  tF: textfile;
   data, tmp : string;
   JSON : TJSONObject;
-  
+
 begin
   // Init
   data := '';
   tmp := '';
-  
+
   // Check if the auth file is available
   if not fileExists(AuthPath) then
   begin
@@ -155,10 +156,10 @@ begin
     closefile(tf);
 
     // Parse the JSON
-    JSON := TJsonObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(data),0));
+    JSON := TJsonObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(StripNonJson(data)),0));
     result := JSON;
   end;
-  
+
 end;
 
 procedure TClient.Authenticate;
@@ -166,12 +167,12 @@ var
   tF : textfile;
   data, tmp : string;
   JSON, JSONRes : TJSONObject;
-  
+
 begin
   // Init
   data := '';
   tmp := '';
-  
+
   // Check if the auth file is available
   if not fileExists(AuthLock) then
   begin
@@ -206,21 +207,21 @@ begin
       begin
         println('error', 'Invalid authentication file (no uid). Create new one in the launcher!');
       end;
-      
+
       JSONRes.AddPair(TJSONPair.Create('action', 'authenticate'));
       JSONRes.AddPair(JSON.Get('auth'));
 
       // Send the authentication request to the server
       IOHandler.WriteLn(JSONRes.ToString);
       println('auth', 'Attempting to authenticate with server');
-      
+
       // Set the credentials for future use;
       Credentials := JSON.Get('auth');
     except
       println('error', 'An eror occured while reading / sending the authentication payload');
     end;
   end;
-  
+
 end;
 
 constructor TClient.Create(AOwner: TComponent);
@@ -279,8 +280,8 @@ begin
   begin
     // If an id could not be generated terminate the program
     // Happens so rarely should not cause any problems
-    Showmessage('Error creating UID, Try again!');
-    Halt;
+    raise Exception.Create('Client Credential Creation Error: Could not generate UID');
+    exit;
   end;
 
   JSONRoot := TJSONObject.Create;

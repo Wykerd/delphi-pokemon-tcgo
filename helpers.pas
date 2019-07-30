@@ -3,7 +3,7 @@ unit helpers;
 interface
 
 uses
-  Classes, DBXJSON, SysUtils, IdSync, ComCtrls;
+  Classes, DBXJSON, SysUtils, IdSync, ComCtrls, Character;
 
 type
   TStrArr = array of string;
@@ -33,6 +33,9 @@ type
 // String manipulation functions
 function strJoin (const arr : array of string; const delim: string): string;
 function strSplit (s: string; delimiter: string): TStrArr;
+
+// More JSON helpers from https://gist.github.com/fabriciocolombo/4236ce010787d86b5c65
+function StripNonJson(s: string): string;
 
 implementation
 
@@ -106,6 +109,24 @@ end;
 procedure TAnonymousThread.Execute;
 begin
   FProc();
+end;
+
+//Remove whitespaces http://edn.embarcadero.com/article/40882
+function StripNonJson(s: string): string;
+var
+  ch: char;
+  inString: boolean;
+begin
+  Result := '';
+  inString := false;
+  for ch in s do
+  begin
+    if ch = '"' then
+      inString := not inString;
+    if TCharacter.IsWhiteSpace(ch) and not inString then
+      continue;
+    Result := Result + ch;
+  end;
 end;
 
 end.

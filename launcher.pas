@@ -72,7 +72,8 @@ begin
   TButton(Sender).Enabled := false;
   Server := TServer.Create(Self);
   Server.Debug := redDebug;
-  Server.Start(8080);
+  Server.Config.LoadFromFile('server\config.json');
+  Server.Start;
 end;
 
 procedure TfrmLauncher.btnUserClick(Sender: TObject);

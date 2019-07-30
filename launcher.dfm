@@ -23,7 +23,7 @@ object frmLauncher: TfrmLauncher
     Width = 645
     Height = 75
     Align = alTop
-    Caption = 'Start Server'
+    Caption = 'Start Local Server'
     TabOrder = 0
     OnClick = btnStartClick
   end
@@ -33,7 +33,7 @@ object frmLauncher: TfrmLauncher
     Width = 645
     Height = 75
     Align = alTop
-    Caption = 'Join Server'
+    Caption = 'Start Game Client'
     TabOrder = 1
     OnClick = btnJoinClick
   end
