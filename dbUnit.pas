@@ -28,7 +28,7 @@ procedure TdmDB.DataModuleCreate(Sender: TObject);
 begin
   con.Close;
   con.ConnectionString := 'Provider=Microsoft.Jet.OLEDB.4.0;Data Source='
-    + GetCurrentDir + '\database.mdb;Mode=ReadWrite;Persist Security Info=False';
+    + GetCurrentDir + '\server\database.mdb;Mode=ReadWrite;Persist Security Info=False';
   con.LoginPrompt := False;
   con.Open;
   tblUsers.Connection := con;

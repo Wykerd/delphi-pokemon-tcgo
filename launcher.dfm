@@ -52,8 +52,6 @@ object frmLauncher: TfrmLauncher
     ScrollBars = ssVertical
     TabOrder = 2
     OnChange = redDebugChange
-    ExplicitLeft = -8
-    ExplicitTop = 204
   end
   object redClient: TRichEdit
     Left = 0

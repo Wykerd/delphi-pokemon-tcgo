@@ -87,8 +87,8 @@ procedure TfrmLauncher.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if Server <> nil then
   begin
-    // Fixes weird issue where program freezes because client disconnects
-    // as the server gets destroyed
+    // Fixes issue where program freezes because client disconnects
+    // as the server gets destroyed blocking the main and server thread;
     Server.OnDisconnect := nil;
     Server.OnExecute := nil;
     Server.Active := false;
@@ -111,7 +111,7 @@ begin
   bLaunchable := false;
 
   // Get Credentials
-  jsCredentials := TClient.GetCredentials(GetCurrentDir + '\auth.json') as TJSONObject;
+  jsCredentials := TClient.GetCredentials(GetCurrentDir + '\client\auth.json') as TJSONObject;
 
   // Validate credentials object
   if jsCredentials = nil then
@@ -136,13 +136,13 @@ end;
 procedure TfrmLauncher.redClientChange(Sender: TObject);
 begin
   // Log the debug to a file in event of crashed
-  redClient.Lines.SaveToFile('client_log.rtf');
+  redClient.Lines.SaveToFile('client\client_log.rtf');
 end;
 
 procedure TfrmLauncher.redDebugChange(Sender: TObject);
 begin
   // Log the debug to a file in event of crashed
-  redDebug.Lines.SaveToFile('server_log.rtf');
+  redDebug.Lines.SaveToFile('server\server_log.rtf');
 end;
 
 procedure TfrmLauncher.SetLaunchable(const Value: boolean);

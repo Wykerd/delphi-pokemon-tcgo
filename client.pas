@@ -18,7 +18,10 @@ type
     FUI: TClientUI;
     procedure SetDebug(const Value: TRichEdit);
     procedure Run (Sender: TIdThreadComponent);
+    // for main thread prints
     procedure println (t, s : string);
+    // for worker thread prints
+    procedure threadprint(t, s: string);
     procedure Connected(Sender: TObject);
     procedure Disconnected(Sender: TObject);
     procedure SetAuthLock(const Value: string);
@@ -227,7 +230,7 @@ begin
   FIdThread.OnRun := Run;
   OnDisconnected := Disconnected;
   OnConnected := Connected;
-  AuthLock := GetCurrentDir + '\auth.json';
+  AuthLock := GetCurrentDir + '\client\auth.json';
   Authenticated := false;
   Credentials := nil;
   UI := TClientUI.CreateNew(Self, 0);
@@ -367,6 +370,17 @@ begin
   Self.Port := Port;
   Connect;
   Authenticate;
+end;
+
+procedure TClient.threadprint(t, s: string);
+begin
+  // Queue the action to be preformed in the main thread as it is not
+  // thread safe.
+  TThread.Queue(nil,
+    procedure
+    begin
+      Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
+    end);
 end;
 
 end.

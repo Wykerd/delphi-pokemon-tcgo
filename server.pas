@@ -6,7 +6,7 @@ uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdCustomTCPServer, IdTCPServer, IdContext,
   ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, DBXJSON,
-  IdIOHandlerSocket, StrUtils, IdSync;
+  IdIOHandlerSocket, StrUtils;
 
 type
   TServer = class(TIdTCPServer)
@@ -135,7 +135,6 @@ var
   JSON, Auth : TJSONObject;
   action : string;
   sUsername, sUID : string;
-  sync : TPrintSync;
 begin
   req := AContext.Connection.Socket.ReadLn;
   println('incoming', req);
@@ -200,7 +199,6 @@ begin
     begin
       action := JSON.get('action').JsonValue.Value;
 
-      //{"action":"authenticate","auth":{"username":"Wykerd","uid":"{3AA29A4C-C2FB-48BF-A541-2B93E19FE957}"}}
       // Check which action to execute
       if action = 'authenticate' then
       begin
@@ -234,17 +232,14 @@ begin
 end;
 
 procedure TServer.println(t, s: string);
-var
-  sync : TPrintSync;
 begin
-  sync := TPrintSync.Create;
-  try
-    sync.printstr := '[' + uppercase(t) + '] ' + s;
-    sync.memo := Debug;
-    sync.Synchronize;
-  finally
-    sync.Free;
-  end;
+  // Queue the action to be preformed in the main thread as it is not
+  // thread safe.
+  TThread.Queue(nil,
+    procedure
+    begin
+      Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
+    end);
 end;
 
 procedure TServer.ProcessAction(action: string; data: TJSONObject; username, uid : string);

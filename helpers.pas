@@ -30,14 +30,6 @@ type
     constructor Create(const AProc: TProc);
   end;
 
-  TPrintSync = class (TIdSync)
-  protected
-    procedure DoSynchronize; override;
-  public
-    printstr : string;
-    memo : TRichEdit;
-  end;
-
 // String manipulation functions
 function strJoin (const arr : array of string; const delim: string): string;
 function strSplit (s: string; delimiter: string): TStrArr;
@@ -114,14 +106,6 @@ end;
 procedure TAnonymousThread.Execute;
 begin
   FProc();
-end;
-
-{ TPrintSync }
-
-procedure TPrintSync.DoSynchronize;
-begin
-  inherited;
-  memo.Lines.Add(printstr);
 end;
 
 end.
