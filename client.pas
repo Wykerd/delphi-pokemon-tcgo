@@ -16,6 +16,7 @@ type
     FAuthenticated: boolean;
     FCredentials: TJSONPair;
     FUI: TClientUI;
+    FServersLock: string;
     procedure SetDebug(const Value: TRichEdit);
     procedure Run (Sender: TIdThreadComponent);
     // for main thread prints
@@ -28,12 +29,14 @@ type
     procedure SetAuthenticated(const Value: boolean);
     procedure SetCredentials(const Value: TJSONPair);
     procedure SetUI(const Value: TClientUI);
+    procedure SetServersLock(const Value: string);
   published
     constructor Create (AOwner: TComponent);
     procedure Start (Host: string; Port: integer);
     property Debug : TRichEdit read FDebug write SetDebug;
     procedure Authenticate;
     property AuthLock : string read FAuthLock write SetAuthLock;
+    property ServersLock : string read FServersLock write SetServersLock;
     property Authenticated : boolean read FAuthenticated write SetAuthenticated;
     property Credentials : TJSONPair read FCredentials write SetCredentials;
     procedure ExecuteAction (JSON : TJSONObject);
@@ -98,6 +101,7 @@ begin
         if data.Get('success').JsonValue.Value = 'true' then
         begin
           println('auth', 'Successfully authenticated');
+          // get the latest server info to update the cache
           IOHandler.WriteLn('{"action":"info","auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
           Authenticated := true;
         end
@@ -110,8 +114,13 @@ begin
     begin
       if data.Get('message') <> nil then
       begin
-        UI.IncomingChat(data.Get('message').JsonValue.Value);
+        UI.GameUI.IncomingChat(data.Get('message').JsonValue.Value);
       end;
+    end;
+
+    if action = 'info' then
+    begin
+
     end;
 
     // End actions //
@@ -232,10 +241,12 @@ begin
   OnDisconnected := Disconnected;
   OnConnected := Connected;
   AuthLock := GetCurrentDir + '\client\auth.json';
+  ServersLock := GetCurrentDir + '\client\server-list.json';
   Authenticated := false;
   Credentials := nil;
   UI := TClientUI.CreateNew(Self, 0);
-  UI.OnChat := SendChat;
+  UI.StartTrigger := Start;
+  UI.GameUI.OnChat := SendChat;
 end;
 
 // Use an pre-existing UID
@@ -358,6 +369,11 @@ end;
 procedure TClient.SetDebug(const Value: TRichEdit);
 begin
   FDebug := Value;
+end;
+
+procedure TClient.SetServersLock(const Value: string);
+begin
+  FServersLock := Value;
 end;
 
 procedure TClient.SetUI(const Value: TClientUI);

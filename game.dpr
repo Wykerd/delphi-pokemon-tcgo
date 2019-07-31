@@ -8,8 +8,12 @@ uses
   dbUnit in 'dbUnit.pas' {dmDB: TDataModule},
   helpers in 'helpers.pas',
   userWizard in 'userWizard.pas' {frmUserEditor},
-  clientUI in 'clientUI.pas',
-  serverConfig in 'serverConfig.pas';
+  serverConfig in 'serverConfig.pas',
+  startUI in 'UI\startUI.pas',
+  UIContainer in 'UI\UIContainer.pas',
+  clientUI in 'UI\clientUI.pas',
+  gameUI in 'UI\gameUI.pas',
+  serversUI in 'UI\serversUI.pas';
 
 {$R *.res}
 
@@ -21,3 +25,4 @@ begin
   Application.CreateForm(TfrmUserEditor, frmUserEditor);
   Application.Run;
 end.
+

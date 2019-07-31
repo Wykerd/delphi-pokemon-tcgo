@@ -2,7 +2,12 @@
   "servers": [
     {
       "host": "localhost",
-      "port": "8080"
+      "port": "8080",
+      "name": "Local Server",
+      "listing": {
+        "motd": "Why don't you join now?",
+        "name": "Epic Gamer Server"
+      }
     }
   ]
 }

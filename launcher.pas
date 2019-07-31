@@ -61,9 +61,6 @@ begin
 
   Client := TClient.Create(Self);
   Client.Debug := redClient;
-
-  // Start the connection to the client
-  Client.Start(InputBox('Host', 'Enter the IP for server', 'localhost'), 8080);
   Client.UI.Show;
 end;
 

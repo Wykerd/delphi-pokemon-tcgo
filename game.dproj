@@ -56,12 +56,20 @@
 			<DCCReference Include="userWizard.pas">
 				<Form>frmUserEditor</Form>
 			</DCCReference>
-			<DCCReference Include="clientUI.pas"/>
 			<DCCReference Include="serverConfig.pas"/>
-			<None Include=".gitignore"/>
+			<DCCReference Include="UI\startUI.pas"/>
+			<DCCReference Include="UI\UIContainer.pas"/>
+			<DCCReference Include="UI\clientUI.pas"/>
+			<DCCReference Include="UI\gameUI.pas"/>
+			<DCCReference Include="UI\serversUI.pas"/>
 			<None Include="client\auth.json"/>
-			<None Include="server\config.json"/>
+			<None Include="client\client_log.rtf"/>
+			<None Include="client\__history"/>
 			<None Include="client\server-list.json"/>
+			<None Include="server\database.mdb"/>
+			<None Include="server\__history"/>
+			<None Include="server\config.json"/>
+			<None Include="server\server_log.rtf"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

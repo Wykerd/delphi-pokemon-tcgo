@@ -3,7 +3,7 @@ unit serverConfig;
 interface
 
 uses
-  DBXJSON, SysUtils, helpers;
+  DBXJSON, SysUtils, helpers, ExtCtrls;
 
 type
   TChatFormat = record
@@ -52,7 +52,6 @@ begin
   Port := 8080;
   MaxPlayers := -1;
   Whitelist := false;
-
   Listing := TJSONObject.Create;
   Listing.AddPair(TJSONPair.Create('motd', 'A Gaming Server'));
   Listing.AddPair(TJSONPair.Create('name', 'New Server'));
