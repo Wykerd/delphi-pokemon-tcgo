@@ -10,10 +10,11 @@ uses
   userWizard in 'userWizard.pas' {frmUserEditor},
   serverConfig in 'serverConfig.pas',
   startUI in 'UI\startUI.pas',
-  UIContainer in 'UI\UIContainer.pas',
   clientUI in 'UI\clientUI.pas',
   gameUI in 'UI\gameUI.pas',
-  serversUI in 'UI\serversUI.pas';
+  serversUI in 'UI\serversUI.pas',
+  UIButton in 'UI\components\UIButton.pas',
+  UIContainer in 'UI\components\UIContainer.pas';
 
 {$R *.res}
 

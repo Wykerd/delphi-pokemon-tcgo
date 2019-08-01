@@ -25,24 +25,11 @@
     <Transaction>2019/07/31 18:36:28.104.pas,E:\IT_PAT_2019_\Unit1.pas=E:\IT_PAT_2019_\UIContainer.pas</Transaction>
     <Transaction>2019/07/31 19:05:48.128.pas,E:\IT_PAT_2019_\Unit1.pas=E:\IT_PAT_2019_\startUI.pas</Transaction>
     <Transaction>2019/07/31 19:07:53.333.pas,E:\IT_PAT_2019_\Unit1.pas=E:\IT_PAT_2019_\UIContainer.pas</Transaction>
+    <Transaction>2019/08/01 21:44:39.543.rc,E:\IT_PAT_2019_\UI\resources\uiresources.rc=</Transaction>
+    <Transaction>2019/08/01 21:44:43.708.rc,E:\IT_PAT_2019_\UI\components\resources\uicomponentresources.rc=</Transaction>
+    <Transaction>2019/08/01 22:04:54.172.bmp,E:\IT_PAT_2019_\UI\resources\blank.bmp=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
-    <File Path="UI"/>
-    <File Path="UI\clientUI.pas"/>
-    <File Path="UI\gameUI.pas"/>
-    <File Path="UI\startUI.pas"/>
-    <File Path="UI\UIContainer.pas"/>
-    <File Path="UI\serversUI.pas"/>
-    <File Path="client.pas"/>
-    <File Path="dbUnit.pas"/>
-    <File Path="dbUnit.dfm"/>
-    <File Path="helpers.pas"/>
-    <File Path="launcher.pas"/>
-    <File Path="launcher.dfm"/>
-    <File Path="server.pas"/>
-    <File Path="userWizard.pas"/>
-    <File Path="userWizard.dfm"/>
-    <File Path="serverConfig.pas"/>
     <File Path="client"/>
     <File Path="client\auth.json"/>
     <File Path="client\client_log.rtf"/>
@@ -53,5 +40,27 @@
     <File Path="server\__history"/>
     <File Path="server\config.json"/>
     <File Path="server\server_log.rtf"/>
+    <File Path="UI"/>
+    <File Path="UI\components"/>
+    <File Path="UI\components\resources"/>
+    <File Path="UI\components\resources\uicomponentres.rc"/>
+    <File Path="UI\components\UIButton.pas"/>
+    <File Path="UI\components\UIContainer.pas"/>
+    <File Path="UI\resources"/>
+    <File Path="UI\resources\uires.rc"/>
+    <File Path="UI\clientUI.pas"/>
+    <File Path="UI\gameUI.pas"/>
+    <File Path="UI\serversUI.pas"/>
+    <File Path="UI\startUI.pas"/>
+    <File Path="client.pas"/>
+    <File Path="dbUnit.pas"/>
+    <File Path="dbUnit.dfm"/>
+    <File Path="helpers.pas"/>
+    <File Path="launcher.pas"/>
+    <File Path="launcher.dfm"/>
+    <File Path="server.pas"/>
+    <File Path="userWizard.pas"/>
+    <File Path="userWizard.dfm"/>
+    <File Path="serverConfig.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

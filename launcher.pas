@@ -51,6 +51,10 @@ implementation
 
 {$R *.dfm}
 
+// Compile the game resources
+{$R 'uires.res' 'UI\resources\uires.rc'}
+{$R 'uicomponentres.res' 'UI\components\resources\uicomponentres.rc'}
+
 procedure TfrmLauncher.btnJoinClick(Sender: TObject);
 begin
   if not bLaunchable then
@@ -58,7 +62,6 @@ begin
     showmessage('You have to create an account before you can join an server!');
     exit;
   end;
-
   Client := TClient.Create(Self);
   Client.Debug := redClient;
   Client.UI.Show;
