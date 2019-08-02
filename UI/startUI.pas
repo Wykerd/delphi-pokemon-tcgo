@@ -6,8 +6,6 @@ uses
   UIContainer, Controls, Classes, ExtCtrls, UIButton, Dialogs, Types, Math;
 
 type
-  TClientStart = procedure (Host : string; Port : integer) of object;
-
   TStartUI = class (TUIContainer)
   private
     FBackground: TImage;

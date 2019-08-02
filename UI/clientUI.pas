@@ -53,11 +53,15 @@ begin
   ClientWidth := 640;
 
   StartUI.OnServersClick := HandleShowServers;
+  ServersUI.OnStartClient := HandleShowGame;
+  ServersUI.StartTrigger := StartTrigger;
 end;
 
 procedure TClientUI.HandleShowGame(Sender: TObject);
 begin
-
+  StartUI.Visible := false;
+  GameUI.Visible := true;
+  ServersUI.Visible := false;
 end;
 
 procedure TClientUI.HandleShowServers(Sender: TObject);
@@ -92,6 +96,7 @@ end;
 procedure TClientUI.SetStartTrigger(const Value: TClientStart);
 begin
   FStartTrigger := Value;
+  ServersUI.StartTrigger := Value;
 end;
 
 end.

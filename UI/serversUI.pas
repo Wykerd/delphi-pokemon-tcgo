@@ -7,7 +7,7 @@ uses
   Forms, DBXJSON, UIContainer, helpers, SysUtils;
 
 type
-  TServerConectionEvent = procedure (Host: string; Port: integer) of object;
+  TClientStart = procedure (Host : string; Port : integer) of object;
 
   TServerListing = class (TPanel)
   private
@@ -38,12 +38,19 @@ type
   private
     FServers: TJSONArray;
     Listings : array of TServerListing;
+    FStartTrigger: TClientStart;
+    FOnStartClient: TNotifyEvent;
     procedure SetServers(const Value: TJSONArray);
     procedure HandleResize (Sender : TObject);
+    procedure SetStartTrigger(const Value: TClientStart);
+    procedure HandleServerClick (Sender : TObject);
+    procedure SetOnStartClient(const Value: TNotifyEvent);
   published
     constructor Create (AOwner: TComponent); override;
     procedure LoadFromFile(s : string);
     property Servers : TJSONArray read FServers write SetServers;
+    property StartTrigger : TClientStart read FStartTrigger write SetStartTrigger;
+    property OnStartClient : TNotifyEvent read FOnStartClient write SetOnStartClient;
   public
     ListingsContainer : TScrollbox;
   end;
@@ -84,6 +91,15 @@ begin
       Height := floor(self.clientheight / 5);
     end;
   end;
+end;
+
+procedure TServersUI.HandleServerClick(Sender: TObject);
+var
+  listing : TServerListing;
+begin
+  listing := TServerListing(Sender);
+  StartTrigger(listing.Host, listing.Port);
+  OnStartClient(self);
 end;
 
 procedure TServersUI.LoadFromFile(s: string);
@@ -127,6 +143,13 @@ begin
   closefile(tF);
 end;
 
+procedure TServersUI.SetOnStartClient(const Value: TNotifyEvent);
+var
+  i : integer;
+begin
+  FOnStartClient := Value;
+end;
+
 procedure TServersUI.SetServers(const Value: TJSONArray);
 var
   I: Integer;
@@ -167,8 +190,14 @@ begin
     begin
       Parent := ListingsContainer;
       Top := i * 10;
+      OnClick := HandleServerClick;
     end;
   end;
+end;
+
+procedure TServersUI.SetStartTrigger(const Value: TClientStart);
+begin
+  FStartTrigger := Value;
 end;
 
 { TServerListing }
