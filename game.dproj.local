@@ -28,18 +28,9 @@
     <Transaction>2019/08/01 21:44:39.543.rc,E:\IT_PAT_2019_\UI\resources\uiresources.rc=</Transaction>
     <Transaction>2019/08/01 21:44:43.708.rc,E:\IT_PAT_2019_\UI\components\resources\uicomponentresources.rc=</Transaction>
     <Transaction>2019/08/01 22:04:54.172.bmp,E:\IT_PAT_2019_\UI\resources\blank.bmp=</Transaction>
+    <Transaction>2019/08/02 20:24:17.478.pas,E:\IT_PAT_2019_\UI\components\UIServerListing.pas=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
-    <File Path="client"/>
-    <File Path="client\auth.json"/>
-    <File Path="client\client_log.rtf"/>
-    <File Path="client\__history"/>
-    <File Path="client\server-list.json"/>
-    <File Path="server"/>
-    <File Path="server\database.mdb"/>
-    <File Path="server\__history"/>
-    <File Path="server\config.json"/>
-    <File Path="server\server_log.rtf"/>
     <File Path="UI"/>
     <File Path="UI\components"/>
     <File Path="UI\components\resources"/>

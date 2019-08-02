@@ -9,13 +9,16 @@ type
   TUIButton = class (TPanel)
   private
     FText: string;
+    FFontSize: integer;
     procedure MouseEnter (Sender: TObject);
     procedure MouseLeave (Sender: TObject);
     procedure SetText(const Value: string);
+    procedure SetFontSize(const Value: integer);
   published
     constructor Create (AOwner : TComponent); override;
     procedure Paint; override;
     property Text : string read FText write SetText;
+    property FontSize : integer read FFontSize write SetFontSize;
   end;
 
 implementation
@@ -48,7 +51,7 @@ begin
     Bitmap.LoadFromResourceName(HInstance, 'BlankResource');
     Canvas.StretchDraw(Self.ClientRect, Bitmap);
     Canvas.Font.Color := rgb(222, 77, 64);
-    Canvas.TextOut(50, floor((height - (Canvas.Font.Size * 1.2))/2), Text);
+    Canvas.TextOut(floor(width / 10), floor((height - (Canvas.Font.Size * 1.2))/2), Text);
   finally
     Bitmap.Free;
   end;
@@ -63,7 +66,7 @@ begin
     Bitmap.LoadFromResourceName(HInstance, 'BlankResource');
     Canvas.StretchDraw(Self.ClientRect, Bitmap);
     Canvas.Font.Color := clBlack;
-    Canvas.TextOut(50, floor((height - (Canvas.Font.Size * 1.2))/2), Text);
+    Canvas.TextOut(floor(width / 10), floor((height - (Canvas.Font.Size * 1.2))/2), Text);
   finally
     Bitmap.Free;
   end;
@@ -80,10 +83,16 @@ begin
     Bitmap.LoadFromResourceName(HInstance, 'BlankResource');
     Canvas.StretchDraw(Self.ClientRect, Bitmap);
     Canvas.Font.Color := clBlack;
-    Canvas.TextOut(50, floor((height - (Canvas.Font.Size * 1.2))/2), Text);
+    Canvas.TextOut(floor(width / 10), floor((height - (Canvas.Font.Size * 1.2))/2), Text);
   finally
     Bitmap.Free;
   end;
+end;
+
+procedure TUIButton.SetFontSize(const Value: integer);
+begin
+  FFontSize := Value;
+  Canvas.Font.Size := Value;
 end;
 
 procedure TUIButton.SetText(const Value: string);
