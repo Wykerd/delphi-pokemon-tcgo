@@ -328,7 +328,13 @@ begin
 
   // Check to see if it is valid json
   JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(req),0));
-  ExecuteAction(JSON);
+
+  // Synchronize with main thread
+  TThread.Synchronize(nil,
+  procedure
+  begin
+    ExecuteAction(JSON);
+  end);
 end;
 
 procedure TClient.SendChat(s: string);
