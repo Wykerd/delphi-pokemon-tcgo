@@ -92,4 +92,4 @@ This includes:
 - Game state
 
 ### Storing server list
-Store the server list in a JSON formatted text file.
+Store the server list in a JSON formatted text file. Use the file to populate a TJSONArray object and display information in list on server list UI.
