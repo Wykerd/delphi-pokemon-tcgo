@@ -18,15 +18,20 @@ The server should handle multiple game instances simultaneously if possible, but
 
 Functions of the server:
 
+### Fetch data from Authentication and Users server
+Make a TCP connection to the main Authentication and Users server to gather user data and ensure that cards are synced between servers.
+
+1. Ensure the user ID exists
+2. Get the card id's of the user
+3. Inform the server of card trades
+
 ### Database operations
 1. Manage ```Users``` table
     - Create records of new users
     - Update existing users
 
 2. Manage ```Cards``` table
-    - Create one-to-many relationships between cards and users
-    - Update or delete references between cards and users in the case users trade cards
-    - Read card data, this includes attacks and attack data from the attacks table
+    - Read card data to use in-game
 
 3. Manage ```Matches``` table
     - Create new matches

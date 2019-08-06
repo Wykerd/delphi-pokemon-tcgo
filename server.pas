@@ -26,7 +26,6 @@ type
     constructor Create(AOwner: TComponent);
     procedure Start;
     procedure Broadcast(s: string);
-    procedure RunCommand(CMD: TJSONObject);
     property Config : TServerConfig read FConfig write SetConfig;
     procedure ProcessAction(action: string; data: TJSONObject; username, uid : string);
     procedure ClientLogin(username, uid : string; callback : TIdIOHandlerSocket);
@@ -108,7 +107,8 @@ begin
     Authenticated;
 
   end;
-  BroadCast('{"action":"join","data":{"message":"' + username + ' has joined the game"}}');
+  BroadCast(Format('{"action":"join","data":{"message":"' + Config.ChatFormat.Join + '"}}',
+    [username]));
 end;
 
 procedure TServer.Connected(AContext: TIdContext);
@@ -256,14 +256,9 @@ begin
   if action = 'chat' then
   begin
     if data.Get('message') <> nil then
-      BroadCast('{"action":"chat","data":{"message":"' + username + ': '
-         + data.Get('message').JsonValue.Value + '"}}');
+      BroadCast(Format('{"action":"chat","data":{"message":"' + Config.ChatFormat.Chat + '"}}',
+        [username, data.Get('message').JsonValue.Value]));
   end;
-end;
-
-procedure TServer.RunCommand(CMD: TJSONObject);
-begin
-
 end;
 
 procedure TServer.SetConfig(const Value: TServerConfig);

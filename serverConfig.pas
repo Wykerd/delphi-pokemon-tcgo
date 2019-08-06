@@ -24,11 +24,13 @@ type
     FListing: TJSONObject;
     FPort: integer;
     FMaxPlayers: integer;
+    FAuthServer: TJSONObject;
     procedure SetChatFormat(const Value: TChatFormat);
     procedure SetListing(const Value: TJSONObject);
     procedure SetMaxPlayers(const Value: integer);
     procedure SetPort(const Value: integer);
     procedure SetWhitelist(const Value: boolean);
+    procedure SetAuthServer(const Value: TJSONObject);
   published
     constructor Create;
     property ChatFormat : TChatFormat read FChatFormat write SetChatFormat;
@@ -36,6 +38,7 @@ type
     property MaxPlayers : integer read FMaxPlayers write SetMaxPlayers;
     property Whitelist : boolean read FWhitelist write SetWhitelist;
     property Listing : TJSONObject read FListing write SetListing;
+    property AuthServer : TJSONObject read FAuthServer write SetAuthServer;
     procedure LoadFromFile (APath : string);
   end;
 
@@ -46,8 +49,8 @@ implementation
 constructor TServerConfig.Create;
 begin
   // Defaults
-  ChatFormat.Chat := '<%s> %s';
-  ChatFormat.Join := '%s joined the game';
+  ChatFormat.Chat := '%s: %s';
+  ChatFormat.Join := '%s has joined the game';
 
   Port := 8080;
   MaxPlayers := -1;
@@ -55,6 +58,9 @@ begin
   Listing := TJSONObject.Create;
   Listing.AddPair(TJSONPair.Create('motd', 'A Gaming Server'));
   Listing.AddPair(TJSONPair.Create('name', 'New Server'));
+  AuthServer := TJSONObject.Create;
+  AuthServer.AddPair(TJSONPair.Create('host', 'localhost'));
+  AuthServer.AddPair(TJSONPair.Create('port', '3000'));
 end;
 
 procedure TServerConfig.LoadFromFile(APath: string);
@@ -90,7 +96,8 @@ begin
       // Make sure required fields are found
       if (get('chat-format') = nil) or (get('join-format') = nil) or
         (get('port') = nil) or (get('max-players') = nil) or
-        (get('whitelist') = nil) or (get('listing') = nil) then
+        (get('whitelist') = nil) or (get('listing') = nil) or
+        (get('auth-server') = nil) then
         raise Exception.CreateFmt('The config at %s is missing required fields',
           [QuotedStr(APath)])
       else
@@ -111,10 +118,21 @@ begin
         // Make sure required fields are found
         if (tmp.Get('motd') = nil) or (tmp.Get('name') = nil) then
           Listing := tmp;
+
+        tmp := TJSONObject(get('auth-server').JsonValue);
+
+        // Make sure required fields are found
+        if (tmp.Get('host') = nil) or (tmp.Get('port') = nil) then
+          AuthServer := tmp;
       end;
     end;
     
   end;
+end;
+
+procedure TServerConfig.SetAuthServer(const Value: TJSONObject);
+begin
+  FAuthServer := Value;
 end;
 
 procedure TServerConfig.SetChatFormat(const Value: TChatFormat);
