@@ -41,8 +41,10 @@
     <File Path="UI\resources\uires.rc"/>
     <File Path="UI\clientUI.pas"/>
     <File Path="UI\gameUI.pas"/>
+    <File Path="UI\profileUI.pas"/>
     <File Path="UI\serversUI.pas"/>
     <File Path="UI\startUI.pas"/>
+    <File Path="UI\tradeUI.pas"/>
     <File Path="client.pas"/>
     <File Path="dbUnit.pas"/>
     <File Path="dbUnit.dfm"/>

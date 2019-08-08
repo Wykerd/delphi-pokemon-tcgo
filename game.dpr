@@ -14,7 +14,9 @@ uses
   gameUI in 'UI\gameUI.pas',
   serversUI in 'UI\serversUI.pas',
   UIButton in 'UI\components\UIButton.pas',
-  UIContainer in 'UI\components\UIContainer.pas';
+  UIContainer in 'UI\components\UIContainer.pas',
+  tradeUI in 'UI\tradeUI.pas',
+  profileUI in 'UI\profileUI.pas';
 
 {$R *.res}
 

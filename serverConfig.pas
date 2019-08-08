@@ -126,8 +126,9 @@ begin
           AuthServer := tmp;
       end;
     end;
-    
   end;
+
+  closefile(tF);
 end;
 
 procedure TServerConfig.SetAuthServer(const Value: TJSONObject);

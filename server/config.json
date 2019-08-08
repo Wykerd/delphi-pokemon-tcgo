@@ -1,6 +1,6 @@
 {
-  "chat-format": "<%s> %s",
-  "join-format": "%s joined the game",
+  "chat-format": "%s > %s",
+  "join-format": "%s has joined the game",
   "port": "8080",
   "max-players": "10",
   "whitelist": "false",

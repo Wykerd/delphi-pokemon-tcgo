@@ -63,6 +63,8 @@
 			<DCCReference Include="UI\serversUI.pas"/>
 			<DCCReference Include="UI\components\UIButton.pas"/>
 			<DCCReference Include="UI\components\UIContainer.pas"/>
+			<DCCReference Include="UI\tradeUI.pas"/>
+			<DCCReference Include="UI\profileUI.pas"/>
 			<RcCompile Include="UI\components\resources\uicomponentres.rc">
 				<ContainerId>RC</ContainerId>
 				<Form>uicomponentres.res</Form>

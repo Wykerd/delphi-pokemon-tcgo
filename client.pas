@@ -100,10 +100,15 @@ begin
       begin
         if data.Get('success').JsonValue.Value = 'true' then
         begin
-          println('auth', 'Successfully authenticated');
-          // get the latest server info to update the cache
-          IOHandler.WriteLn('{"action":"info","auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
-          Authenticated := true;
+          if data.Get('sid') <> nil then
+          begin
+            println('auth', 'Successfully authenticated');
+            // Add the session to the auth credentials!
+            TJSONObject(Credentials.JsonValue).AddPair(data.Get('sid'));
+            // get the latest server info to update the cache
+            IOHandler.WriteLn('{"action":"info","auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
+            Authenticated := true;
+          end;
         end
         else
           println('auth', 'Could not authenticate');
@@ -162,6 +167,8 @@ begin
       readln(tF, tmp);
       data := data + tmp;
     end;
+
+
     closefile(tf);
 
     // Parse the JSON

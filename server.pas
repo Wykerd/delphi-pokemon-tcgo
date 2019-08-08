@@ -6,13 +6,13 @@ uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdCustomTCPServer, IdTCPServer, IdContext,
   ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, DBXJSON,
-  IdIOHandlerSocket, StrUtils, Windows, serverConfig;
+  IdIOHandlerSocket, StrUtils, Windows, serverConfig, serverSessions;
 
 type
   TServer = class(TIdTCPServer)
   private
     FDebug: TRichEdit;
-    FSessions : array of string;
+    FSessions : TSessionsArr;
     FConfig: TServerConfig;
     procedure Execute(AContext: TIdContext);
     procedure Connected(AContext: TIdContext);
@@ -59,14 +59,35 @@ procedure TServer.ClientLogin(username, uid: string; callback : TIdIOHandlerSock
 var
   // Dummy varable
   i : byte;
-  procedure Authenticated;
+
+  procedure Authenticate;
+  var
+    sid: TGuid;
+    res: HResult;
   begin
     setlength(FSessions, length(FSessions) + 1);
-    FSessions[High(FSessions)] := uid;
-    callback.WriteLn('{"action":"authenticate","data":{"success":"true"}}');
+
+    FSessions[High(FSessions)] := TClientSession.Create;
+
+    res := CreateGUID(sid);
+    if res = S_OK then
+       FSessions[High(FSessions)].sessionid := GuidToString(sid)
+    else
+    begin
+      // On error
+      callback.WriteLn('{"action":"authenticate","data":{"success":"false"}}');
+      exit;
+    end;
+
+    FSessions[High(FSessions)].uid := uid;
+    FSessions[High(FSessions)].username := username;
+
+    callback.WriteLn('{"action":"authenticate","data":{"success":"true","sid":"'
+      + FSessions[High(FSessions)].sessionid + '"}}');
   end;
+
 begin
-  if MatchStr(uid, FSessions) then
+  if GetUserFromUID(uid, FSessions) > -1 then
   begin
     println('login', 'Another user with that ID is already authenticated!');
     callback.WriteLn('{"action":"authenticate","data":{"success":"false"}}');
@@ -76,7 +97,7 @@ begin
   begin
     // user found
     println('login', 'User found and logged in');
-    Authenticated;
+    Authenticate;
     // check that username is up to date on server side
     with dmDB do
     begin
@@ -89,7 +110,7 @@ begin
         tblUsers['UserName'] := username;
         tblUsers.Post;
         println('login', 'Username did not match server and is now updated');
-        Authenticated;
+        Authenticate;
       end;
     end;
   end
@@ -104,7 +125,7 @@ begin
       tblUsers.Post;
     end;
     println('login', 'User created!');
-    Authenticated;
+    Authenticate;
 
   end;
   BroadCast(Format('{"action":"join","data":{"message":"' + Config.ChatFormat.Join + '"}}',
@@ -138,10 +159,13 @@ var
   req: string;
   JSON, Auth : TJSONObject;
   action : string;
-  sUsername, sUID : string;
+  sUsername, sUID, sSID : string;
+  bAUTH : boolean;
 begin
   req := AContext.Connection.Socket.ReadLn;
   println('incoming', req);
+
+  sSID := '';
 
   // Check to see if it is valid json
   JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(req),0));
@@ -167,6 +191,8 @@ begin
       '"data":{"details":"401 Unauthorized, request has no uid"}}');
       exit;
     end;
+
+    if Auth.Get('sid') <> nil then sSID := Auth.Get('sid').JsonValue.Value;
 
     sUID := Auth.Get('uid').JsonValue.Value;
 
@@ -199,6 +225,26 @@ begin
       exit;
     end;
 
+    bAUTH := true;
+
+    // IS THE SID AND UID MATCHING?
+    if (GetUserFromUID(sUID, FSessions) < 0) OR
+      (GetUserFromSID(sSID, FSessions) < 0) then bAUTH := false;
+
+    if (GetUserFromUID(sUID, FSessions) > -1) then
+    begin
+      if (GetUserFromSID(sSID, FSessions) > -1) then
+      begin
+        if FSessions[GetUserFromUID(sUID, FSessions)].SessionID <> sSID then
+        begin
+          bAUTH := false;
+        end;
+
+      end;
+    end;
+
+
+
     if JSON.Get('action') <> nil then
     begin
       action := JSON.get('action').JsonValue.Value;
@@ -214,7 +260,7 @@ begin
         AContext.Connection.Socket.WriteLn('{"action":"info","data":' + Config.Listing.ToString + '}');
       end
       // If not in current game actions can't be executed by server
-      else if not MatchStr(sUID, FSessions) then
+      else if not bAUTH then
       begin
         println('client', 'An unauthorized user made an request to the server');
         // Directly write json string to limit memory and code lines

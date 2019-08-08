@@ -8,6 +8,7 @@ Design and develop a card game for multiple players to play at the same time (mu
 - At least one other data structure should be used along with the database. 
 
 # Solution
+For this project, it was desided that a trading card game would best meet the requirements of the project and the game Pokemon TCG was chosen as the game that will be made.
 To allow for multiplayer gameplay the program should allow users to create their own servers.
 Thus the project and final project will consist of two parts, the server and client.
 

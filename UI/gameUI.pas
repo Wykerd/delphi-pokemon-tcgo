@@ -37,6 +37,7 @@ begin
   ChatMemo := TMemo.Create(self);
   ChatMemo.Align := alBottom;
   ChatMemo.Parent := self;
+  ChatMemo.ReadOnly := true;
 end;
 
 procedure TGameUI.IncomingChat(s: string);
