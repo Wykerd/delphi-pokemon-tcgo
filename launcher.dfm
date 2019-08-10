@@ -36,6 +36,7 @@ object frmLauncher: TfrmLauncher
     Caption = 'Start Game Client'
     TabOrder = 1
     OnClick = btnJoinClick
+    ExplicitTop = 69
   end
   object redDebug: TRichEdit
     Left = 0
@@ -77,7 +78,6 @@ object frmLauncher: TfrmLauncher
     Align = alTop
     ParentBackground = False
     TabOrder = 4
-    ExplicitTop = 144
     object lblUser: TLabel
       Left = 16
       Top = 16

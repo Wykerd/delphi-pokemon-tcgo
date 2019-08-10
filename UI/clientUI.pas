@@ -45,7 +45,6 @@ begin
   ServersUI := TServersUI.Create(self);
   ServersUI.Parent := self;
   ServersUI.Visible := false;
-  ServersUI.LoadFromFile('client\server-list.json');
 
   DoubleBuffered := true;
   Caption := 'Client';

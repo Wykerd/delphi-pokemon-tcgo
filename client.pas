@@ -17,6 +17,7 @@ type
     FCredentials: TJSONPair;
     FUI: TClientUI;
     FServersLock: string;
+    FServerIndex: integer;
     procedure SetDebug(const Value: TRichEdit);
     procedure Run (Sender: TIdThreadComponent);
     // for main thread prints
@@ -30,18 +31,22 @@ type
     procedure SetCredentials(const Value: TJSONPair);
     procedure SetUI(const Value: TClientUI);
     procedure SetServersLock(const Value: string);
+    procedure SetServerIndex(const Value: integer);
   published
     constructor Create (AOwner: TComponent);
-    procedure Start (Host: string; Port: integer);
+    procedure Start (Host: string; Port: integer; ServerIndex: integer = -1);
     property Debug : TRichEdit read FDebug write SetDebug;
     procedure Authenticate;
     property AuthLock : string read FAuthLock write SetAuthLock;
     property ServersLock : string read FServersLock write SetServersLock;
     property Authenticated : boolean read FAuthenticated write SetAuthenticated;
     property Credentials : TJSONPair read FCredentials write SetCredentials;
-    procedure ExecuteAction (JSON : TJSONObject);
     property UI : TClientUI read FUI write SetUI;
+    property ServerIndex: integer read FServerIndex write SetServerIndex;
     procedure SendChat (s: string);
+    // Actions
+    procedure UpdateServerListings (Index: integer; Motd: string; Name: string; CustomName: string = '');
+    procedure ExecuteAction (JSON : TJSONObject);
   public
     class function GetCredentials (AuthPath : string)  : TJSONObject;
     class procedure CreateCredentials(sUsername, AuthLock : string); overload;
@@ -105,10 +110,12 @@ begin
             println('auth', 'Successfully authenticated');
             // Add the session to the auth credentials!
             TJSONObject(Credentials.JsonValue).AddPair(data.Get('sid'));
-            // get the latest server info to update the cache
+            // request the latest server info to update the cache
             IOHandler.WriteLn('{"action":"info","auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
             Authenticated := true;
-          end;
+          end
+          else
+            println('auth', 'Authentication payload does not contain the field "sid"');
         end
         else
           println('auth', 'Could not authenticate');
@@ -123,9 +130,14 @@ begin
       end;
     end;
 
+    // Update local server listing cache
     if action = 'info' then
     begin
-
+      if not ((data.Get('motd') = nil) or (data.Get('name') = nil)) then
+      begin
+        if ServerIndex > -1 then
+          UpdateServerListings(ServerIndex, data.Get('motd').JsonValue.Value, data.Get('name').JsonValue.Value);
+      end;
     end;
 
     // End actions //
@@ -249,6 +261,7 @@ begin
   OnConnected := Connected;
   AuthLock := GetCurrentDir + '\client\auth.json';
   ServersLock := GetCurrentDir + '\client\server-list.json';
+  ServerIndex := -1;
   Authenticated := false;
   Credentials := nil;
   UI := TClientUI.CreateNew(Self, 0);
@@ -384,6 +397,11 @@ begin
   FDebug := Value;
 end;
 
+procedure TClient.SetServerIndex(const Value: integer);
+begin
+  FServerIndex := Value;
+end;
+
 procedure TClient.SetServersLock(const Value: string);
 begin
   FServersLock := Value;
@@ -394,10 +412,11 @@ begin
   FUI := Value;
 end;
 
-procedure TClient.Start(Host: string; Port: integer);
+procedure TClient.Start(Host: string; Port: integer; ServerIndex: integer = -1);
 begin
   Self.Host := Host;
   Self.Port := Port;
+  Self.ServerIndex := ServerIndex;
   Connect;
   Authenticate;
 end;
@@ -411,6 +430,71 @@ begin
     begin
       Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
     end);
+end;
+
+// TODO : Add way to fix invalid json (adding properties if they dont exist rather than exiting method)
+procedure TClient.UpdateServerListings(Index: integer; Motd, Name,
+  CustomName: string);
+var
+  tF : textfile;
+  JSON, JSONListing, JSONServerListing : TJSONObject;
+  ARR : TJSONArray;
+  tmp, data : string;
+begin
+  AssignFile(tf, ServersLock);
+
+  try
+
+    reset(tf);
+  finally
+    while not eof(tf) do
+    begin
+      Readln(tf, tmp);
+      data := data + tmp;
+    end;
+
+    JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(StripNonJson(data)), 0));
+
+    if JSON <> nil then
+    begin
+      if JSON.Get('servers') <> nil then
+      begin
+        ARR := TJSONArray(JSON.Get('servers').JsonValue);
+        JSONListing := TJSONObject(ARR.Get(Index));
+
+        if JSONListing.Get('name') <> nil then
+        begin
+
+          if JSONListing.Get('listing') <> nil then
+          begin
+            JSONServerListing := TJSONObject(JSONListing.Get('listing').JsonValue);
+
+            if not ((JSONServerListing.Get('name') = nil) or (JSONServerListing.Get('motd') = nil)) then
+            begin
+              JSONServerListing.Get('name').JsonValue := TJSONString.Create(Name);
+              JSONServerListing.Get('motd').JsonValue := TJSONString.Create(Motd);
+
+              // if everything succeeds the file should be updated
+
+              rewrite(tf);
+              Writeln(tf, JSON.ToString);
+              println('file', 'Updated ' + ServersLock);
+
+            end;
+
+          end;
+
+        end;
+
+      end;
+
+    end;
+
+  end;
+
+  closefile(tF);
+
+  //JSON.Free;
 end;
 
 end.

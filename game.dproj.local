@@ -29,6 +29,7 @@
     <Transaction>2019/08/01 21:44:43.708.rc,E:\IT_PAT_2019_\UI\components\resources\uicomponentresources.rc=</Transaction>
     <Transaction>2019/08/01 22:04:54.172.bmp,E:\IT_PAT_2019_\UI\resources\blank.bmp=</Transaction>
     <Transaction>2019/08/02 20:24:17.478.pas,E:\IT_PAT_2019_\UI\components\UIServerListing.pas=</Transaction>
+    <Transaction>2019/08/08 18:48:00.642.pas,F:\IT_PAT_2019_\Unit1.pas=F:\IT_PAT_2019_\serverSessions.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="UI"/>
@@ -55,5 +56,6 @@
     <File Path="userWizard.pas"/>
     <File Path="userWizard.dfm"/>
     <File Path="serverConfig.pas"/>
+    <File Path="serverSessions.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

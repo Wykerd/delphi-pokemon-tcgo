@@ -64,6 +64,8 @@ begin
   end;
   Client := TClient.Create(Self);
   Client.Debug := redClient;
+  Client.ServersLock := 'client\server-list.json';
+  Client.UI.ServersUI.LoadFromFile(Client.ServersLock);
   Client.UI.Show;
 end;
 

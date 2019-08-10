@@ -7,7 +7,7 @@ uses
   Forms, DBXJSON, UIContainer, helpers, SysUtils;
 
 type
-  TClientStart = procedure (Host : string; Port : integer) of object;
+  TClientStart = procedure (Host : string; Port : integer; ServerIndex: integer = -1) of object;
 
   TServerListing = class (TPanel)
   private
@@ -16,6 +16,7 @@ type
     FPort: integer;
     FMotd: string;
     FHost: string;
+    FArrayIndex: integer;
     procedure SetHost(const Value: string);
     procedure SetLName(const Value: string);
     procedure SetMotd(const Value: string);
@@ -23,6 +24,7 @@ type
     procedure SetPort(const Value: integer);
     procedure HandleMouseEnter (Sender: TObject);
     procedure HandleMouseLeave (Sender: TObject);
+    procedure SetArrayIndex(const Value: integer);
   published
     constructor CreateWithState (AOwner : TComponent; sName, sLName,
       sMotd, sHost : string; iPort : integer);
@@ -32,6 +34,7 @@ type
     property Port: integer read FPort write SetPort;
     property LName: string read FLName write SetLName;
     property Motd: string read FMotd write SetMotd;
+    property ArrayIndex: integer read FArrayIndex write SetArrayIndex;
   end;
 
   TServersUI = class (TUIContainer)
@@ -98,7 +101,7 @@ var
   listing : TServerListing;
 begin
   listing := TServerListing(Sender);
-  StartTrigger(listing.Host, listing.Port);
+  StartTrigger(listing.Host, listing.Port, listing.ArrayIndex);
   OnStartClient(self);
 end;
 
@@ -191,6 +194,7 @@ begin
       Parent := ListingsContainer;
       Top := i * 10;
       OnClick := HandleServerClick;
+      ArrayIndex := i;
     end;
   end;
 end;
@@ -269,6 +273,11 @@ begin
   finally
     Bitmap.Free;
   end;
+end;
+
+procedure TServerListing.SetArrayIndex(const Value: integer);
+begin
+  FArrayIndex := Value;
 end;
 
 procedure TServerListing.SetHost(const Value: string);

@@ -65,7 +65,7 @@ end;
 
 procedure TServerConfig.LoadFromFile(APath: string);
 var
-  json, tmp: TJSONObject;
+  json, jsonlisting, jsonauth: TJSONObject;
   tF : textfile;
   dat, s : string;
 begin
@@ -113,17 +113,17 @@ begin
         else
           Whitelist := false;
 
-        tmp := TJSONObject(get('listing').JsonValue);
+        jsonlisting := TJSONObject(get('listing').JsonValue);
 
         // Make sure required fields are found
-        if (tmp.Get('motd') = nil) or (tmp.Get('name') = nil) then
-          Listing := tmp;
+        if not ((jsonlisting.Get('motd') = nil) or (jsonlisting.Get('name') = nil)) then
+          Listing := jsonlisting;
 
-        tmp := TJSONObject(get('auth-server').JsonValue);
+        jsonauth := TJSONObject(get('auth-server').JsonValue);
 
         // Make sure required fields are found
-        if (tmp.Get('host') = nil) or (tmp.Get('port') = nil) then
-          AuthServer := tmp;
+        if not ((jsonauth.Get('host') = nil) or (jsonauth.Get('port') = nil)) then
+          AuthServer := jsonauth;
       end;
     end;
   end;

@@ -1,11 +1,11 @@
 {
   "chat-format": "%s > %s",
-  "join-format": "%s has joined the game",
+  "join-format": "%s joined the game",
   "port": "8080",
   "max-players": "10",
   "whitelist": "false",
   "listing": {
-    "motd": "Epic Gamer Server",
+    "motd": "Just another Pokemon TCG server",
     "name": "Wykerd's Server"
   },
   "auth-server": {
