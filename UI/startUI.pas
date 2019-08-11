@@ -3,13 +3,16 @@ unit startUI;
 interface
 
 uses
-  UIContainer, Controls, Classes, ExtCtrls, UIButton, Dialogs, Types, Math;
+  UIContainer, Controls, Classes, ExtCtrls, UIButton, Dialogs, Types, Math,
+  GIFImg;
 
 type
   TStartUI = class (TUIContainer)
   private
     FBackground: TImage;
     ServersButton : TUIButton;
+    SettingsButton : TUIButton;
+    TradesButton : TUIButton;
     FOnServersClick: TNotifyEvent;
     procedure SetBackground(const Value: TImage);
     procedure HandleResize (Sender : TObject);
@@ -25,13 +28,29 @@ implementation
 { TStartUI }
 
 constructor TStartUI.Create(AOwner: TComponent);
+var
+  rs : TResourceStream;
+  gif : TGIFImage;
 begin
   inherited;
   Caption := 'Start UI';
   Background := TImage.Create(self);
   Background.Stretch := true;
   Background.Parent := self;
-  Background.Picture.Bitmap.LoadFromResourceName(HInstance, 'BlankResource');
+  // Load the background image from resource
+  gif := TGIFImage.Create;
+  try
+    RS := TResourceStream.Create(hInstance, 'StartBackground', RT_RCDATA);
+    try
+      gif.LoadFromStream(RS);
+      gif.Animate := true;
+      Background.Picture.Graphic := gif;
+    finally
+      RS.Free;
+    end;
+  finally
+    gif.Free;
+  end;
 
   ServersButton := TUIButton.Create(self);
   ServersButton.Parent := self;
@@ -39,7 +58,20 @@ begin
   ServersButton.Align := alTop;
   ServersButton.AlignWithMargins := true;
   ServersButton.Top := 100;
-  ServersButton.Margins.Bottom := 20;
+  ServersButton.Margins.Bottom := 0;
+
+  TradesButton := TUIButton.Create(self);
+  TradesButton.Parent := self;
+  TradesButton.Text := 'Trade';
+  TradesButton.Align := alTop;
+  TradesButton.AlignWithMargins := true;
+  TradesButton.Top := 150;
+  TradesButton.TextOffset := 8;
+
+  SettingsButton := TUIButton.Create(self);
+  SettingsButton.Parent := self;
+  SettingsButton.Text := 'S';
+  SettingsButton.TextOffset := 2.65;
 
   OnResize := HandleResize;
 end;
@@ -47,10 +79,19 @@ end;
 procedure TStartUI.HandleResize(Sender: TObject);
 begin
   ServersButton.Height := floor(clientheight / 5);
-  ServersButton.FontSize := floor(clientheight / 15);
-  ServersButton.Margins.Top := floor((clientheight / 2) - ServersButton.Height);
-  ServersButton.Margins.Left := floor(ClientWidth / 10);
-  ServersButton.Margins.Right := floor(ClientWidth / 10);
+  ServersButton.Margins.Top := floor((clientheight / 2) - ServersButton.Height - (ServersButton.Height / 7));
+  ServersButton.Margins.Left := floor(ClientWidth / 2.25);
+  ServersButton.Margins.Right := floor(ClientWidth / 15);
+
+  TradesButton.Height := floor(clientheight / 5);
+  TradesButton.Margins.Top := floor(ServersButton.Height / 7);
+  TradesButton.Margins.Right := floor((ClientWidth / 15) + (ServersButton.Height / 7) + TradesButton.Height);
+  TradesButton.Margins.Left := floor(ClientWidth / 2.25);
+
+  SettingsButton.Height := TradesButton.Height;
+  SettingsButton.Width := SettingsButton.Height;
+  SettingsButton.Top := TradesButton.Top;
+  SettingsButton.Left := ServersButton.Left + ServersButton.Width - SettingsButton.Width;
 
   Background.Height := self.ClientHeight;
   Background.Width := self.ClientWidth;

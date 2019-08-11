@@ -10,15 +10,19 @@ type
   private
     FText: string;
     FFontSize: integer;
+    FTextOffset: real;
     procedure MouseEnter (Sender: TObject);
     procedure MouseLeave (Sender: TObject);
     procedure SetText(const Value: string);
     procedure SetFontSize(const Value: integer);
+    procedure HandleResize (Sender : TObject);
+    procedure SetTextOffset(const Value: real);
   published
     constructor Create (AOwner : TComponent); override;
     procedure Paint; override;
     property Text : string read FText write SetText;
     property FontSize : integer read FFontSize write SetFontSize;
+    property TextOffset : real read FTextOffset write SetTextOffset;
   end;
 
 implementation
@@ -26,8 +30,6 @@ implementation
 { TUIButton }
 
 constructor TUIButton.Create(AOwner: TComponent);
-var
-  Bitmap : TBitmap;
 begin
   inherited;
 
@@ -39,54 +41,97 @@ begin
 
   Canvas.Brush.Style := bsClear;
   Canvas.Font.Size := 15;
-  Canvas.Font.Name := 'Lucida Console';
+  Canvas.Font.Name := 'Early GameBoy';
+
+  AlignWithMargins := true;
+
+  OnResize := HandleResize;
+
+  DoubleBuffered := true;
+
+  TextOffset := 10;
+end;
+
+procedure TUIButton.HandleResize(Sender: TObject);
+begin
+  FontSize := floor(clientheight / 4.25);
 end;
 
 procedure TUIButton.MouseEnter(Sender: TObject);
 var
-  Bitmap : TBitmap;
+  Bitmap, BmpLeft, BmpRight : TBitmap;
 begin
   Bitmap := TBitmap.Create;
+  BmpLeft := TBitmap.Create;
+  BmpRight := TBitmap.Create;
   try
-    Bitmap.LoadFromResourceName(HInstance, 'BlankResource');
+    Bitmap.LoadFromResourceName(HInstance, 'UIButtonBackHov');
+
+    // The edges can't stretch so have to be rendered seperately
+    BmpLeft.LoadFromResourceName(HInstance, 'UIButtonLEHov');
+    BmpRight.LoadFromResourceName(HInstance, 'UIButtonREHov');
+
+    // Render to the canvas
     Canvas.StretchDraw(Self.ClientRect, Bitmap);
-    Canvas.Font.Color := rgb(222, 77, 64);
-    Canvas.TextOut(floor(width / 10), floor((height - (Canvas.Font.Size * 1.2))/2), Text);
+
+    Canvas.StretchDraw(Rect(
+      0, 0,
+      Bmpleft.Width * (ceil(Self.ClientRect.bottom / BmpLeft.height)),
+      Self.ClientRect.Bottom), bmpLeft);
+
+    Canvas.StretchDraw(Rect(
+      Self.ClientRect.Right - (bmpRight.Width * (ceil(Self.ClientRect.bottom / bmpRight.height))),
+      0, Self.ClientRect.Right, Self.ClientRect.Bottom), bmpRight);
+
+    Canvas.Font.Color := rgb(8, 65, 82);
+    Canvas.TextOut(floor(width / textoffset), floor((height - (Canvas.Font.Size * 1.55))/2), Text);
   finally
     Bitmap.Free;
+    BmpLeft.Free;
+    BmpRight.Free;
   end;
 end;
 
 procedure TUIButton.MouseLeave(Sender: TObject);
 var
-  Bitmap : TBitmap;
+  Bitmap, BmpLeft, BmpRight : TBitmap;
 begin
   Bitmap := TBitmap.Create;
+  BmpLeft := TBitmap.Create;
+  BmpRight := TBitmap.Create;
   try
-    Bitmap.LoadFromResourceName(HInstance, 'BlankResource');
+    Bitmap.LoadFromResourceName(HInstance, 'UIButtonBack');
+
+    // The edges can't stretch so have to be rendered seperately
+    BmpLeft.LoadFromResourceName(HInstance, 'UIButtonLE');
+    BmpRight.LoadFromResourceName(HInstance, 'UIButtonRE');
+
+    // Render to the canvas
     Canvas.StretchDraw(Self.ClientRect, Bitmap);
-    Canvas.Font.Color := clBlack;
-    Canvas.TextOut(floor(width / 10), floor((height - (Canvas.Font.Size * 1.2))/2), Text);
+
+    Canvas.StretchDraw(Rect(
+      0, 0,
+      Bmpleft.Width * (ceil(Self.ClientRect.bottom / BmpLeft.height)),
+      Self.ClientRect.Bottom), bmpLeft);
+
+    Canvas.StretchDraw(Rect(
+      Self.ClientRect.Right - (bmpRight.Width * (ceil(Self.ClientRect.bottom / bmpRight.height))),
+      0, Self.ClientRect.Right, Self.ClientRect.Bottom), bmpRight);
+
+    Canvas.Font.Color := rgb(8, 65, 82);
+    Canvas.TextOut(floor(width / textoffset), floor((height - (Canvas.Font.Size * 1.9))/2), Text);
   finally
     Bitmap.Free;
+    BmpLeft.Free;
+    BmpRight.Free;
   end;
 end;
 
 procedure TUIButton.Paint;
-var
-  Bitmap : TBitmap;
 begin
   inherited;
 
-  Bitmap := TBitmap.Create;
-  try
-    Bitmap.LoadFromResourceName(HInstance, 'BlankResource');
-    Canvas.StretchDraw(Self.ClientRect, Bitmap);
-    Canvas.Font.Color := clBlack;
-    Canvas.TextOut(floor(width / 10), floor((height - (Canvas.Font.Size * 1.2))/2), Text);
-  finally
-    Bitmap.Free;
-  end;
+  MouseLeave(nil);
 end;
 
 procedure TUIButton.SetFontSize(const Value: integer);
@@ -98,6 +143,11 @@ end;
 procedure TUIButton.SetText(const Value: string);
 begin
   FText := Value;
+end;
+
+procedure TUIButton.SetTextOffset(const Value: real);
+begin
+  FTextOffset := Value;
 end;
 
 end.

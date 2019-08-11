@@ -103,7 +103,17 @@ begin
 end;
 
 procedure TfrmLauncher.FormCreate(Sender: TObject);
+var
+  ResStream : TResourceStream;
+  FontsCount : DWORD;
 begin
+  ResStream := TResourceStream.Create(hInstance, 'UIFont', RT_RCDATA);
+  try
+    AddFontMemResourceEx(ResStream.Memory, ResStream.Size, nil, @FontsCount);
+  finally
+    ResStream.Free;
+  end;
+
   LoadCredentials;
 end;
 
