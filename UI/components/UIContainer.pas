@@ -22,6 +22,7 @@ begin
   Align := alClient;
   BevelEdges := [];
   BevelOuter := bvNone;
+  ParentBackground := false;
 end;
 
 end.

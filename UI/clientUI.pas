@@ -45,6 +45,7 @@ begin
   ServersUI := TServersUI.Create(self);
   ServersUI.Parent := self;
   ServersUI.Visible := false;
+  ServersUI.OnBackClick := HandleShowStart;
 
   DoubleBuffered := true;
   Caption := 'Client';

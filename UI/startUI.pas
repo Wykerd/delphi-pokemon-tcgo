@@ -2,6 +2,10 @@ unit startUI;
 
 interface
 
+// Color pallettes from
+// http://pokepalettes.com
+// This page uses charizard
+
 uses
   UIContainer, Controls, Classes, ExtCtrls, UIButton, Dialogs, Types, Math,
   GIFImg, Graphics, UIImgButton;

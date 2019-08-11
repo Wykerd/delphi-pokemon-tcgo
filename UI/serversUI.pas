@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, ExtCtrls, Classes, StdCtrls, Controls, Graphics, Dialogs, Math,
-  Forms, DBXJSON, UIContainer, helpers, SysUtils;
+  Forms, DBXJSON, UIContainer, helpers, SysUtils, UIButton, UIImgButton;
 
 type
   TClientStart = procedure (Host : string; Port : integer; ServerIndex: integer = -1) of object;
@@ -37,23 +37,44 @@ type
     property ArrayIndex: integer read FArrayIndex write SetArrayIndex;
   end;
 
+  TAddServerUI = class (TUIContainer)
+
+  end;
+
   TServersUI = class (TUIContainer)
   private
     FServers: TJSONArray;
     Listings : array of TServerListing;
     FStartTrigger: TClientStart;
     FOnStartClient: TNotifyEvent;
+    // Buttons
+    AddServer : TUIButton;
+    BackButton : TUIImgButton;
+    DirectButton : TUIButton;
+    FServersPath: string;
+    //
+
+    // Dialogs
+    AddServerUI : TAddServerUI;
+    FOnBackClick: TNotifyEvent;
+    //
+
     procedure SetServers(const Value: TJSONArray);
     procedure HandleResize (Sender : TObject);
     procedure SetStartTrigger(const Value: TClientStart);
     procedure HandleServerClick (Sender : TObject);
     procedure SetOnStartClient(const Value: TNotifyEvent);
+    procedure SetServersPath(const Value: string);
+    procedure HandleAddClick (Sender: TObject);
+    procedure SetOnBackClick(const Value: TNotifyEvent);
   published
     constructor Create (AOwner: TComponent); override;
     procedure LoadFromFile(s : string);
     property Servers : TJSONArray read FServers write SetServers;
     property StartTrigger : TClientStart read FStartTrigger write SetStartTrigger;
     property OnStartClient : TNotifyEvent read FOnStartClient write SetOnStartClient;
+    property OnBackClick : TNotifyEvent read FOnBackClick write SetOnBackClick;
+    property ServersPath : string read FServersPath write SetServersPath;
   public
     ListingsContainer : TScrollbox;
   end;
@@ -71,29 +92,75 @@ begin
   with ListingsContainer do
   begin
     Align := alClient;
+    AlignWithMargins := true;
+    Margins.Left := 0;
+    Margins.Right := 0;
     BevelEdges := [];
     BorderStyle := bsNone;
     Parent := self;
+    Color := rgb(238, 180, 90);
   end;
 
+  Color := rgb(24, 139, 180);
+
+  AddServer := TUIButton.Create(self);
+  AddServer.Parent := self;
+  AddServer.Text := 'Add Server';
+  AddServer.OnClick := HandleAddClick;
+
+  DirectButton := TUIButton.Create(self);
+  DirectButton.Parent := self;
+  DirectButton.Text := 'Direct Connect';
+
+  AddServerUI := TAddServerUI.Create(self);
+  AddServerUI.Parent := self;
+  AddServerUI.Visible := false;
+
+  BackButton := TUIImgButton.Create(self);
+  BackButton.Parent := self;
+  BackButton.IconName := 'BackIcon';
+
   OnResize := HandleResize;
+end;
+
+procedure TServersUI.HandleAddClick(Sender: TObject);
+begin
+  AddServerUI.Visible := true;
+  AddServerUI.BringToFront;
 end;
 
 procedure TServersUI.HandleResize(Sender: TObject);
 var
   i : integer;
 begin
-
   for I := 0 to Length(Listings) - 1 do
   begin
     with Listings[i] do
     begin
-      Margins.Top := 20;
-      Margins.Left := floor(ClientWidth / 10);
-      Margins.Right := floor(ClientWidth / 10);
-      Height := floor(self.clientheight / 5);
+      Margins.Top := ceil(self.clientheight / 30);
+      Margins.Left := floor(self.ClientWidth / 8);
+      Margins.Right := floor(self.ClientWidth / 8);
+      Height := floor(self.clientheight / 8);
     end;
   end;
+
+  ListingsContainer.Margins.Top := floor(ClientHeight / 10);
+  ListingsContainer.Margins.Bottom := floor(ClientHeight / 5);
+
+  BackButton.Height := floor(ClientHeight / 10);
+  BackButton.Top := floor(ClientHeight - (ClientHeight / 10) - (BackButton.Height / 2));
+  BackButton.Left := floor(ClientWidth / 8);
+  BackButton.Width := BackButton.Height;
+
+  AddServer.Height := floor(ClientHeight / 10);
+  AddServer.Top := floor(ClientHeight - (ClientHeight / 10) - (AddServer.Height / 2));
+  AddServer.Left := BackButton.Left + BackButton.Width + floor(BackButton.Height / 7);
+  AddServer.Width := floor((ClientWidth / 2) - (ClientWidth / 8) - (AddServer.Height / 7) - (BackButton.Width / 2));
+
+  DirectButton.Left := AddServer.Width + AddServer.Left + floor(AddServer.Height / 7);
+  DirectButton.Height := floor(ClientHeight / 10);
+  DirectButton.Top := floor(ClientHeight - (ClientHeight / 10) - (DirectButton.Height / 2));
+  DirectButton.Width := AddServer.Width;
 end;
 
 procedure TServersUI.HandleServerClick(Sender: TObject);
@@ -112,6 +179,8 @@ var
   JSON : TJSONObject;
   JSONArr : TJSONArray;
 begin
+  ServersPath := s;
+
   AssignFile(tF, s);
 
   try
@@ -144,6 +213,12 @@ begin
   end;
 
   closefile(tF);
+end;
+
+procedure TServersUI.SetOnBackClick(const Value: TNotifyEvent);
+begin
+  FOnBackClick := Value;
+  BackButton.OnClick := Value;
 end;
 
 procedure TServersUI.SetOnStartClient(const Value: TNotifyEvent);
@@ -197,6 +272,11 @@ begin
       ArrayIndex := i;
     end;
   end;
+end;
+
+procedure TServersUI.SetServersPath(const Value: string);
+begin
+  FServersPath := Value;
 end;
 
 procedure TServersUI.SetStartTrigger(const Value: TClientStart);
