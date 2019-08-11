@@ -4,14 +4,14 @@ interface
 
 uses
   UIContainer, Controls, Classes, ExtCtrls, UIButton, Dialogs, Types, Math,
-  GIFImg;
+  GIFImg, Graphics, UIImgButton;
 
 type
   TStartUI = class (TUIContainer)
   private
     FBackground: TImage;
     ServersButton : TUIButton;
-    SettingsButton : TUIButton;
+    SettingsButton : TUIImgButton;
     TradesButton : TUIButton;
     FOnServersClick: TNotifyEvent;
     procedure SetBackground(const Value: TImage);
@@ -68,10 +68,9 @@ begin
   TradesButton.Top := 150;
   TradesButton.TextOffset := 8;
 
-  SettingsButton := TUIButton.Create(self);
+  SettingsButton := TUIImgButton.Create(self);
+  SettingsButton.IconName := 'SettingsIcon';
   SettingsButton.Parent := self;
-  SettingsButton.Text := 'S';
-  SettingsButton.TextOffset := 2.65;
 
   OnResize := HandleResize;
 end;

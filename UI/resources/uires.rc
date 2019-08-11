@@ -1,2 +1,3 @@
 BlankResource BITMAP "blank.bmp"
 StartBackground RCDATA "start-background.gif"
+SettingsIcon BITMAP "SettingsIcon.bmp"

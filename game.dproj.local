@@ -38,6 +38,7 @@
     <File Path="UI\components\resources\uicomponentres.rc"/>
     <File Path="UI\components\UIButton.pas"/>
     <File Path="UI\components\UIContainer.pas"/>
+    <File Path="UI\components\UIImgButton.pas"/>
     <File Path="UI\resources"/>
     <File Path="UI\resources\uires.rc"/>
     <File Path="UI\clientUI.pas"/>

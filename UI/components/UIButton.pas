@@ -11,8 +11,6 @@ type
     FText: string;
     FFontSize: integer;
     FTextOffset: real;
-    procedure MouseEnter (Sender: TObject);
-    procedure MouseLeave (Sender: TObject);
     procedure SetText(const Value: string);
     procedure SetFontSize(const Value: integer);
     procedure HandleResize (Sender : TObject);
@@ -23,6 +21,8 @@ type
     property Text : string read FText write SetText;
     property FontSize : integer read FFontSize write SetFontSize;
     property TextOffset : real read FTextOffset write SetTextOffset;
+    procedure MouseEnter (Sender: TObject); virtual;
+    procedure MouseLeave (Sender: TObject); virtual;
   end;
 
 implementation

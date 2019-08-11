@@ -17,7 +17,8 @@ uses
   UIContainer in 'UI\components\UIContainer.pas',
   tradeUI in 'UI\tradeUI.pas',
   profileUI in 'UI\profileUI.pas',
-  serverSessions in 'serverSessions.pas';
+  serverSessions in 'serverSessions.pas',
+  UIImgButton in 'UI\components\UIImgButton.pas';
 
 {$R *.res}
 
