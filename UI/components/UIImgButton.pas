@@ -38,7 +38,7 @@ begin
   try
     Bitmap.LoadFromResourceName(HInstance, IconName);
     Bitmap.Transparent := True;
-    Bitmap.TransparentColor := Bitmap.Canvas.Pixels[1,1];
+    Bitmap.TransparentColor := clWhite;
     Bitmap.TransparentMode := tmAuto;
     // Render to the image
     Canvas.StretchDraw(Rect(ceil(Self.ClientRect.Right * 0.25), ceil(Self.ClientRect.bottom * 0.25),

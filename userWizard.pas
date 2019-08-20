@@ -42,14 +42,14 @@ end;
 
 procedure TfrmUserEditor.btnCreateClick(Sender: TObject);
 begin
-  TClient.CreateCredentials(edtUsername.Text, GetCurrentDir + '\auth.json');
+  TClient.CreateCredentials(edtUsername.Text, GetCurrentDir + '\client\auth.json');
   call;
   hide;
 end;
 
 procedure TfrmUserEditor.btnUpdateClick(Sender: TObject);
 begin
-  TClient.CreateCredentials(edtUsername.Text, UID, GetCurrentDir + '\auth.json');
+  TClient.CreateCredentials(edtUsername.Text, UID, GetCurrentDir + '\client\auth.json');
   call;
   hide;
 end;

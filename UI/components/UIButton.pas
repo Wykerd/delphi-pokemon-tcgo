@@ -74,13 +74,14 @@ begin
     // Render to the canvas
     Canvas.StretchDraw(Self.ClientRect, Bitmap);
 
+    // Render the edges
     Canvas.StretchDraw(Rect(
       0, 0,
-      Bmpleft.Width * (ceil(Self.ClientRect.bottom / BmpLeft.height)),
+      ceil(Bmpleft.Width * (Self.ClientRect.bottom / BmpLeft.height)),
       Self.ClientRect.Bottom), bmpLeft);
 
     Canvas.StretchDraw(Rect(
-      Self.ClientRect.Right - (bmpRight.Width * (ceil(Self.ClientRect.bottom / bmpRight.height))),
+      ceil(Self.ClientRect.Right - (bmpRight.Width * (Self.ClientRect.bottom / bmpRight.height))),
       0, Self.ClientRect.Right, Self.ClientRect.Bottom), bmpRight);
 
     Canvas.Font.Color := rgb(8, 65, 82);
@@ -111,11 +112,11 @@ begin
 
     Canvas.StretchDraw(Rect(
       0, 0,
-      Bmpleft.Width * (ceil(Self.ClientRect.bottom / BmpLeft.height)),
+      ceil(Bmpleft.Width * (Self.ClientRect.bottom / BmpLeft.height)),
       Self.ClientRect.Bottom), bmpLeft);
 
     Canvas.StretchDraw(Rect(
-      Self.ClientRect.Right - (bmpRight.Width * (ceil(Self.ClientRect.bottom / bmpRight.height))),
+      ceil(Self.ClientRect.Right - (bmpRight.Width * (Self.ClientRect.bottom / bmpRight.height))),
       0, Self.ClientRect.Right, Self.ClientRect.Bottom), bmpRight);
 
     Canvas.Font.Color := rgb(8, 65, 82);

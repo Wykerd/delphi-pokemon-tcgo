@@ -9,7 +9,7 @@ uses
 type
   TTradeUI = class (TUIContainer)
     constructor Create (AOwner: TComponent); override;
-    property
+
   end;
 
 implementation

@@ -38,7 +38,18 @@ type
   end;
 
   TAddServerUI = class (TUIContainer)
-
+  private
+    FPath: string;
+    AddServerBtn : TUIButton;
+    BackButton : TUIImgButton;
+    CenterPanel : TPanel;
+    procedure SetPath(const Value: string);
+    procedure HandleResize (Sender: TObject);
+    procedure HandleAddClick (Sender: TObject);
+    procedure HandleBackClick (Sender: TObject);
+  published
+    constructor Create (AOwner : TComponent); override;
+    property Path : string read FPath write SetPath;
   end;
 
   TServersUI = class (TUIContainer)
@@ -383,6 +394,75 @@ end;
 procedure TServerListing.SetPort(const Value: integer);
 begin
   FPort := Value;
+end;
+
+{ TAddServerUI }
+
+constructor TAddServerUI.Create(AOwner: TComponent);
+begin
+  inherited;
+
+  CenterPanel := TPanel.Create(self);
+
+  with CenterPanel do
+  begin
+    Align := alClient;
+    AlignWithMargins := true;
+    Margins.Left := 0;
+    Margins.Right := 0;
+    BorderStyle := bsNone;
+    BevelEdges := [];
+    BevelOuter := bvNone;
+    Parent := self;
+    Color := rgb(238, 180, 90);
+    ParentBackground := false;
+  end;
+
+  Color := rgb(24, 139, 180);
+
+  AddServerBtn := TUIButton.Create(self);
+  AddServerBtn.Parent := self;
+  AddServerBtn.Text := 'Add Server';
+  AddServerBtn.OnClick := HandleAddClick;
+
+  BackButton := TUIImgButton.Create(self);
+  BackButton.Parent := self;
+  BackButton.IconName := 'BackIcon';
+  BackButton.OnClick := Handlebackclick;
+
+  OnResize := HandleResize;
+end;
+
+procedure TAddServerUI.HandleAddClick(Sender: TObject);
+begin
+
+end;
+
+procedure TAddServerUI.HandleBackClick(Sender: TObject);
+begin
+  Visible := false;
+end;
+
+procedure TAddServerUI.HandleResize(Sender: TObject);
+begin
+  CenterPanel.Margins.Top := floor(ClientHeight / 10);
+  CenterPanel.Margins.Bottom := floor(ClientHeight / 5);
+
+  BackButton.Height := floor(ClientHeight / 10);
+  BackButton.Top := floor(ClientHeight - (ClientHeight / 10) - (BackButton.Height / 2));
+  BackButton.Left := floor(ClientWidth / 8);
+  BackButton.Width := BackButton.Height;
+
+  AddServerBtn.Height := floor(ClientHeight / 10);
+  AddServerBtn.Top := floor(ClientHeight - (ClientHeight / 10) - (AddServerBtn.Height / 2));
+  AddServerBtn.Left := BackButton.Left + BackButton.Width + floor(BackButton.Height / 7);
+  AddServerBtn.Width :=
+    floor(ClientWidth - (ClientWidth / 4) - (AddServerBtn.Height / 7) - BackButton.Width);
+end;
+
+procedure TAddServerUI.SetPath(const Value: string);
+begin
+  FPath := Value;
 end;
 
 end.
