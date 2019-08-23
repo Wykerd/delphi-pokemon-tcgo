@@ -1,9 +1,20 @@
+// Copyright 2019 Daniel Wykerd
+//
+// TClientUI Class
+//
+// Author:      Daniel Wykerd
+// Year:        2019
+//
+// Function:    Contains all the views of the game
+//
+// Description: The TClientUI is a decendant of the TForm Class and is used as
+//              the main container for all the TUIContainer views.
 unit clientUI;
 
 interface
-// Page 148
+
 uses
-  Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, DBXJSON,
+  Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, DBXJSON,
   Controls, gameUI, startUI, serversUI;
 
 type
@@ -26,6 +37,8 @@ type
     property StartUI : TStartUI read FStart write SetStart;
     property ServersUI : TServersUI read FServersUI write SetServersUI;
     property StartTrigger : TClientStart read FStartTrigger write SetStartTrigger;
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
   end;
 
 implementation
@@ -35,9 +48,13 @@ implementation
 constructor TClientUI.CreateNew(AOwner: TComponent; Dummy: integer);
 begin
   inherited;
+  // Create all the application views as Panels as they are basically forms,
+  // but can be swapped out without the user being directed to a new window/form
+  // This, in my opinion, creates better flow in the User eXperience.
   GameUI := TGameUI.Create(self);
   GameUI.Parent := self;
   GameUI.Visible := false;
+  GameUI.Init;
 
   StartUI := TStartUI.Create(self);
   StartUI.Parent := self;
@@ -55,6 +72,15 @@ begin
   StartUI.OnServersClick := HandleShowServers;
   ServersUI.OnStartClient := HandleShowGame;
   ServersUI.StartTrigger := StartTrigger;
+end;
+
+procedure TClientUI.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  // Make the client window appear on the taskbar
+  // for BETTER UX
+  Params.ExStyle := Params.ExStyle or WS_EX_APPWINDOW;
+  Params.WndParent := GetDesktopWindow;
 end;
 
 procedure TClientUI.HandleShowGame(Sender: TObject);

@@ -18,7 +18,8 @@ uses
   tradeUI in 'UI\tradeUI.pas',
   profileUI in 'UI\profileUI.pas',
   serverSessions in 'serverSessions.pas',
-  UIImgButton in 'UI\components\UIImgButton.pas';
+  UIImgButton in 'UI\components\UIImgButton.pas',
+  Textures in 'dependencies\Textures.pas';
 
 {$R *.res}
 

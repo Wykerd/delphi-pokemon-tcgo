@@ -67,6 +67,7 @@
 			<DCCReference Include="UI\profileUI.pas"/>
 			<DCCReference Include="serverSessions.pas"/>
 			<DCCReference Include="UI\components\UIImgButton.pas"/>
+			<DCCReference Include="dependencies\Textures.pas"/>
 			<RcCompile Include="UI\components\resources\uicomponentres.rc">
 				<ContainerId>RC</ContainerId>
 				<Form>uicomponentres.res</Form>

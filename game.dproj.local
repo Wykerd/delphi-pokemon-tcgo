@@ -32,6 +32,8 @@
     <Transaction>2019/08/08 18:48:00.642.pas,F:\IT_PAT_2019_\Unit1.pas=F:\IT_PAT_2019_\serverSessions.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="dependencies"/>
+    <File Path="dependencies\Textures.pas"/>
     <File Path="UI"/>
     <File Path="UI\components"/>
     <File Path="UI\components\resources"/>
