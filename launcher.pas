@@ -115,6 +115,9 @@ begin
   end;
 
   LoadCredentials;
+
+  // For Debugging - auto launch client
+  btnJoin.OnClick(nil);
 end;
 
 procedure TfrmLauncher.LoadCredentials;

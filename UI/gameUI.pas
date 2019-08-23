@@ -13,6 +13,7 @@ type
   private
     FState: TJSONObject;
     FOnChat: TChatEvent;
+    FPanAngleX, FPanAngleY: Extended;
     procedure SetOnChat(const Value: TChatEvent);
     procedure SetState(const Value: TJSONObject);
     procedure OpenChat(sender: Tobject);
@@ -31,7 +32,6 @@ type
   end;
 
 var
-  angle: Extended;
   MyTextureTex, DiamondTex, PokeTex: GLuint;
 
 implementation
@@ -75,7 +75,8 @@ begin
   // set viewing projection
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity;
-  glFrustum(-1.6, 1.6, -0.9, 0.9, 2.0, 25.0);
+  gluPerspective(45.0, 16 / 9, 2.0, 25.0);
+  // glFrustum(-1.6, 1.6, -0.9, 0.9, 2.0, 25.0);
   // position viewer
   glMatrixMode(GL_MODELVIEW);
 
@@ -85,6 +86,7 @@ begin
   // Default textures to enabled
   glEnable(GL_TEXTURE_2D);
 
+  // DEMO TEST
   LoadTexture('Texture.jpg', MyTextureTex, false);
   LoadTexture('diamond_ore.jpg', DiamondTex, false);
   LoadTexture('card-icon.jpg', PokeTex, false);
@@ -112,48 +114,6 @@ begin
   RC := wglCreateContext(DC);
   wglMakeCurrent(DC, RC); // makes OpenGL window active
   GLInit; // initialize OpenGL
-
-  glNewList(1, GL_COMPILE);
-  glBegin(GL_QUADS);
-  glNormal3f(0.0, 0.0, 1.0);
-  glTexCoord2f(0.0, 0.0);
-  glVertex3f(-1.0, -1.0, 0);
-  glTexCoord2f(1.0, 0.0);
-  glVertex3f(1.0, -1.0, 0);
-  glTexCoord2f(1.0, 1.0);
-  glVertex3f(1.0, 1.0, 0);
-  glTexCoord2f(0.0, 1.0);
-  glVertex3f(-1.0, 1.0, 0);
-  glEnd;
-  glEndList;
-
-  glNewList(2, GL_COMPILE);
-  glBegin(GL_QUADS);
-  glNormal3f(0.0, 0.0, 1.0);
-  glTexCoord2f(0.0, 0.0);
-  glVertex3f(-0.25, -0.5, 0);
-  glTexCoord2f(1.0, 0.0);
-  glVertex3f(0.25, -0.5, 0);
-  glTexCoord2f(1.0, 1.0);
-  glVertex3f(0.25, 0.5, 0);
-  glTexCoord2f(0.0, 1.0);
-  glVertex3f(-0.25, 0.5, 0);
-  glEnd;
-  glEndList;
-
-  glNewList(3, GL_COMPILE);
-  glBegin(GL_QUADS);
-  glNormal3f(0.0, 0.0, 1.0);
-  glTexCoord2f(0.0, 0.0);
-  glVertex3f(-0.66, -0.5, 0);
-  glTexCoord2f(1.0, 0.0);
-  glVertex3f(0.66, -0.5, 0);
-  glTexCoord2f(1.0, 1.0);
-  glVertex3f(0.66, 0.5, 0);
-  glTexCoord2f(0.0, 1.0);
-  glVertex3f(-0.66, 0.5, 0);
-  glEnd;
-  glEndList;
 end;
 
 procedure TGameUI.Draw;
@@ -162,40 +122,162 @@ begin
 
   glPushMatrix;
   glPushName(1);
-  glTranslatef(0.0, 0.0, -10.0);
-  glRotate(angle, 1, 0, 0);
-  glBindTexture(GL_TEXTURE_2D, MyTextureTex);
-  glCallList(1);
-  glPopName;
-  glPopMatrix;
+  glTranslatef(0.0, 1.5, -10.0);
+  glRotate(FPanAngleX, 0, 1, 0);
+  glRotate(FPanAngleY, 1, 0, 0);
+  glRotate(315, 1, 0, 0);
+    glBindTexture(GL_TEXTURE_2D, DiamondTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-3.5, -3.5, 0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(3.5, -3.5, 0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(3.5, 3.5, 0);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-3.5, 3.5, 0);
+    glEnd;
 
-  glPushMatrix;
-  glPushName(2);
-  glTranslatef(0.0, 0.0, -10.0);
-  glRotate(angle + 90, 1, 0, 0);
-  glTranslatef(0, 2.5, 0.0);
-  glBindTexture(GL_TEXTURE_2D, PokeTex);
-  glCallList(3);
-  glPopName;
-  glPopMatrix;
+    // bottom bench top
+    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-2.0, -3.5, 0.1);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(2.0, -3.5, 0.1);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(2.0, -2.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-2.0, -2.5, 0.1);
+    glEnd;
 
-  glPushMatrix;
-  glPushName(3);
-  glTranslatef(0.0, 0.0, -10.0);
-  glRotate(angle, 1, 0, 0);
-  glTranslatef(0, 0.5, 0);
-  glBindTexture(GL_TEXTURE_2D, MyTextureTex);
-  glCallList(2);
-  glPopName;
-  glPopMatrix;
+    // bottom bench front
+    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-2.0, -3.5, 0.0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(2.0, -3.5, 0.0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(2.0, -3.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-2.0, -3.5, 0.1);
+    glEnd;
 
-  glPushMatrix;
-  glPushName(4);
-  glTranslatef(0.0, 0.0, -10.0);
-  glRotate(angle, 1, 0, 0);
-  glTranslatef(0.65, 0.5, 0);
-  glBindTexture(GL_TEXTURE_2D, DiamondTex);
-  glCallList(2);
+    // bottom bench back
+    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-2.0, -2.5, 0.0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(2.0, -2.5, 0.0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(2.0, -2.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-2.0, -2.5, 0.1);
+    glEnd;
+
+    // bottom bench right
+    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(2.0, -3.5, 0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(2.0, -2.5, 0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(2.0, -2.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(2.0, -3.5, 0.1);
+    glEnd;
+
+    // bottom bench left
+    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-2.0, -3.5, 0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(-2.0, -2.5, 0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(-2.0, -2.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-2.0, -3.5, 0.1);
+    glEnd;
+
+    // Top bench top
+    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-2.0, 3.5, 0.1);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(2.0, 3.5, 0.1);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(2.0, 2.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-2.0, 2.5, 0.1);
+    glEnd;
+
+    // Top bench front
+    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-2.0, 3.5, 0.0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(2.0, 3.5, 0.0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(2.0, 3.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-2.0, 3.5, 0.1);
+    glEnd;
+
+    // Top bench back
+    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-2.0, 2.5, 0.0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(2.0, 2.5, 0.0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(2.0, 2.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-2.0, 2.5, 0.1);
+    glEnd;
+
+    // Top bench right
+    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(2.0, 3.5, 0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(2.0, 2.5, 0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(2.0, 2.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(2.0, 3.5, 0.1);
+    glEnd;
+
+    // Top bench left
+    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-2.0, 3.5, 0);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(-2.0, 2.5, 0);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(-2.0, 2.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-2.0, 3.5, 0.1);
+    glEnd;
   glPopName;
   glPopMatrix;
 end;
@@ -203,11 +285,22 @@ end;
 procedure TGameUI.HandleMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
+  FPanAngleX := (8 * (x / ClientWidth)) - 4;
+  FPanAngleY := (4.5 * (y / ClientHeight)) - 2.25;
   Pick(X, Y);
+  Draw;
+  SwapBuffers(wglGetCurrentDC);
 end;
 
 procedure TGameUI.HandleResize(Sender: TObject);
 begin
+  // Change the Matrix to accommodate for the new aspect ratio
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity;
+  gluPerspective(45.0, ClientWidth / ClientHeight, 2.0, 25.0);
+  // position viewer
+  glMatrixMode(GL_MODELVIEW);
+
   glViewport(0, 0, ClientWidth, ClientHeight);
 end;
 
@@ -249,6 +342,7 @@ begin
   // Basically what this code does is it zooms into one pixel area on the screen
   gluPickMatrix(X, viewport[3] - Y, 1, 1, addr(viewport));
   gluPerspective(45.0, ClientWidth / ClientHeight, 2.0, 25.0);
+  // glFrustum(-1.6, 1.6, -0.9, 0.9, 2.0, 25.0);
   glMatrixMode(GL_MODELVIEW);
 
   // Render the scene to the buffer
@@ -263,8 +357,6 @@ begin
   begin
     ptr := @buf;
     minZ := $FFFFFFFF;
-
-    //memo1.Lines.Add('======' + inttostr(buf[0]) + '-' + inttostr(buf[3]));
 
     for i := 0 to hits - 1 do
     begin
@@ -284,12 +376,11 @@ begin
 
     for i := 0 to numberOfNames - 1 do
     begin
-    //  Memo1.Lines.Add(IntToStr(ptr^));
+      // showmessage(IntToStr(ptr^));
       inc(ptr);
     end;
   end;
   // end hit processing
-  //Memo1.Lines.Add('HITS: ' + IntToStr(hits) + #13#10 + '======');
 
   // Return to the original matrix
   glMatrixMode(GL_PROJECTION);
