@@ -1,5 +1,10 @@
 program game;
 
+// Compile the game resources
+{$R 'uires.res' 'UI\resources\uires.rc'}
+{$R 'uicomponentres.res' 'UI\components\resources\uicomponentres.rc'}
+{$R 'textureres.res' 'UI\textures\textureres.rc'}
+
 uses
   Forms,
   launcher in 'launcher.pas' {frmLauncher},

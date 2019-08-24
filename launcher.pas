@@ -51,10 +51,6 @@ implementation
 
 {$R *.dfm}
 
-// Compile the game resources
-{$R 'uires.res' 'UI\resources\uires.rc'}
-{$R 'uicomponentres.res' 'UI\components\resources\uicomponentres.rc'}
-
 procedure TfrmLauncher.btnJoinClick(Sender: TObject);
 begin
   if not bLaunchable then

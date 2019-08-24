@@ -14,6 +14,7 @@ type
     FState: TJSONObject;
     FOnChat: TChatEvent;
     FPanAngleX, FPanAngleY: Extended;
+    FBoardTex, FEdgeTex, FBenchEdgeTex, FBenchTex : GLuint;
     procedure SetOnChat(const Value: TChatEvent);
     procedure SetState(const Value: TJSONObject);
     procedure OpenChat(sender: Tobject);
@@ -32,7 +33,7 @@ type
   end;
 
 var
-  MyTextureTex, DiamondTex, PokeTex: GLuint;
+  debugTex : GLuint;
 
 implementation
 
@@ -86,10 +87,8 @@ begin
   // Default textures to enabled
   glEnable(GL_TEXTURE_2D);
 
-  // DEMO TEST
-  LoadTexture('Texture.jpg', MyTextureTex, false);
-  LoadTexture('diamond_ore.jpg', DiamondTex, false);
-  LoadTexture('card-icon.jpg', PokeTex, false);
+  // Debug code
+  LoadTexture('diamond_ore.jpg', debugTex, false);
 end;
 
 { TGameUI }
@@ -114,6 +113,12 @@ begin
   RC := wglCreateContext(DC);
   wglMakeCurrent(DC, RC); // makes OpenGL window active
   GLInit; // initialize OpenGL
+
+  // Load the static textures
+  LoadTexture('boardTexture.jpg', FBoardTex, true);
+  LoadTexture('edgeTexture.jpg', FEdgeTex, true);
+  LoadTexture('greyEdgeTexture.jpg', FBenchEdgeTex, true);
+  LoadTexture('benchTexture.jpg', FBenchTex, true);
 end;
 
 procedure TGameUI.Draw;
@@ -126,7 +131,8 @@ begin
   glRotate(FPanAngleX, 0, 1, 0);
   glRotate(FPanAngleY, 1, 0, 0);
   glRotate(315, 1, 0, 0);
-    glBindTexture(GL_TEXTURE_2D, DiamondTex);
+    // Main board top
+    glBindTexture(GL_TEXTURE_2D, FBoardTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -139,8 +145,64 @@ begin
       glVertex3f(-3.5, 3.5, 0);
     glEnd;
 
+    // Main board front
+    glBindTexture(GL_TEXTURE_2D, FEdgeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-3.5, -3.5, -0.1);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(3.5, -3.5, -0.1);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(3.5, -3.5, 0);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-3.5, -3.5, 0);
+    glEnd;
+
+    // Main board back
+    glBindTexture(GL_TEXTURE_2D, FEdgeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-3.5, 3.5, -0.1);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(3.5, 3.5, -0.1);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(3.5, 3.5, 0);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-3.5, 3.5, 0);
+    glEnd;
+
+    // Main board left
+    glBindTexture(GL_TEXTURE_2D, FEdgeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-3.5, -3.5, -0.1);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(-3.5, 3.5, -0.1);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(-3.5, 3.5, 0);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-3.5, -3.5, 0);
+    glEnd;
+
+    // Main board right
+    glBindTexture(GL_TEXTURE_2D, FEdgeTex);
+    glBegin(GL_QUADS);
+      glNormal3f(0.0, 0.0, 1.0);
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(3.5, -3.5, -0.1);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(3.5, 3.5, -0.1);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(3.5, 3.5, 0);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(3.5, -3.5, 0);
+    glEnd;
+
     // bottom bench top
-    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBindTexture(GL_TEXTURE_2D, FBenchTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -154,7 +216,7 @@ begin
     glEnd;
 
     // bottom bench front
-    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -168,7 +230,7 @@ begin
     glEnd;
 
     // bottom bench back
-    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -182,7 +244,7 @@ begin
     glEnd;
 
     // bottom bench right
-    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -196,7 +258,7 @@ begin
     glEnd;
 
     // bottom bench left
-    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -210,7 +272,7 @@ begin
     glEnd;
 
     // Top bench top
-    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBindTexture(GL_TEXTURE_2D, FBenchTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -224,7 +286,7 @@ begin
     glEnd;
 
     // Top bench front
-    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -238,7 +300,7 @@ begin
     glEnd;
 
     // Top bench back
-    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -252,7 +314,7 @@ begin
     glEnd;
 
     // Top bench right
-    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -266,7 +328,7 @@ begin
     glEnd;
 
     // Top bench left
-    glBindTexture(GL_TEXTURE_2D, PokeTex);
+    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
     glBegin(GL_QUADS);
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
@@ -286,6 +348,7 @@ procedure TGameUI.HandleMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
   FPanAngleX := (8 * (x / ClientWidth)) - 4;
+ // FPanAngleX := (180 * (x / ClientWidth)) - 90; // View Whole model pan
   FPanAngleY := (4.5 * (y / ClientHeight)) - 2.25;
   Pick(X, Y);
   Draw;
@@ -302,6 +365,9 @@ begin
   glMatrixMode(GL_MODELVIEW);
 
   glViewport(0, 0, ClientWidth, ClientHeight);
+
+  // Force a render cycle
+  Invalidate;
 end;
 
 procedure TGameUI.IncomingChat(s: string);

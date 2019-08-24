@@ -1,0 +1,4 @@
+benchTexture JPEG "benchTexture.jpg"
+boardTexture JPEG "boardTexture.jpg"
+edgeTexture JPEG "edgeTexture.jpg"
+greyEdgeTexture JPEG "greyEdgeTexture.jpg"

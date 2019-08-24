@@ -43,6 +43,8 @@
     <File Path="UI\components\UIImgButton.pas"/>
     <File Path="UI\resources"/>
     <File Path="UI\resources\uires.rc"/>
+    <File Path="UI\textures"/>
+    <File Path="UI\textures\textureres.rc"/>
     <File Path="UI\clientUI.pas"/>
     <File Path="UI\gameUI.pas"/>
     <File Path="UI\profileUI.pas"/>

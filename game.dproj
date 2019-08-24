@@ -43,6 +43,21 @@
 			<DelphiCompile Include="game.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
+			<RcCompile Include="UI\resources\uires.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
+				<Form>uires.res</Form>
+			</RcCompile>
+			<RcCompile Include="UI\components\resources\uicomponentres.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
+				<Form>uicomponentres.res</Form>
+			</RcCompile>
+			<RcCompile Include="UI\textures\textureres.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
+				<Form>textureres.res</Form>
+			</RcCompile>
 			<DCCReference Include="launcher.pas">
 				<Form>frmLauncher</Form>
 			</DCCReference>
@@ -68,14 +83,6 @@
 			<DCCReference Include="serverSessions.pas"/>
 			<DCCReference Include="UI\components\UIImgButton.pas"/>
 			<DCCReference Include="dependencies\Textures.pas"/>
-			<RcCompile Include="UI\components\resources\uicomponentres.rc">
-				<ContainerId>RC</ContainerId>
-				<Form>uicomponentres.res</Form>
-			</RcCompile>
-			<RcCompile Include="UI\resources\uires.rc">
-				<ContainerId>RC</ContainerId>
-				<Form>uires.res</Form>
-			</RcCompile>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
