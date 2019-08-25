@@ -58,6 +58,11 @@
 				<ContainerId>RC</ContainerId>
 				<Form>textureres.res</Form>
 			</RcCompile>
+			<RcCompile Include="UI\game_components\resources\game_components_res.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
+				<Form>game_components_res.res</Form>
+			</RcCompile>
 			<DCCReference Include="launcher.pas">
 				<Form>frmLauncher</Form>
 			</DCCReference>
@@ -83,6 +88,7 @@
 			<DCCReference Include="serverSessions.pas"/>
 			<DCCReference Include="UI\components\UIImgButton.pas"/>
 			<DCCReference Include="dependencies\Textures.pas"/>
+			<DCCReference Include="UI\game_components\pkmCard.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

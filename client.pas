@@ -344,7 +344,6 @@ var
   JSON : TJSONObject;
 begin
   req := IOHandler.ReadLn();
-  println('incoming', req);
 
   // Check to see if it is valid json
   JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(req),0));
@@ -353,6 +352,7 @@ begin
   TThread.Synchronize(nil,
   procedure
   begin
+    println('incoming', req);
     ExecuteAction(JSON);
   end);
 end;

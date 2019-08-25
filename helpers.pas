@@ -8,12 +8,11 @@ uses
 type
   TStrArr = array of string;
 
-  // TJSONObjectHelper has been copied from github
-  // CREDITS: https://gist.github.com/fabriciocolombo/4236ce010787d86b5c65
   TJsonObjectHelper = class helper for TJsonObject
   public
     //Helper to find a JSON pair based on the pair string part
     function Get(const PairName: UnicodeString): TJSONPair; overload;
+    function Exists (const PairName: UnicodeString): boolean;
   end;
   // //
 
@@ -34,10 +33,52 @@ type
 function strJoin (const arr : array of string; const delim: string): string;
 function strSplit (s: string; delimiter: string): TStrArr;
 
+// JSON LOADER
+function LoadJSONFromFile (s: string) : TJSONObject;
+
 // More JSON helpers from https://gist.github.com/fabriciocolombo/4236ce010787d86b5c65
 function StripNonJson(s: string): string;
 
 implementation
+
+function LoadJSONFromFile (s: string) : TJSONObject;
+var
+  tF: textfile;
+  data, tmp : string;
+
+begin
+  // Init
+  data := '';
+  tmp := '';
+
+  if not fileExists(s) then
+  begin
+    result := nil;
+    exit;
+  end;
+
+  AssignFile(tF, s);
+  try
+    try
+      reset(tF);
+    except
+      result := nil;
+    end;
+  finally
+    while not eof(tF) do
+    begin
+      readln(tF, tmp);
+      data := data + tmp;
+    end;
+
+
+    closefile(tf);
+
+    // Parse the JSON
+    result := TJsonObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(StripNonJson(data)),0));
+  end;
+
+end;
 
 // Created to act as javascript string helpers
 function strJoin (const arr : array of string; const delim: string): string;
@@ -83,11 +124,27 @@ end;
 
 { TJsonObjectHelper }
 
+function TJsonObjectHelper.Exists(const PairName: UnicodeString): boolean;
+var
+  pair : TJSONPair;
+begin
+  // Check to see if the pair exists
+  result := false;
+
+  pair := Get(PairName);
+
+  if pair <> nil then
+    if pair.JsonValue <> nil then
+      result := true;
+end;
+
 function TJsonObjectHelper.Get(const PairName: UnicodeString): TJSONPair;
 var
   Candidate: TJSONPair;
   I: Integer;
 begin
+  // This helper has been copied from github
+  // CREDITS: https://gist.github.com/fabriciocolombo/4236ce010787d86b5c65
   for i := 0 to Size - 1 do
   begin
     Candidate := Get(i);
@@ -111,7 +168,8 @@ begin
   FProc();
 end;
 
-//Remove whitespaces http://edn.embarcadero.com/article/40882
+// Remove whitespaces http://edn.embarcadero.com/article/40882
+// CREDITS: https://gist.github.com/fabriciocolombo/4236ce010787d86b5c65
 function StripNonJson(s: string): string;
 var
   ch: char;

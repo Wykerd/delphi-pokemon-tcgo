@@ -4,7 +4,7 @@ interface
 // Page 148
 uses
   Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, DBXJSON,
-  Controls, ExtCtrls, UIContainer, OpenGL, Textures;
+  Controls, ExtCtrls, UIContainer, OpenGL, Textures, pkmCard;
 
 type
   TChatEvent = procedure (s : string) of object;
@@ -13,6 +13,7 @@ type
   private
     FState: TJSONObject;
     FOnChat: TChatEvent;
+    FBenchedCards : array of TCardModel;
     FPanAngleX, FPanAngleY: Extended;
     FBoardTex, FEdgeTex, FBenchEdgeTex, FBenchTex : GLuint;
     procedure SetOnChat(const Value: TChatEvent);
@@ -24,21 +25,25 @@ type
   published
     constructor Create (AOwner: TComponent); override;
     property State : TJSONObject read FState write SetState;
+    // Events //
     property OnChat : TChatEvent read FOnChat write SetOnChat;
+    // -- //
+    // OpenGL //
     procedure Pick (X, Y: Integer);
     procedure Paint; override;
     procedure Draw;
     procedure Init;
+    // -- //
+    // Handlers //
     procedure IncomingChat (s : string);
+    // -- //
+  public
   end;
 
 var
   debugTex : GLuint;
 
 implementation
-
-procedure glBindTexture(target: GLenum; texture: GLuint); stdcall;
-external opengl32;
 
 { GL Setup Functions }
 procedure setupPixelFormat(DC: HDC);
@@ -86,9 +91,6 @@ begin
   glEnable(GL_NORMALIZE);
   // Default textures to enabled
   glEnable(GL_TEXTURE_2D);
-
-  // Debug code
-  LoadTexture('diamond_ore.jpg', debugTex, false);
 end;
 
 { TGameUI }
@@ -99,6 +101,7 @@ begin
   OnClick := OpenChat;
   OnMouseMove := HandleMouseMove;
   OnResize := HandleResize;
+  SetLength(FBenchedCards, 0);
 end;
 
 procedure TGameUI.Init;
@@ -122,6 +125,8 @@ begin
 end;
 
 procedure TGameUI.Draw;
+var
+  I: Integer;
 begin
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
 
@@ -145,9 +150,10 @@ begin
       glVertex3f(-3.5, 3.5, 0);
     glEnd;
 
-    // Main board front
+    // Main board edges
     glBindTexture(GL_TEXTURE_2D, FEdgeTex);
     glBegin(GL_QUADS);
+      // Main board front
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(-3.5, -3.5, -0.1);
@@ -157,11 +163,8 @@ begin
       glVertex3f(3.5, -3.5, 0);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-3.5, -3.5, 0);
-    glEnd;
 
-    // Main board back
-    glBindTexture(GL_TEXTURE_2D, FEdgeTex);
-    glBegin(GL_QUADS);
+      // Main board back
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(-3.5, 3.5, -0.1);
@@ -171,11 +174,8 @@ begin
       glVertex3f(3.5, 3.5, 0);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-3.5, 3.5, 0);
-    glEnd;
 
-    // Main board left
-    glBindTexture(GL_TEXTURE_2D, FEdgeTex);
-    glBegin(GL_QUADS);
+      // Main board left
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(-3.5, -3.5, -0.1);
@@ -185,11 +185,8 @@ begin
       glVertex3f(-3.5, 3.5, 0);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-3.5, -3.5, 0);
-    glEnd;
 
-    // Main board right
-    glBindTexture(GL_TEXTURE_2D, FEdgeTex);
-    glBegin(GL_QUADS);
+      // Main board right
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(3.5, -3.5, -0.1);
@@ -201,9 +198,10 @@ begin
       glVertex3f(3.5, -3.5, 0);
     glEnd;
 
-    // bottom bench top
+    // bench tops
     glBindTexture(GL_TEXTURE_2D, FBenchTex);
     glBegin(GL_QUADS);
+      // Bottom
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(-2.0, -3.5, 0.1);
@@ -213,11 +211,22 @@ begin
       glVertex3f(2.0, -2.5, 0.1);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-2.0, -2.5, 0.1);
+
+      // Top
+      glTexCoord2f(0.0, 0.0);
+      glVertex3f(-2.0, 3.5, 0.1);
+      glTexCoord2f(1.0, 0.0);
+      glVertex3f(2.0, 3.5, 0.1);
+      glTexCoord2f(1.0, 1.0);
+      glVertex3f(2.0, 2.5, 0.1);
+      glTexCoord2f(0.0, 1.0);
+      glVertex3f(-2.0, 2.5, 0.1);
     glEnd;
 
-    // bottom bench front
+    // bench Edges
     glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
     glBegin(GL_QUADS);
+      // bottom bench front
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(-2.0, -3.5, 0.0);
@@ -227,11 +236,8 @@ begin
       glVertex3f(2.0, -3.5, 0.1);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-2.0, -3.5, 0.1);
-    glEnd;
 
-    // bottom bench back
-    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
-    glBegin(GL_QUADS);
+      // bottom bench back
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(-2.0, -2.5, 0.0);
@@ -241,11 +247,8 @@ begin
       glVertex3f(2.0, -2.5, 0.1);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-2.0, -2.5, 0.1);
-    glEnd;
 
-    // bottom bench right
-    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
-    glBegin(GL_QUADS);
+      // bottom bench right
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(2.0, -3.5, 0);
@@ -255,11 +258,8 @@ begin
       glVertex3f(2.0, -2.5, 0.1);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(2.0, -3.5, 0.1);
-    glEnd;
 
-    // bottom bench left
-    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
-    glBegin(GL_QUADS);
+      // bottom bench left
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(-2.0, -3.5, 0);
@@ -269,25 +269,8 @@ begin
       glVertex3f(-2.0, -2.5, 0.1);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-2.0, -3.5, 0.1);
-    glEnd;
 
-    // Top bench top
-    glBindTexture(GL_TEXTURE_2D, FBenchTex);
-    glBegin(GL_QUADS);
-      glNormal3f(0.0, 0.0, 1.0);
-      glTexCoord2f(0.0, 0.0);
-      glVertex3f(-2.0, 3.5, 0.1);
-      glTexCoord2f(1.0, 0.0);
-      glVertex3f(2.0, 3.5, 0.1);
-      glTexCoord2f(1.0, 1.0);
-      glVertex3f(2.0, 2.5, 0.1);
-      glTexCoord2f(0.0, 1.0);
-      glVertex3f(-2.0, 2.5, 0.1);
-    glEnd;
-
-    // Top bench front
-    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
-    glBegin(GL_QUADS);
+      // Top bench front
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(-2.0, 3.5, 0.0);
@@ -297,11 +280,8 @@ begin
       glVertex3f(2.0, 3.5, 0.1);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-2.0, 3.5, 0.1);
-    glEnd;
 
-    // Top bench back
-    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
-    glBegin(GL_QUADS);
+      // Top back
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(-2.0, 2.5, 0.0);
@@ -311,11 +291,8 @@ begin
       glVertex3f(2.0, 2.5, 0.1);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-2.0, 2.5, 0.1);
-    glEnd;
 
-    // Top bench right
-    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
-    glBegin(GL_QUADS);
+      // Top right
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(2.0, 3.5, 0);
@@ -325,11 +302,8 @@ begin
       glVertex3f(2.0, 2.5, 0.1);
       glTexCoord2f(0.0, 1.0);
       glVertex3f(2.0, 3.5, 0.1);
-    glEnd;
 
-    // Top bench left
-    glBindTexture(GL_TEXTURE_2D, FBenchEdgeTex);
-    glBegin(GL_QUADS);
+      // Top left
       glNormal3f(0.0, 0.0, 1.0);
       glTexCoord2f(0.0, 0.0);
       glVertex3f(-2.0, 3.5, 0);
@@ -340,15 +314,29 @@ begin
       glTexCoord2f(0.0, 1.0);
       glVertex3f(-2.0, 3.5, 0.1);
     glEnd;
+
   glPopName;
   glPopMatrix;
+
+  for I := 2 to Length(FBenchedCards) + 1 do
+  begin
+    glPushMatrix;
+    glPushName(i);
+    glTranslatef(0.0, 1.5, -10.0);
+    glRotate(FPanAngleX, 0, 1, 0);
+    glRotate(FPanAngleY, 1, 0, 0);
+    glRotate(315, 1, 0, 0);
+      FBenchedCards[i - 2].Draw;
+    glPopName;
+    glPopMatrix;
+  end;
 end;
 
 procedure TGameUI.HandleMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
   FPanAngleX := (8 * (x / ClientWidth)) - 4;
- // FPanAngleX := (180 * (x / ClientWidth)) - 90; // View Whole model pan
+  //FPanAngleX := (180 * (x / ClientWidth)) - 90; // View Whole model pan
   FPanAngleY := (4.5 * (y / ClientHeight)) - 2.25;
   Pick(X, Y);
   Draw;

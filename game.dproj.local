@@ -41,6 +41,10 @@
     <File Path="UI\components\UIButton.pas"/>
     <File Path="UI\components\UIContainer.pas"/>
     <File Path="UI\components\UIImgButton.pas"/>
+    <File Path="UI\game_components"/>
+    <File Path="UI\game_components\resources"/>
+    <File Path="UI\game_components\resources\game_components_res.rc"/>
+    <File Path="UI\game_components\pkmCard.pas"/>
     <File Path="UI\resources"/>
     <File Path="UI\resources\uires.rc"/>
     <File Path="UI\textures"/>

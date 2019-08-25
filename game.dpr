@@ -4,6 +4,7 @@ program game;
 {$R 'uires.res' 'UI\resources\uires.rc'}
 {$R 'uicomponentres.res' 'UI\components\resources\uicomponentres.rc'}
 {$R 'textureres.res' 'UI\textures\textureres.rc'}
+{$R 'game_components_res.res' 'UI\game_components\resources\game_components_res.rc'}
 
 uses
   Forms,
@@ -24,7 +25,8 @@ uses
   profileUI in 'UI\profileUI.pas',
   serverSessions in 'serverSessions.pas',
   UIImgButton in 'UI\components\UIImgButton.pas',
-  Textures in 'dependencies\Textures.pas';
+  Textures in 'dependencies\Textures.pas',
+  pkmCard in 'UI\game_components\pkmCard.pas';
 
 {$R *.res}
 
