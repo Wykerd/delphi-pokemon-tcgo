@@ -2,19 +2,32 @@ unit serverSessions;
 
 interface
 
+uses
+  IdIOHandlerSocket, cardDeck;
+
 type
   TClientSession = class
   private
     FUID: string;
     FSessionID: string;
     FUsername: string;
+    FSocket: TIdIOHandlerSocket;
+    FReady: boolean;
+    FDeck: TCardDeck;
     procedure SetSessionID(const Value: string);
     procedure SetUID(const Value: string);
     procedure SetUsername(const Value: string);
+    procedure SetSocket(const Value: TIdIOHandlerSocket);
+    procedure SetReady(const Value: boolean);
+    procedure SetDeck(const Value: TCardDeck);
   published
+    constructor Create; override;
     property UID : string read FUID write SetUID;
     property Username : string read FUsername write SetUsername;
     property SessionID : string read FSessionID write SetSessionID;
+    property Socket : TIdIOHandlerSocket read FSocket write SetSocket;
+    property Ready: boolean read FReady write SetReady;
+    property Deck : TCardDeck read FDeck write SetDeck;
   end;
 
 
@@ -27,9 +40,30 @@ implementation
 
 { TClientSession }
 
+constructor TClientSession.Create;
+begin
+  inherited;
+  FReady := false;
+end;
+
+procedure TClientSession.SetDeck(const Value: TCardDeck);
+begin
+  FDeck := Value;
+end;
+
+procedure TClientSession.SetReady(const Value: boolean);
+begin
+  FReady := Value;
+end;
+
 procedure TClientSession.SetSessionID(const Value: string);
 begin
   FSessionID := Value;
+end;
+
+procedure TClientSession.SetSocket(const Value: TIdIOHandlerSocket);
+begin
+  FSocket := Value;
 end;
 
 procedure TClientSession.SetUID(const Value: string);

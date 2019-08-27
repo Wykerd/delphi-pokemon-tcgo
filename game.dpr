@@ -26,7 +26,10 @@ uses
   serverSessions in 'serverSessions.pas',
   UIImgButton in 'UI\components\UIImgButton.pas',
   Textures in 'dependencies\Textures.pas',
-  pkmCard in 'UI\game_components\pkmCard.pas';
+  pkmCard in 'UI\game_components\pkmCard.pas',
+  gameLogic in 'gameLogic.pas',
+  gameState in 'gameState.pas',
+  cardDeck in 'cardDeck.pas';
 
 {$R *.res}
 

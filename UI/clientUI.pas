@@ -30,7 +30,7 @@ type
     procedure SetServersUI(const Value: TServersUI);
     procedure HandleShowServers (Sender: TObject);
     procedure HandleShowStart (Sender: TObject);
-    procedure HandleShowGame (Sender: TObject);
+    procedure HandleStartGame (Sender: TObject);
   published
     constructor CreateNew (AOwner : TComponent; Dummy: integer); override;
     property GameUI : TGameUI read FGame write SetGame;
@@ -54,7 +54,6 @@ begin
   GameUI := TGameUI.Create(self);
   GameUI.Parent := self;
   GameUI.Visible := false;
-  GameUI.Init;
 
   StartUI := TStartUI.Create(self);
   StartUI.Parent := self;
@@ -70,7 +69,7 @@ begin
   ClientWidth := 640;
 
   StartUI.OnServersClick := HandleShowServers;
-  ServersUI.OnStartClient := HandleShowGame;
+  ServersUI.OnStartClient := HandleStartGame;
   ServersUI.StartTrigger := StartTrigger;
 end;
 
@@ -83,11 +82,12 @@ begin
   Params.WndParent := GetDesktopWindow;
 end;
 
-procedure TClientUI.HandleShowGame(Sender: TObject);
+procedure TClientUI.HandleStartGame(Sender: TObject);
 begin
   StartUI.Visible := false;
   GameUI.Visible := true;
   ServersUI.Visible := false;
+  GameUI.Init;
 end;
 
 procedure TClientUI.HandleShowServers(Sender: TObject);

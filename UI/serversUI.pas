@@ -58,6 +58,7 @@ type
     Listings : array of TServerListing;
     FStartTrigger: TClientStart;
     FOnStartClient: TNotifyEvent;
+
     // Buttons
     AddServer : TUIButton;
     BackButton : TUIImgButton;

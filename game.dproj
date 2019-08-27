@@ -89,6 +89,9 @@
 			<DCCReference Include="UI\components\UIImgButton.pas"/>
 			<DCCReference Include="dependencies\Textures.pas"/>
 			<DCCReference Include="UI\game_components\pkmCard.pas"/>
+			<DCCReference Include="gameLogic.pas"/>
+			<DCCReference Include="gameState.pas"/>
+			<DCCReference Include="cardDeck.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

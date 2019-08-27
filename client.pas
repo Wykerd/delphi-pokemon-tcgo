@@ -111,7 +111,7 @@ begin
             // Add the session to the auth credentials!
             TJSONObject(Credentials.JsonValue).AddPair(data.Get('sid'));
             // request the latest server info to update the cache
-            IOHandler.WriteLn('{"action":"info","auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
+            IOHandler.WriteLn('{"action":"listing-info","auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
             Authenticated := true;
           end
           else

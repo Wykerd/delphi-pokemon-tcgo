@@ -6,13 +6,14 @@ uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdCustomTCPServer, IdTCPServer, IdContext,
   ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, DBXJSON,
-  IdIOHandlerSocket, StrUtils, Windows, serverConfig, serverSessions;
+  IdIOHandlerSocket, StrUtils, Windows, serverConfig, serverSessions, gameLogic;
 
 type
   TServer = class(TIdTCPServer)
   private
     FDebug: TRichEdit;
     FSessions : TSessionsArr;
+    FInGameSessions: array [0..1] of TClientSession;
     FConfig: TServerConfig;
     procedure Execute(AContext: TIdContext);
     procedure Connected(AContext: TIdContext);
@@ -26,10 +27,13 @@ type
     constructor Create(AOwner: TComponent);
     procedure Start;
     procedure Broadcast(s: string);
+    procedure UpdateGameQueue;
+    procedure StartGame (Sessions: TSessionsArr);
     property Config : TServerConfig read FConfig write SetConfig;
     procedure ProcessAction(action: string; data: TJSONObject; username, uid : string);
     procedure ClientLogin(username, uid : string; callback : TIdIOHandlerSocket);
     property Debug: TRichEdit read FDebug write SetDebug;
+    property GameLogic : TGameLogic;
   end;
 
 implementation
@@ -81,9 +85,15 @@ var
 
     FSessions[High(FSessions)].uid := uid;
     FSessions[High(FSessions)].username := username;
+    FSessions[High(FSessions)].Socket := callback;
 
     callback.WriteLn('{"action":"authenticate","data":{"success":"true","sid":"'
       + FSessions[High(FSessions)].sessionid + '"}}');
+
+    BroadCast(Format('{"action":"join","data":{"message":"' + Config.ChatFormat.Join + '"}}',
+      [username]));
+
+    UpdateGameQueue;
   end;
 
 begin
@@ -128,8 +138,6 @@ begin
     Authenticate;
 
   end;
-  BroadCast(Format('{"action":"join","data":{"message":"' + Config.ChatFormat.Join + '"}}',
-    [username]));
 end;
 
 procedure TServer.Connected(AContext: TIdContext);
@@ -333,10 +341,49 @@ begin
 
 end;
 
+procedure TServer.StartGame(Sessions: TSessionsArr);
+begin
+  if Length(Sessions) <> 2 then
+  raise Exception.Create('Woops, that''''s an error! Invalid arguments sent to TServer.StartGame. It has to be length 2');
+
+  FInGameSessions[0] := Sessions[0];
+  FInGameSessions[1] := Sessions[1];
+
+  GameLogic := TGameLogic.Create(FInGameSessions[0], FInGameSessions[1]);
+  GameLogic.OnBroadcast := Broadcast;
+  GameLogic.Init;
+end;
+
 procedure TServer.Status(ASender: TObject; const AStatus: TIdStatus;
   const AStatusText: string);
 begin
   println('server', AStatusText);
+end;
+
+procedure TServer.UpdateGameQueue;
+var
+  PlayersReady: array [0..1] of TClientSession;
+  iPlayersReady, iSLength, i : integer;
+begin
+  iPlayersReady := 0;
+  iSLength := Length(FSessions);
+  i := -1;
+  while (i < (iSLength - 1)) and (iPlayersReady < 2) do
+  begin
+    inc(i);
+    if FSessions[i].ready then
+    begin
+      PlayersReady[iPlayersReady] := FSessions[i];
+      inc(iPlayersReady);
+    end;
+  end;
+
+  if iPlayersReady >= 2 then
+  begin
+    StartGame(PlayersReady);
+  end
+  else
+    Broadcast('{"action":"game-queue","data":{"status":"waiting_for_players"}');
 end;
 
 end.

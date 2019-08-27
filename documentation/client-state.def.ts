@@ -20,6 +20,7 @@ interface ClientAnimation {
 interface ClientPlayerState {
     "prize-cards": Card[];
     "benched-cards": Card[];
+    "deck": Card; // The top card of the deck!
     "active-card": Card;
     "hand": Card[];
     "discard": Card[]; // last 2 discards

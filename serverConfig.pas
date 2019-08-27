@@ -42,6 +42,9 @@ type
     procedure LoadFromFile (APath : string);
   end;
 
+const
+  SERVER_VERSION = 'PASCAL.0.0.7f9fe24.INDEV';
+
 implementation
 
 { TServerConfig }

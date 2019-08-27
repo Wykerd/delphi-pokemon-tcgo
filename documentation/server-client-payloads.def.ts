@@ -3,11 +3,19 @@ interface ServerInfo {
     "version": String; // server version name scheme LANGUAGE.MAJOR.MINOR.COMMIT(.CUSTOM_NAME) eg. PASCAL.0.1.7f9fe24.PRODUCTION or NODE.0.12.d930200.STABLE
     "online": Number;
     "users": String[]; // Names of users
-    "chat": String[]; // All previous chat messages
+    "motd": String;
+    "name": String;
+}
+
+interface GameQueue {
+    "status": String; // waiting_for_players
+}
+
+interface GameStart {
+    "start": String; // "you" or "oponent" string saying who wil start!
 }
 
 interface ServerPayload {
     "action": String;
     "data": Object;
-    "info": ServerInfo;
 }
