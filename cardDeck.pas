@@ -4,7 +4,7 @@ interface
 
 type
   TCardDeck = class
-    constructor Create; override;
+    constructor Create;
   end;
 
 implementation
@@ -13,7 +13,6 @@ implementation
 
 constructor TCardDeck.Create;
 begin
-  inherited;
 
 end;
 

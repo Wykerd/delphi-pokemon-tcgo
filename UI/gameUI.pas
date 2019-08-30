@@ -4,27 +4,26 @@ interface
 // Page 148
 uses
   Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, DBXJSON,
-  Controls, ExtCtrls, UIContainer, OpenGL, Textures, pkmCard;
+  Controls, ExtCtrls, UIContainer, OpenGL, Textures, pkmCard, clientState;
 
 type
   TChatEvent = procedure (s : string) of object;
 
   TGameUI = class (TUIContainer)
   private
-    FState: TJSONObject;
     FOnChat: TChatEvent;
-    FBenchedCards : array of TCardModel;
     FPanAngleX, FPanAngleY: Extended;
     FBoardTex, FEdgeTex, FBenchEdgeTex, FBenchTex : GLuint;
+    FState: TClientState;
     procedure SetOnChat(const Value: TChatEvent);
-    procedure SetState(const Value: TJSONObject);
     procedure OpenChat(sender: Tobject);
     procedure HandleResize(Sender: TObject);
     procedure HandleMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
+    procedure SetState(const Value: TClientState);
   published
     constructor Create (AOwner: TComponent); override;
-    property State : TJSONObject read FState write SetState;
+    property State : TClientState read FState write SetState;
     // Events //
     property OnChat : TChatEvent read FOnChat write SetOnChat;
     // -- //
@@ -101,7 +100,6 @@ begin
   OnClick := OpenChat;
   OnMouseMove := HandleMouseMove;
   OnResize := HandleResize;
-  SetLength(FBenchedCards, 0);
 end;
 
 procedure TGameUI.Init;
@@ -130,6 +128,7 @@ var
 begin
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
 
+  // Render the main board
   glPushMatrix;
   glPushName(1);
   glTranslatef(0.0, 1.5, -10.0);
@@ -318,6 +317,7 @@ begin
   glPopName;
   glPopMatrix;
 
+  (*
   for I := 2 to Length(FBenchedCards) + 1 do
   begin
     glPushMatrix;
@@ -330,6 +330,7 @@ begin
     glPopName;
     glPopMatrix;
   end;
+  *)
 end;
 
 procedure TGameUI.HandleMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -448,9 +449,12 @@ begin
   FOnChat := Value;
 end;
 
-procedure TGameUI.SetState(const Value: TJSONObject);
+procedure TGameUI.SetState(const Value: TClientState);
 begin
   FState := Value;
+  // Update
+  Draw;
+  SwapBuffers(wglGetCurrentDC);
 end;
 
 end.

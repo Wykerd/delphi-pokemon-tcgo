@@ -21,7 +21,7 @@ type
     procedure SetReady(const Value: boolean);
     procedure SetDeck(const Value: TCardDeck);
   published
-    constructor Create; override;
+    constructor Create;
     property UID : string read FUID write SetUID;
     property Username : string read FUsername write SetUsername;
     property SessionID : string read FSessionID write SetSessionID;
@@ -42,7 +42,6 @@ implementation
 
 constructor TClientSession.Create;
 begin
-  inherited;
   FReady := false;
 end;
 

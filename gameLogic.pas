@@ -16,7 +16,7 @@ type
     procedure SetOnBroadcast(const Value: TBroadcastEvent);
     procedure SetState(const Value: TGameState);
   published
-    constructor Create(Player1, Player2: TClientSession); override;
+    constructor Create(Player1, Player2: TClientSession);
     property State : TGameState read FState write SetState;
     property OnBroadcast : TBroadcastEvent read FOnBroadcast write SetOnBroadcast;
     procedure Init;
@@ -28,7 +28,6 @@ implementation
 
 constructor TGameLogic.Create(Player1, Player2: TClientSession);
 begin
-  inherited;
   FPlayerSessions[0] := Player1;
   FPlayerSessions[1] := Player2;
   State := TGameState.Create;

@@ -29,7 +29,8 @@ uses
   pkmCard in 'UI\game_components\pkmCard.pas',
   gameLogic in 'gameLogic.pas',
   gameState in 'gameState.pas',
-  cardDeck in 'cardDeck.pas';
+  cardDeck in 'cardDeck.pas',
+  clientState in 'clientState.pas';
 
 {$R *.res}
 

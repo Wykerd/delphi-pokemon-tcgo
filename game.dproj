@@ -92,6 +92,7 @@
 			<DCCReference Include="gameLogic.pas"/>
 			<DCCReference Include="gameState.pas"/>
 			<DCCReference Include="cardDeck.pas"/>
+			<DCCReference Include="clientState.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -33,6 +33,7 @@
     <Transaction>2019/08/26 18:41:34.441.pas,F:\2it-pat\Unit1.pas=F:\2it-pat\gameLogic.pas</Transaction>
     <Transaction>2019/08/26 18:47:48.199.pas,F:\2it-pat\Unit1.pas=F:\2it-pat\gameState.pas</Transaction>
     <Transaction>2019/08/26 18:58:08.166.pas,F:\2it-pat\Unit1.pas=F:\2it-pat\cardDeck.pas</Transaction>
+    <Transaction>2019/08/30 17:44:28.595.pas,F:\2it-pat\Unit1.pas=F:\2it-pat\clientState.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="dependencies"/>
@@ -72,5 +73,6 @@
     <File Path="gameLogic.pas"/>
     <File Path="gameState.pas"/>
     <File Path="cardDeck.pas"/>
+    <File Path="clientState.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

@@ -7,7 +7,7 @@ uses
 
 type
   TGameState = class
-    constructor Create; override;
+    constructor Create;
     procedure BuildStateFromDecks (plrOneDeck, plrTwoDeck : TCardDeck);
     function ToJSON(player: integer) : TJSONObject;
     function UpdatePayload: TJSONObject;
@@ -25,7 +25,6 @@ end;
 
 constructor TGameState.Create;
 begin
-  inherited;
 
 end;
 

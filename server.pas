@@ -15,6 +15,7 @@ type
     FSessions : TSessionsArr;
     FInGameSessions: array [0..1] of TClientSession;
     FConfig: TServerConfig;
+    FGameLogic: TGameLogic;
     procedure Execute(AContext: TIdContext);
     procedure Connected(AContext: TIdContext);
     procedure Disconnected(AContext: TIdContext);
@@ -23,6 +24,7 @@ type
     procedure SetDebug(const Value: TRichEdit);
     procedure println(t, s: string);
     procedure SetConfig(const Value: TServerConfig);
+    procedure SetGameLogic(const Value: TGameLogic);
   published
     constructor Create(AOwner: TComponent);
     procedure Start;
@@ -33,7 +35,7 @@ type
     procedure ProcessAction(action: string; data: TJSONObject; username, uid : string);
     procedure ClientLogin(username, uid : string; callback : TIdIOHandlerSocket);
     property Debug: TRichEdit read FDebug write SetDebug;
-    property GameLogic : TGameLogic;
+    property GameLogic : TGameLogic read FGameLogic write SetGameLogic;
   end;
 
 implementation
@@ -97,6 +99,7 @@ var
   end;
 
 begin
+  dmDB.tblUsers.Open;
   if GetUserFromUID(uid, FSessions) > -1 then
   begin
     println('login', 'Another user with that ID is already authenticated!');
@@ -138,6 +141,7 @@ begin
     Authenticate;
 
   end;
+  dmDB.tblUsers.Close;
 end;
 
 procedure TServer.Connected(AContext: TIdContext);
@@ -325,6 +329,11 @@ begin
   FDebug := Value;
 end;
 
+procedure TServer.SetGameLogic(const Value: TGameLogic);
+begin
+  FGameLogic := Value;
+end;
+
 procedure TServer.Start;
 begin
   Self.DefaultPort := Config.Port;
@@ -362,9 +371,10 @@ end;
 
 procedure TServer.UpdateGameQueue;
 var
-  PlayersReady: array [0..1] of TClientSession;
+  PlayersReady: TSessionsArr;
   iPlayersReady, iSLength, i : integer;
 begin
+  SetLength(PlayersReady, 2);
   iPlayersReady := 0;
   iSLength := Length(FSessions);
   i := -1;
@@ -383,7 +393,7 @@ begin
     StartGame(PlayersReady);
   end
   else
-    Broadcast('{"action":"game-queue","data":{"status":"waiting_for_players"}');
+    Broadcast('{"action":"game-queue","data":{"status":"waiting_for_players"}}');
 end;
 
 end.
