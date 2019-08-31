@@ -5,6 +5,7 @@ program game;
 {$R 'uicomponentres.res' 'UI\components\resources\uicomponentres.rc'}
 {$R 'textureres.res' 'UI\textures\textureres.rc'}
 {$R 'game_components_res.res' 'UI\game_components\resources\game_components_res.rc'}
+{$R 'trade-res.res' 'UI\trade\trade-res.rc'}
 
 uses
   Forms,

@@ -63,6 +63,11 @@
 				<ContainerId>RC</ContainerId>
 				<Form>game_components_res.res</Form>
 			</RcCompile>
+			<RcCompile Include="UI\trade\trade-res.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
+				<Form>trade-res.res</Form>
+			</RcCompile>
 			<DCCReference Include="launcher.pas">
 				<Form>frmLauncher</Form>
 			</DCCReference>

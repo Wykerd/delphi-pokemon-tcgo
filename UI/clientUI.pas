@@ -15,7 +15,7 @@ interface
 
 uses
   Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, DBXJSON,
-  Controls, gameUI, startUI, serversUI;
+  Controls, gameUI, startUI, serversUI, tradeUI;
 
 type
   TClientUI = class (TForm)
@@ -24,17 +24,21 @@ type
     FStart: TStartUI;
     FStartTrigger: TClientStart;
     FServersUI: TServersUI;
+    FTradeUI: TTradeUI;
     procedure SetGame(const Value: TGameUI);
     procedure SetStart(const Value: TStartUI);
     procedure SetStartTrigger(const Value: TClientStart);
     procedure SetServersUI(const Value: TServersUI);
     procedure HandleShowServers (Sender: TObject);
     procedure HandleShowStart (Sender: TObject);
+    procedure HandleShowTrade (Sender: TObject);
     procedure HandleStartGame (Sender: TObject);
+    procedure SetTradeUI(const Value: TTradeUI);
   published
     constructor CreateNew (AOwner : TComponent; Dummy: integer); override;
     property GameUI : TGameUI read FGame write SetGame;
     property StartUI : TStartUI read FStart write SetStart;
+    property TradeUI : TTradeUI read FTradeUI write SetTradeUI;
     property ServersUI : TServersUI read FServersUI write SetServersUI;
     property StartTrigger : TClientStart read FStartTrigger write SetStartTrigger;
   protected
@@ -58,6 +62,10 @@ begin
   StartUI := TStartUI.Create(self);
   StartUI.Parent := self;
 
+  TradeUI := TTradeUI.Create(self);
+  TradeUI.Parent := self;
+  TradeUI.Visible := false;
+
   ServersUI := TServersUI.Create(self);
   ServersUI.Parent := self;
   ServersUI.Visible := false;
@@ -68,7 +76,9 @@ begin
   ClientHeight := 360;
   ClientWidth := 640;
 
+  // Handle events
   StartUI.OnServersClick := HandleShowServers;
+  StartUI.OnTradesClick := HandleShowTrade;
   ServersUI.OnStartClient := HandleStartGame;
   ServersUI.StartTrigger := StartTrigger;
 end;
@@ -87,6 +97,7 @@ begin
   StartUI.Visible := false;
   GameUI.Visible := true;
   ServersUI.Visible := false;
+  TradeUI.Visible := false;
   GameUI.Init;
 end;
 
@@ -95,6 +106,7 @@ begin
   StartUI.Visible := false;
   GameUI.Visible := false;
   ServersUI.Visible := true;
+  TradeUI.Visible := false;
 end;
 
 procedure TClientUI.HandleShowStart(Sender: TObject);
@@ -102,6 +114,15 @@ begin
   StartUI.Visible := true;
   GameUI.Visible := false;
   ServersUI.Visible := false;
+  TradeUI.Visible := false;
+end;
+
+procedure TClientUI.HandleShowTrade(Sender: TObject);
+begin
+  StartUI.Visible := false;
+  GameUI.Visible := false;
+  ServersUI.Visible := false;
+  TradeUI.Visible := true;
 end;
 
 procedure TClientUI.SetGame(const Value: TGameUI);
@@ -123,6 +144,11 @@ procedure TClientUI.SetStartTrigger(const Value: TClientStart);
 begin
   FStartTrigger := Value;
   ServersUI.StartTrigger := Value;
+end;
+
+procedure TClientUI.SetTradeUI(const Value: TTradeUI);
+begin
+  FTradeUI := Value;
 end;
 
 end.

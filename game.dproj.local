@@ -53,6 +53,8 @@
     <File Path="UI\resources\uires.rc"/>
     <File Path="UI\textures"/>
     <File Path="UI\textures\textureres.rc"/>
+    <File Path="UI\trade"/>
+    <File Path="UI\trade\trade-res.rc"/>
     <File Path="UI\clientUI.pas"/>
     <File Path="UI\gameUI.pas"/>
     <File Path="UI\profileUI.pas"/>
