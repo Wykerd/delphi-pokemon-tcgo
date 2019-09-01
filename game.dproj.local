@@ -34,6 +34,8 @@
     <Transaction>2019/08/26 18:47:48.199.pas,F:\2it-pat\Unit1.pas=F:\2it-pat\gameState.pas</Transaction>
     <Transaction>2019/08/26 18:58:08.166.pas,F:\2it-pat\Unit1.pas=F:\2it-pat\cardDeck.pas</Transaction>
     <Transaction>2019/08/30 17:44:28.595.pas,F:\2it-pat\Unit1.pas=F:\2it-pat\clientState.pas</Transaction>
+    <Transaction>2019/09/01 01:09:36.803.rc,F:\2it-pat\UI\textures\textureres.rc=</Transaction>
+    <Transaction>2019/09/01 01:09:58.269.rc,F:\2it-pat\UI\trade\trade-res.rc=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="dependencies"/>
@@ -53,8 +55,6 @@
     <File Path="UI\resources\uires.rc"/>
     <File Path="UI\textures"/>
     <File Path="UI\textures\textureres.rc"/>
-    <File Path="UI\trade"/>
-    <File Path="UI\trade\trade-res.rc"/>
     <File Path="UI\clientUI.pas"/>
     <File Path="UI\gameUI.pas"/>
     <File Path="UI\profileUI.pas"/>

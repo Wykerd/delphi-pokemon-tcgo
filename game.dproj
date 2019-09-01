@@ -20,7 +20,8 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DependencyCheckOutputName>game.exe</DCC_DependencyCheckOutputName>
+			<DCC_ExeOutput>.\build</DCC_ExeOutput>
+			<DCC_DependencyCheckOutputName>build\game.exe</DCC_DependencyCheckOutputName>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_Platform>x86</DCC_Platform>
@@ -53,20 +54,15 @@
 				<ContainerId>RC</ContainerId>
 				<Form>uicomponentres.res</Form>
 			</RcCompile>
-			<RcCompile Include="UI\textures\textureres.rc">
-				<ContainerId>RC</ContainerId>
-				<ContainerId>RC</ContainerId>
-				<Form>textureres.res</Form>
-			</RcCompile>
 			<RcCompile Include="UI\game_components\resources\game_components_res.rc">
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
 				<Form>game_components_res.res</Form>
 			</RcCompile>
-			<RcCompile Include="UI\trade\trade-res.rc">
+			<RcCompile Include="UI\textures\textureres.rc">
 				<ContainerId>RC</ContainerId>
 				<ContainerId>RC</ContainerId>
-				<Form>trade-res.res</Form>
+				<Form>textureres.res</Form>
 			</RcCompile>
 			<DCCReference Include="launcher.pas">
 				<Form>frmLauncher</Form>
@@ -138,15 +134,16 @@
 					</VersionInfo>
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
-						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileDescription">game</VersionInfoKeys>
 						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
-						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductName">game</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
+						<VersionInfoKeys Name="ProgramID">com.embarcadero.game</VersionInfoKeys>
 					</VersionInfoKeys>
 					<Source>
 						<Source Name="MainSource">game.dpr</Source>

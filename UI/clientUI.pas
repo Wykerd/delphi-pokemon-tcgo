@@ -123,6 +123,7 @@ begin
   GameUI.Visible := false;
   ServersUI.Visible := false;
   TradeUI.Visible := true;
+  TradeUI.Init;
 end;
 
 procedure TClientUI.SetGame(const Value: TGameUI);

@@ -3,12 +3,14 @@ program game;
 // Compile the game resources
 {$R 'uires.res' 'UI\resources\uires.rc'}
 {$R 'uicomponentres.res' 'UI\components\resources\uicomponentres.rc'}
-{$R 'textureres.res' 'UI\textures\textureres.rc'}
 {$R 'game_components_res.res' 'UI\game_components\resources\game_components_res.rc'}
-{$R 'trade-res.res' 'UI\trade\trade-res.rc'}
+{$R 'textureres.res' 'UI\textures\textureres.rc'}
 
 uses
   Forms,
+  Windows,
+  uCEFApplication,
+  uCEFTypes,
   launcher in 'launcher.pas' {frmLauncher},
   server in 'server.pas',
   client in 'client.pas',
@@ -36,11 +38,24 @@ uses
 {$R *.res}
 
 begin
-  Application.Initialize;
-  Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TfrmLauncher, frmLauncher);
+  GlobalCEFApp := TCefApplication.Create;
+  GlobalCEFApp.EnableGPU            := True;      // Enable hardware acceleration
+  GlobalCEFApp.UserDataPath := 'cef_userdata';
+  GlobalCEFApp.Cache := 'cef_cache';
+  GlobalCEFApp.PersistSessionCookies := True;
+  // Disabling some features to improve stability
+  GlobalCEFApp.DisableFeatures  := 'NetworkService,OutOfBlinkCors';
+
+  if GlobalCEFApp.StartMainProcess then
+    begin
+      Application.Initialize;
+      Application.MainFormOnTaskbar := True;
+      Application.CreateForm(TfrmLauncher, frmLauncher);
   Application.CreateForm(TdmDB, dmDB);
   Application.CreateForm(TfrmUserEditor, frmUserEditor);
   Application.Run;
+    end;
+
+  DestroyGlobalCEFApp;
 end.
 

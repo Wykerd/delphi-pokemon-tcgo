@@ -59,6 +59,7 @@ begin
     exit;
   end;
   Client := TClient.Create(Self);
+  Client.UI.TradeUI.UserID := UID;
   Client.Debug := redClient;
   Client.ServersLock := 'client\server-list.json';
   Client.UI.ServersUI.LoadFromFile(Client.ServersLock);
