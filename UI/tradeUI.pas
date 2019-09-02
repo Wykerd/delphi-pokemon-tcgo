@@ -89,7 +89,7 @@ end;
 
 procedure TTradeUI.ChromiumWindowAfterCreated(Sender: TObject);
 begin
-  FChromiumWindow.LoadURL('http://localhost:1234');
+  FChromiumWindow.LoadURL('http://localhost:1234/');
 end;
 
 procedure TTradeUI.ChromiumWindowBeforeClose(Sender: TObject);

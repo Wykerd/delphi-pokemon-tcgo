@@ -4,17 +4,18 @@ import * as firebase from "firebase/app";
 import "firebase/firestore";
 import "firebase/auth";
 import "firebase/storage";
+import "firebase/functions";
 
 // Config from https://console.firebase.google.com/u/0/project/entersekt-koffie/settings/general/
 const firebaseConfig = {
-    apiKey: "AIzaSyD3ugbZncs-O1QQxP__8plciP2jMfOh3pE",
-    authDomain: "entersekt-koffie.firebaseapp.com",
-    databaseURL: "https://entersekt-koffie.firebaseio.com",
-    projectId: "entersekt-koffie",
-    storageBucket: "entersekt-koffie.appspot.com",
-    messagingSenderId: "437000617922",
-    appId: "1:437000617922:web:7fe6965aee223d47"
-  };
+  apiKey: "AIzaSyDGOEHQS2uyOA63wu3fy3ymrnKfc6sMZ8A",
+  authDomain: "pokemon-central.firebaseapp.com",
+  databaseURL: "https://pokemon-central.firebaseio.com",
+  projectId: "pokemon-central",
+  storageBucket: "pokemon-central.appspot.com",
+  messagingSenderId: "927138649338",
+  appId: "1:927138649338:web:e4f2d61c4ba95fc1"
+};
 
 firebase.initializeApp(firebaseConfig);
 

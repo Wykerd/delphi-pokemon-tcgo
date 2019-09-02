@@ -1,0 +1,73 @@
+body, html, pre {
+    font-family: 'Roboto Slab', serif;
+    background-color: #e0f7fa;
+}
+
+html, body {
+    overflow-x: hidden;
+}
+
+header ul {
+    display: flex;
+    flex-flow: row;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    width: 100%;
+}
+
+header ul li {
+    display: flex;
+    flex-grow: 1;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+}
+
+header {
+    background-color: #37558b;
+}
+
+header img {
+    height: 30px;
+    width: 30px;
+    border-radius: 100%;
+    object-fit: contain;
+}
+
+h1, h2, h3 {
+    text-align: center;
+}
+
+a {
+    color: #ff5757;
+    text-emphasis: none;
+    text-decoration: none;
+    transition: color 175ms ease; 
+}
+
+a:link {
+    color: #ff5757;
+}
+
+a:visited {
+    color: #ff5757;
+}
+
+a:hover {
+    color: #ffb0b0;
+}
+
+a:active {
+    color: #ff5757;
+}
+
+.content {
+    padding: 0 5vw;
+}
+
+button {
+    font-family: 'Montserrat', sans-serif;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}

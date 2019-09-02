@@ -36,6 +36,7 @@
     <Transaction>2019/08/30 17:44:28.595.pas,F:\2it-pat\Unit1.pas=F:\2it-pat\clientState.pas</Transaction>
     <Transaction>2019/09/01 01:09:36.803.rc,F:\2it-pat\UI\textures\textureres.rc=</Transaction>
     <Transaction>2019/09/01 01:09:58.269.rc,F:\2it-pat\UI\trade\trade-res.rc=</Transaction>
+    <Transaction>2019/09/01 21:07:53.935.pas,C:\Users\danie\Documents\2it-pat\UI\game_components\cardSprite.pas=</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="dependencies"/>

@@ -8,8 +8,11 @@
   },
   "license": "MIT",
   "dependencies": {
+    "firebase": "^6.5.0",
+    "normalize.css": "^8.0.1",
     "react": "^16.8.1",
-    "react-dom": "^16.8.1"
+    "react-dom": "^16.8.1",
+    "react-router-dom": "^5.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",
