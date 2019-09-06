@@ -3,6 +3,9 @@ import Page from './Page';
 import UserContext from './context/UserContext';
 import { Link, Switch, Route } from 'react-router-dom';
 import FirebaseContext from './context/FirebaseContext';
+import { ProfileDataContext } from './context/UserDataContexts';
+
+import imageCompression from 'browser-image-compression';
 
 import profile from '../static/placeholder.png';
 
@@ -12,33 +15,8 @@ export default function CurrentPage() {
     const user = useContext(UserContext);
     const firebase = useContext(FirebaseContext);
     // u - private user data; p - public user data
-    const [pData, setPData] = useState(undefined);
+    const pData = useContext(ProfileDataContext);
     const [uploading, setUploading] = useState(false);
-
-    // Get the data 
-    useEffect(() => {
-        firebase.firestore().collection("users").doc(user.uid).onSnapshot(function (doc) {
-            if (!doc.data()) {
-                firebase.firestore().collection("users").doc(user.uid).set({
-                    clientID: user.email.split("@")[0],
-                    friend_requests: [],
-                    sent_requests: []
-                });
-            }
-        });
-
-        firebase.firestore().collection('profiles').doc(user.uid).onSnapshot(doc => {
-            if (!doc.data()) {
-                firebase.firestore().collection('profiles').doc(user.uid).set({
-                    friends: [],
-                    bio: 'Gotta catch em all',
-                    profilePic: '',
-                    displayName: 'Anonymous Trainer'
-                });
-            };
-            setPData(doc.data());
-        });
-    }, [firebase, user]);
 
     function handleDrop(e) {
         e.stopPropagation();
@@ -47,30 +25,40 @@ export default function CurrentPage() {
         if (e.dataTransfer.files) if (e.dataTransfer.files.length > 0) {
             const file = e.dataTransfer.files[0];
             if (file.type.match(/image\//g)) {
-                var storageRef = firebase.storage().ref();
-                var profileRef = storageRef.child(`profiles/${user.uid}.${file.name.split('.').pop()}`);
-                setUploading('Uploading ...');
-                
-                var upload = profileRef.put(file);
+                setUploading('Compressing ...');
+                imageCompression(file, {
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 200,
+                }).then((cfile)=>{
+                    var storageRef = firebase.storage().ref();
+                    var profileRef = storageRef.child(`profiles/${user.uid}.${file.name.split('.').pop().toLowerCase()}`);
+                    setUploading('Uploading ...');
+                    
+                    var upload = profileRef.put(cfile);
 
-                upload.then(snapshot => {
-                    snapshot.ref.getDownloadURL().then(async function (downloadURL) {
-                        console.log('updating profile');
-                        setUploading('Applying ...');
+                    upload.then(snapshot => {
+                        snapshot.ref.getDownloadURL().then(async function (downloadURL) {
+                            console.log('updating profile');
+                            setUploading('Applying ...');
 
-                        await firebase.firestore().collection("profiles").doc(user.uid).update({
-                            profilePic: downloadURL
+                            await firebase.firestore().collection("profiles").doc(user.uid).update({
+                                profilePic: downloadURL
+                            });
+
+                            setUploading(false);
                         });
-
-                        setUploading(false);
                     });
-                });
 
-                upload.on('state_changed', function (snapshot) {
+                    upload.on('state_changed', function (snapshot) {
 
-                    var progress = Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                    console.log('Progress: ' + progress + '%');
-                });
+                        var progress = Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                        console.log('Progress: ' + progress + '%');
+                        setUploading(`Uploading (${progress} %)...`);
+                    });
+                })
+                .catch(e=>{
+                    setUploading('Compression failed.')
+                })
             }
         }
     }
@@ -125,7 +113,7 @@ export default function CurrentPage() {
                             <Route exact path="/profile/friends" component={FriendsList} />
                             <Route exact path="/profile/friends/add" component={FriendAdd} />
                         </Switch>
-                    </div> : undefined
+                    </div> : <h2>Loading ...</h2>
             }
         </Page>
     );
@@ -141,7 +129,7 @@ function FriendAdd () {
     }
 
     function handleSearch () {
-        firebase.firestore().collection('profiles').where('displayName', '>=', query).limit(20).get().then(snap=>{
+        firebase.firestore().collection('profiles').where('displayName', '==', query).limit(20).get().then(snap=>{
             var newState = [];
             snap.forEach(doc=>{
                 newState.push({...doc.data(), _id: doc.id});
@@ -194,34 +182,24 @@ function SearchResult({ data }) {
 
 
 function FriendsList () {
-    const user = useContext(UserContext);
+    const pData = useContext(ProfileDataContext);
     const firebase = useContext(FirebaseContext);
     const [ friends, setFriends ] = useState([]);
 
     useEffect(()=>{
-        firebase.firestore().collection('profiles').doc(user.uid).onSnapshot(snap=>{
-            if (!snap.data()) {
-                firebase.firestore().collection('profiles').doc(user.uid).set({
-                    friends: [],
-                    bio: 'Gotta catch em all',
-                    profilePic: '',
-                    displayName: 'Anonymous Trainer'
-                });
-                return;
-            };
+        if (!pData) return console.error('The account is invalid!');
 
-            if (!Array.isArray(snap.data().friends)) return;
+        if (!Array.isArray(pData.friends)) return;
 
-            let newState = [];
+        let newState = [];
 
-            snap.data().friends.forEach(el=>{
-                firebase.firestore().collection('profiles').doc(el).get().then((doc)=>{
-                    newState.push({...doc.data(), _id: doc.id});
-                    setFriends([...newState]);
-                });
+        pData.friends.forEach(el=>{
+            firebase.firestore().collection('profiles').doc(el).get().then((doc)=>{
+                newState.push({...doc.data(), _id: doc.id});
+                setFriends([...newState]);
             });
-        })
-    }, [firebase, user]);
+        });
+    }, [pData]);
 
     return (
         <>
@@ -246,17 +224,7 @@ function UpdateProfile () {
 
     // Get the data 
     useEffect(() => {
-        firebase.firestore().collection('profiles').doc(user.uid).onSnapshot(doc => {
-            if (!doc.data()) {
-                firebase.firestore().collection('profiles').doc(user.uid).set({
-                    friends: [],
-                    bio: 'Gotta catch em all',
-                    profilePic: '',
-                    displayName: 'Anonymous Trainer'
-                });
-                return;
-            };
-            
+        firebase.firestore().collection('profiles').doc(user.uid).get().then(doc => {
             if (doc.data().bio && doc.data().displayName) {
                 setDisplayName(doc.data().displayName);
                 setBio(doc.data().bio);

@@ -85,7 +85,6 @@
 			<DCCReference Include="UI\components\UIButton.pas"/>
 			<DCCReference Include="UI\components\UIContainer.pas"/>
 			<DCCReference Include="UI\tradeUI.pas"/>
-			<DCCReference Include="UI\profileUI.pas"/>
 			<DCCReference Include="serverSessions.pas"/>
 			<DCCReference Include="UI\components\UIImgButton.pas"/>
 			<DCCReference Include="dependencies\Textures.pas"/>
@@ -94,6 +93,7 @@
 			<DCCReference Include="gameState.pas"/>
 			<DCCReference Include="cardDeck.pas"/>
 			<DCCReference Include="clientState.pas"/>
+			<DCCReference Include="UI\preGameUI.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -149,6 +149,7 @@
 						<Source Name="MainSource">game.dpr</Source>
 					</Source>
 				</Delphi.Personality>
+				<ModelSupport>False</ModelSupport>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>

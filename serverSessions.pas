@@ -3,7 +3,7 @@ unit serverSessions;
 interface
 
 uses
-  IdIOHandlerSocket, cardDeck;
+  IdIOHandlerSocket, cardDeck, DBXJSON;
 
 type
   TClientSession = class
@@ -14,12 +14,14 @@ type
     FSocket: TIdIOHandlerSocket;
     FReady: boolean;
     FDeck: TCardDeck;
+    FDecks: TJSONArray;
     procedure SetSessionID(const Value: string);
     procedure SetUID(const Value: string);
     procedure SetUsername(const Value: string);
     procedure SetSocket(const Value: TIdIOHandlerSocket);
     procedure SetReady(const Value: boolean);
     procedure SetDeck(const Value: TCardDeck);
+    procedure SetDecks(const Value: TJSONArray);
   published
     constructor Create;
     property UID : string read FUID write SetUID;
@@ -28,6 +30,8 @@ type
     property Socket : TIdIOHandlerSocket read FSocket write SetSocket;
     property Ready: boolean read FReady write SetReady;
     property Deck : TCardDeck read FDeck write SetDeck;
+    property Decks : TJSONArray read FDecks write SetDecks;
+    procedure LoadDeck(index: integer);
   end;
 
 
@@ -45,9 +49,19 @@ begin
   FReady := false;
 end;
 
+procedure TClientSession.LoadDeck(index: integer);
+begin
+  //
+end;
+
 procedure TClientSession.SetDeck(const Value: TCardDeck);
 begin
   FDeck := Value;
+end;
+
+procedure TClientSession.SetDecks(const Value: TJSONArray);
+begin
+  FDecks := Value;
 end;
 
 procedure TClientSession.SetReady(const Value: boolean);

@@ -25,7 +25,6 @@ uses
   UIButton in 'UI\components\UIButton.pas',
   UIContainer in 'UI\components\UIContainer.pas',
   tradeUI in 'UI\tradeUI.pas',
-  profileUI in 'UI\profileUI.pas',
   serverSessions in 'serverSessions.pas',
   UIImgButton in 'UI\components\UIImgButton.pas',
   Textures in 'dependencies\Textures.pas',
@@ -33,7 +32,8 @@ uses
   gameLogic in 'gameLogic.pas',
   gameState in 'gameState.pas',
   cardDeck in 'cardDeck.pas',
-  clientState in 'clientState.pas';
+  clientState in 'clientState.pas',
+  preGameUI in 'UI\preGameUI.pas';
 
 {$R *.res}
 

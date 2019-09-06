@@ -65,6 +65,7 @@
     overflow: hidden;
     padding: 15px 50px;
     transition: transform 200ms ease;
+    margin-bottom: 20px;
 }
 
 .log-item:hover {

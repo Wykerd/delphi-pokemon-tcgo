@@ -26,7 +26,7 @@
 .profile .header .profile-image .image-upload {
     z-index : 10;
     opacity: 0;
-    background-color: rgba(0, 0, 0, 25%);
+    background-color: rgba(0, 0, 0, 66%);
     transition: opacity 200ms ease;
     display: flex;
     align-items: center;
@@ -41,6 +41,7 @@
     content: 'Drag to upload image';
     font-family: 'Montserrat', sans-serif;
     display: block;
+    color: white;
 }
 
 .profile .header .wrapper {
@@ -72,10 +73,10 @@
 
 .profile .quick-actions li {
     display: flex;
-    flex-grow: 1;
-    height: 40px;
     align-items: center;
     justify-content: center;
+    flex-grow: 1;
+    height: 40px;
     cursor: pointer;
     background-color: #4766a0;
     color: white;
@@ -94,6 +95,11 @@
 
 .profile .quick-actions a {
     color: white;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .profile .quick-actions a:link {

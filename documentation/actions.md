@@ -1,5 +1,5 @@
 # Server to Client Actions (server-to-client-payloads.def)
-- authenticate () () ()
+- authenticate (server-to-client-payloads.def/ClientAuthenticate) () ()
 - chat () (implimented) (implimented)
 - join () (implimented) (implimented)
 - info (server-to-client-payloads.def) () ()

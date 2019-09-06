@@ -19,3 +19,18 @@ interface ServerPayload {
     "action": String;
     "data": Object;
 }
+/*
+reasons:
+- session_exists
+- user_undefined
+- no_decks
+- internal_error
+*/
+
+interface ClientAuthenticate {
+    "success": Boolean;
+    "reason"?: String; // if not authenticated
+    // if authenticated
+    "sid"?: String; // GUID
+    "decks"?: String[]; // Deck names
+}

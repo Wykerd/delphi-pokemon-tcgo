@@ -6,7 +6,8 @@ uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdCustomTCPServer, IdTCPServer, IdContext,
   ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, DBXJSON,
-  IdIOHandlerSocket, StrUtils, Windows, serverConfig, serverSessions, gameLogic;
+  IdIOHandlerSocket, StrUtils, Windows, serverConfig, serverSessions, gameLogic,
+  IdHTTP, HTTPApp;
 
 type
   TServer = class(TIdTCPServer)
@@ -64,38 +65,113 @@ end;
 procedure TServer.ClientLogin(username, uid: string; callback : TIdIOHandlerSocket);
 var
   // Dummy varable
-  i : byte;
+  i : boolean;
 
   procedure Authenticate;
-  var
-    sid: TGuid;
-    res: HResult;
   begin
-    setlength(FSessions, length(FSessions) + 1);
+    TAnonymousThread.Create(procedure
+      var
+        sid: TGuid;
+        res: HResult;
+        idHttp : TIdHTTP;
+        api_res : string;
+        err, json, auth_res, auth_res_data, tmp, deckObj : TJSONObject;
+        names, decks : TJSONArray;
+        i : integer;
+      begin
+        // Get the client data from the api
+        idHttp := TIdHTTP.Create;
+        idHttp.HandleRedirects := true;
+        try
+          try
+            api_res := idHttp.Get(format('%sgetDeckData?uid=%s&motd=%s&name=%s&user=%s',
+              [Config.APIURL,
+              String(Httpencode(Config.UID)),
+              String(Httpencode(Config.Listing.Get('motd').JsonValue.Value)),
+              String(Httpencode(Config.Listing.Get('name').JsonValue.Value)),
+              String(Httpencode(uid))]));
+            println('login', api_res);
 
-    FSessions[High(FSessions)] := TClientSession.Create;
+            // Check the response for decks
+            json := TJsonObject(TJSONObject.ParseJSONValue(
+                TEncoding.ASCII.GetBytes(StripNonJson(api_res)),0));
+            if json <> nil then
+              if json.Exists('data') then
+              begin
+                decks := TJSONArray(json.Get('data').JsonValue);
+                names := TJSONArray.Create;
+                if decks <> nil then
+                begin
+                  for I := 0 to decks.Size - 1 do
+                  begin
+                    tmp := TJSONObject(decks.Get(i));
+                    if tmp.Exists('name') then
+                    begin
+                      deckObj := TJSONObject.Create;
+                      deckObj.AddPair(TJSONPair.Create('name', tmp.Get('name').JsonValue.Value));
+                      deckObj.AddPair(TJSONPair.Create('index', inttostr(i)));
+                      names.Add(deckObj);
+                    end;
+                  end; //end for loop to populate names
 
-    res := CreateGUID(sid);
-    if res = S_OK then
-       FSessions[High(FSessions)].sessionid := GuidToString(sid)
-    else
-    begin
-      // On error
-      callback.WriteLn('{"action":"authenticate","data":{"success":"false"}}');
-      exit;
-    end;
+                  // Create the session
+                  setlength(FSessions, length(FSessions) + 1);
 
-    FSessions[High(FSessions)].uid := uid;
-    FSessions[High(FSessions)].username := username;
-    FSessions[High(FSessions)].Socket := callback;
+                  FSessions[High(FSessions)] := TClientSession.Create;
 
-    callback.WriteLn('{"action":"authenticate","data":{"success":"true","sid":"'
-      + FSessions[High(FSessions)].sessionid + '"}}');
+                  res := CreateGUID(sid);
+                  FSessions[High(FSessions)].sessionid := GuidToString(sid);
 
-    BroadCast(Format('{"action":"join","data":{"message":"' + Config.ChatFormat.Join + '"}}',
-      [username]));
+                  FSessions[High(FSessions)].uid := uid;
+                  FSessions[High(FSessions)].username := username;
+                  FSessions[High(FSessions)].Socket := callback;
+                  FSessions[High(FSessions)].Decks := decks;
+                  // end creating session
 
-    UpdateGameQueue;
+                  auth_res_data := TJSONObject.Create;
+                  auth_res_data.AddPair(TJSONPair.Create('success', 'true'));
+                  auth_res_data.AddPair(TJSONPair.Create('sid', FSessions[High(FSessions)].sessionid));
+                  auth_res_data.AddPair(TJSONPair.Create('decks', names));
+
+                  auth_res := TJSONObject.Create;
+                  auth_res.AddPair(TJSONPair.Create('action', 'authenticate'));
+                  auth_res.AddPair(TJSONPair.Create('data', auth_res_data));
+
+                  callback.WriteLn(auth_res.ToString);
+
+                  BroadCast(Format('{"action":"join","data":{"message":"' + Config.ChatFormat.Join + '"}}',
+                    [username]));
+
+                  UpdateGameQueue;
+                  //
+
+                end; //end decks check
+                names.Free;
+              end;
+
+          finally
+            idHttp.Free;
+          end;
+        except
+          on E : Exception do
+          begin
+            println('login', 'ERROR: ' + E.ClassName+' error raised, with message : '+E.Message);
+            if E is EIdHTTPProtocolException then
+            begin
+              err := TJsonObject(TJSONObject.ParseJSONValue(
+                TEncoding.ASCII.GetBytes(StripNonJson((e as EIdHTTPProtocolException).ErrorMessage)),0));
+              println('login', (e as EIdHTTPProtocolException).ErrorMessage);
+              if err.Exists('message') then
+                callback.WriteLn('{"action":"authenticate","data":{"success":"false","reason":"' +
+                  err.Get('message').JsonValue.Value + '"}}')
+              else
+                callback.WriteLn('{"action":"authenticate","data":{"success":"false","reason":"internal_error"}}');
+            end
+            else
+              callback.WriteLn('{"action":"authenticate","data":{"success":"false","reason":"internal_error"}}');
+          end;
+        end;
+      end).Start;
   end;
 
 begin
@@ -103,7 +179,7 @@ begin
   if GetUserFromUID(uid, FSessions) > -1 then
   begin
     println('login', 'Another user with that ID is already authenticated!');
-    callback.WriteLn('{"action":"authenticate","data":{"success":"false"}}');
+    callback.WriteLn('{"action":"authenticate","data":{"success":"false","reason":"session_exists"}}');
     exit;
   end;
   if dmDB.tblUsers.Locate('UID', uid, []) then
@@ -267,9 +343,9 @@ begin
         ClientLogin(sUsername, sUID, AContext.Connection.Socket);
       end
       // get server info for server list
-      else if action = 'info' then
+      else if action = 'listing-info' then
       begin
-        AContext.Connection.Socket.WriteLn('{"action":"info","data":' + Config.Listing.ToString + '}');
+        AContext.Connection.Socket.WriteLn('{"action":"listing-info","data":' + Config.Listing.ToString + '}');
       end
       // If not in current game actions can't be executed by server
       else if not bAUTH then

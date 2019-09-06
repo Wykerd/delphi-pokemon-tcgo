@@ -8,7 +8,7 @@ export default function Login () {
     const firebase = useContext(FirebaseContext);
 
     const [ data, setData ] = useState({
-        'userid': __user__ID__,
+        'email': __user__ID__,
         'password': ''
     });
 
@@ -27,13 +27,13 @@ export default function Login () {
     }
 
     function handleSignIn () {
-        firebase.auth().signInWithEmailAndPassword(`${data.userid}@pkm.co.za`, `${data.password}`).catch(e=>{
+        firebase.auth().signInWithEmailAndPassword(data.email, data.password).catch(e=>{
             console.warn(e.message);
         });
     }
 
     function handleSignUp () {
-        firebase.auth().createUserWithEmailAndPassword(`${data.userid}@pkm.co.za`, `${data.password}`).catch(e=>{
+        firebase.auth().createUserWithEmailAndPassword(data.email, data.password).catch(e=>{
             console.warn(e.message);
         });
     }
@@ -44,7 +44,7 @@ export default function Login () {
             user ? <Redirect to="/home" /> : <div className="login-page">
                 <div className="login-wrap">
                     <form onSubmit={handleSubmit}>
-                        <input onChange={handleChange} name="userid" value={data.userid} type="text" />
+                        <input onChange={handleChange} name="email" value={data.email} type="text" />
                         <input onChange={handleChange} name="password" value={data.password} type="password" />
                         <button onClick={handleSignIn} id="login-button">Sign In</button>
                         <button onClick={handleSignUp} id="sign-up-button">Don't have an account? Sign Up.</button>

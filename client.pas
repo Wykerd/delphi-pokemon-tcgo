@@ -48,7 +48,7 @@ type
     procedure SendChat (s: string);
     // Actions
     procedure UpdateServerListings (Index: integer; Motd: string; Name: string; CustomName: string = '');
-    procedure ExecuteAction (JSON : TJSONObject);
+    procedure ExecuteAction (s : string);
     // State
     property GameState : TClientState read FGameState write SetGameState;
     procedure PushStateToUI;
@@ -73,23 +73,24 @@ begin
   println('status', 'Disconnected');
 end;
 
-procedure TClient.ExecuteAction(JSON: TJSONObject);
+procedure TClient.ExecuteAction(s: string);
 var
   action : string;
-  data: TJSONObject;
+  data, JSON: TJSONObject;
 begin
+  JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(s),0));
   if JSON <> nil then
   begin
     // Check if payload has action
     if JSON.Get('action') = nil then
     begin
-      println('action', 'ERROR: no action in payload!');
+      threadprint('action', 'ERROR: no action in payload!');
       exit;
     end;
     // Check for data
     if JSON.Get('data') = nil then
     begin
-      println('action', 'ERROR: no data property in payload');
+      threadprint('action', 'ERROR: no data property in payload');
       exit;
     end;
 
@@ -97,7 +98,7 @@ begin
 
     if data = nil then
     begin
-      println('action', 'ERROR: empty data property in payload');
+      threadprint('action', 'ERROR: empty data property in payload');
       exit;
     end;
     //
@@ -112,7 +113,7 @@ begin
         begin
           if data.Get('sid') <> nil then
           begin
-            println('auth', 'Successfully authenticated');
+            threadprint('auth', 'Successfully authenticated');
             // Add the session to the auth credentials!
             TJSONObject(Credentials.JsonValue).AddPair(data.Get('sid'));
             // request the latest server info to update the cache
@@ -120,10 +121,10 @@ begin
             Authenticated := true;
           end
           else
-            println('auth', 'Authentication payload does not contain the field "sid"');
+            threadprint('auth', 'Authentication payload does not contain the field "sid"');
         end
         else
-          println('auth', 'Could not authenticate');
+          threadprint('auth', 'Could not authenticate');
       end;
     end; // end authenticate
 
@@ -131,12 +132,12 @@ begin
     begin
       if data.Get('message') <> nil then
       begin
-        UI.GameUI.IncomingChat(data.Get('message').JsonValue.Value);
+        tthread.Synchronize(procedure begin UI.GameUI.IncomingChat(data.Get('message').JsonValue.Value); end);
       end;
     end;
 
     // Update local server listing cache
-    if action = 'info' then
+    if action = 'listing-info' then
     begin
       if not ((data.Get('motd') = nil) or (data.Get('name') = nil)) then
       begin
@@ -149,7 +150,7 @@ begin
   end
   else
   begin
-    println('action', 'ERROR: Invalid JSON payload');
+    threadprint('action', 'ERROR: Invalid JSON payload');
   end;
 end;
 
@@ -209,7 +210,7 @@ begin
   // Check if the auth file is available
   if not fileExists(AuthLock) then
   begin
-    println('error', 'Could not locate the authentication file! One has to be created in the laucher!');
+    threadprint('error', 'Could not locate the authentication file! One has to be created in the laucher!');
     exit;
   end;
 
@@ -218,7 +219,7 @@ begin
     try
       reset(tF);
     except
-      println('error', 'Error while opening the config file, is it already open?');
+      threadprint('error', 'Error while opening the config file, is it already open?');
     end;
   finally
     while not eof(tF) do
@@ -234,11 +235,11 @@ begin
       JSON := TJsonObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(data),0));
       if JSON.Get('auth') = nil then
       begin
-        println('error', 'Invalid authentication file (no auth object). Create new one in the launcher');
+        threadprint('error', 'Invalid authentication file (no auth object). Create new one in the launcher');
       end
       else if TJSONObject(JSON.Get('auth').JsonValue).get('uid') = nil then
       begin
-        println('error', 'Invalid authentication file (no uid). Create new one in the launcher!');
+        threadprint('error', 'Invalid authentication file (no uid). Create new one in the launcher!');
       end;
 
       JSONRes.AddPair(TJSONPair.Create('action', 'authenticate'));
@@ -246,12 +247,12 @@ begin
 
       // Send the authentication request to the server
       IOHandler.WriteLn(JSONRes.ToString);
-      println('auth', 'Attempting to authenticate with server');
+      threadprint('auth', 'Attempting to authenticate with server');
 
       // Set the credentials for future use;
       Credentials := JSON.Get('auth');
     except
-      println('error', 'An eror occured while reading / sending the authentication payload');
+      threadprint('error', 'An eror occured while reading / sending the authentication payload');
     end;
   end;
 
@@ -267,11 +268,11 @@ begin
   AuthLock := GetCurrentDir + '\client\auth.json';
   ServersLock := GetCurrentDir + '\client\server-list.json';
   ServerIndex := -1;
-  Authenticated := false;
   Credentials := nil;
   UI := TClientUI.CreateNew(Self, 0);
   UI.StartTrigger := Start;
   UI.GameUI.OnChat := SendChat;
+  Authenticated := false;
 end;
 
 // Use an pre-existing UID
@@ -345,7 +346,7 @@ end;
 
 procedure TClient.PushStateToUI;
 begin
-  UI.GameUI.State := GameState;
+  tthread.Synchronize(procedure begin UI.GameUI.State := GameState; end);
 end;
 
 procedure TClient.Run(Sender: TIdThreadComponent);
@@ -355,16 +356,9 @@ var
 begin
   req := IOHandler.ReadLn();
 
-  // Check to see if it is valid json
-  JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(req),0));
-
   // Synchronize with main thread
-  TThread.Synchronize(nil,
-  procedure
-  begin
-    println('incoming', req);
-    ExecuteAction(JSON);
-  end);
+  threadprint('incoming', req);
+  ExecuteAction(req);
 end;
 
 procedure TClient.SendChat(s: string);
@@ -390,6 +384,7 @@ end;
 procedure TClient.SetAuthenticated(const Value: boolean);
 begin
   FAuthenticated := Value;
+  Tthread.Synchronize(procedure begin UI.PreGameUI.Authenticated := FAuthenticated; end);
 end;
 
 procedure TClient.SetAuthLock(const Value: string);
@@ -440,7 +435,7 @@ procedure TClient.threadprint(t, s: string);
 begin
   // Queue the action to be preformed in the main thread as it is not
   // thread safe.
-  TThread.Queue(nil,
+  TThread.Synchronize(nil,
     procedure
     begin
       Debug.Lines.Add('[' + uppercase(t) + '] ' + s);

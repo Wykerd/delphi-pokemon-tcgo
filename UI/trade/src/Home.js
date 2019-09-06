@@ -1,52 +1,15 @@
 import React, { useContext, useEffect, useState } from "react";
 import Page from './Page';
-import UserContext from './context/UserContext';
 import FirebaseContext from './context/FirebaseContext';
 import './css/home';
+import { UserDataContext, LogDataContext } from './context/UserDataContexts';
 
 import profile from '../static/placeholder.png';
 
 export default function Home () {
-    const user = useContext(UserContext);
-    const firebase = useContext(FirebaseContext);
     // u - private user data; p - public user data
-    const [ uData, setUData ] = useState(undefined);
-    const [ pData, setPData ] = useState(undefined);
-    const [ logData, setLogData ] = useState([]);
-
-    useEffect(()=>{
-        firebase.firestore().collection("users").doc(user.uid).onSnapshot(function(doc) {
-            if (!doc.data()) {
-                firebase.firestore().collection("users").doc(user.uid).set({
-                    clientID: user.email.split("@")[0],
-                    friend_requests: [],
-                    sent_requests: []
-                });
-            }
-            setUData(doc.data());
-        });
-
-        firebase.firestore().collection('profiles').doc(user.uid).onSnapshot(doc=>{
-            if (!doc.data()){
-                firebase.firestore().collection('profiles').doc(user.uid).set({
-                    friends: [],
-                    bio: 'Gotta catch em all',
-                    profilePic: '',
-                    displayName: 'Anonymous Trainer'
-                });
-            }
-            setPData(doc.data());
-        });
-
-        firebase.firestore().collection('logs').where('user', '==', firebase.firestore().collection("users").doc(user.uid)).onSnapshot(snap=>{
-            let newState = [];
-            snap.forEach(doc=>{
-                newState.push({...doc.data(), _id: doc.id});
-                
-            });
-            setLogData(newState);
-        });
-    }, []);    
+    const uData = useContext(UserDataContext);
+    const logData = useContext(LogDataContext);
 
     return (
         <Page>
@@ -76,10 +39,10 @@ export default function Home () {
 }
 
 function LogItem ({ data }) {
-    const [ serverDat, setServerDat ] = useState({name: 'Loading...', _id: ''});
+    const [ serverDat, setServerDat ] = useState({name: 'Loading ...', action: 'Loading ...', _id: ''});
 
     useEffect(()=>{
-        data.server.onSnapshot(dat=>setServerDat({...dat.data(), _id: dat.id}));
+        data.server.get().then(dat=>setServerDat({...dat.data(), _id: dat.id}));
     }, []);
 
     return (
@@ -97,7 +60,7 @@ function FriendRequest ({ data }) {
     const [ loading, setLoading ] = useState(false);
 
     useEffect(()=>{
-        data.onSnapshot(snap=>setDat(snap.data()));
+        data.get().then(snap=>setDat(snap.data()));
     }, []);
 
     function handleAccept () {
