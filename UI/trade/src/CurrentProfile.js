@@ -112,11 +112,35 @@ export default function CurrentPage() {
                             <Route exact path="/profile/update" component={UpdateProfile} />
                             <Route exact path="/profile/friends" component={FriendsList} />
                             <Route exact path="/profile/friends/add" component={FriendAdd} />
+                            <Route exact path="/profile/link" component={LinkAccount} />
                         </Switch>
                     </div> : <h2>Loading ...</h2>
             }
         </Page>
     );
+}
+
+function LinkAccount () {
+    const firebase = useContext(FirebaseContext);
+    const [ guid, setGuid ] = useState(__inject.client_id);
+    const [ error, setError ] = useState(false);
+
+    function handleLink () {
+        var linkAccount = firebase.functions().httpsCallable('linkAccount');
+        linkAccount({client_id: guid}).then(console.log).catch(e=>{
+            setError(e.message);
+        });
+    }
+
+    return <>
+        <div className="link-account">
+            <input type="text" value={guid} onChange={e=>setGuid(e.target.value)} />
+            {
+                error ? <span>{error}</span> : undefined
+            }
+            <button onClick={handleLink}>Link Account</button>
+        </div>
+    </>
 }
 
 function FriendAdd () {

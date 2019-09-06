@@ -87,7 +87,7 @@ begin
       threadprint('action', 'ERROR: no action in payload!');
       exit;
     end;
-    // Check for data
+    // Check for data [Validate]
     if JSON.Get('data') = nil then
     begin
       threadprint('action', 'ERROR: no data property in payload');
@@ -124,7 +124,13 @@ begin
             threadprint('auth', 'Authentication payload does not contain the field "sid"');
         end
         else
+        begin
           threadprint('auth', 'Could not authenticate');
+          if data.Exists('reason') then
+            UI.PreGameUI.AuthError('Authentication error: ' + data.get('reason').JsonValue.Value)
+          else
+            UI.PreGameUI.AuthError('Authentication error: Unknown error. Is the server modded?');
+        end;
       end;
     end; // end authenticate
 
@@ -132,7 +138,7 @@ begin
     begin
       if data.Get('message') <> nil then
       begin
-        tthread.Synchronize(procedure begin UI.GameUI.IncomingChat(data.Get('message').JsonValue.Value); end);
+        UI.GameUI.IncomingChat(data.Get('message').JsonValue.Value);
       end;
     end;
 
@@ -346,7 +352,7 @@ end;
 
 procedure TClient.PushStateToUI;
 begin
-  tthread.Synchronize(procedure begin UI.GameUI.State := GameState; end);
+  UI.GameUI.State := GameState;
 end;
 
 procedure TClient.Run(Sender: TIdThreadComponent);
@@ -384,7 +390,7 @@ end;
 procedure TClient.SetAuthenticated(const Value: boolean);
 begin
   FAuthenticated := Value;
-  Tthread.Synchronize(procedure begin UI.PreGameUI.Authenticated := FAuthenticated; end);
+  UI.PreGameUI.Authenticated := FAuthenticated;
 end;
 
 procedure TClient.SetAuthLock(const Value: string);

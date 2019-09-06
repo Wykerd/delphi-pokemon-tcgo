@@ -65,7 +65,9 @@ procedure TTradeUI.HandleLoadStart(Sender: TObject; const browser: ICefBrowser;
   const frame: ICefFrame; transitionType: TCefTransitionType);
 begin
   // Inject the username variable into the browser view
-  FChromiumWindow.ChromiumBrowser.Browser.MainFrame.ExecuteJavaScript('__user__ID__ = "' + UserID + '"', 'http://localhost:1234', 0);
+  FChromiumWindow.ChromiumBrowser.Browser.MainFrame.ExecuteJavaScript(
+    '__inject = { client: "PASCAL", client_id: "' + UserID + '" }',
+    'http://localhost:1234', 0);
 end;
 
 procedure TTradeUI.Init;

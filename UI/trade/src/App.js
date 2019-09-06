@@ -42,7 +42,7 @@ export default () => {
           setDecksData(newState);
       })
 
-      firebase.firestore().collection('logs').where('user', '==', firebase.firestore().collection("users").doc(user.uid)).onSnapshot(snap=>{
+      firebase.firestore().collection('logs').orderBy("timestamp", "desc").where('user', '==', firebase.firestore().collection("users").doc(user.uid)).limit(10).onSnapshot(snap=>{
           let newState = [];
           snap.forEach(doc=>{
               newState.push({...doc.data(), _id: doc.id});

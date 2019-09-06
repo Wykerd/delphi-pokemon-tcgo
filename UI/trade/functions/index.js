@@ -119,6 +119,36 @@ exports.sendInvite = functions.https.onCall((data, context) => {
     });
 });
 
+exports.linkAccount = functions.https.onCall((data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
+    }
+
+    const uid = context.auth.uid;
+
+    if (!data) throw new functions.https.HttpsError('invalid-argument', 'No data');
+
+    const { client_id } = data;
+
+    if (!client_id) throw new functions.https.HttpsError('invalid-argument', 'Required data client_id not found');
+
+    return admin.firestore().collection('users').where('clientID', '==', client_id).limit(1).get().then(snap=>{
+        if (snap.docs.length > 0) throw new functions.https.HttpsError('permission-denied', 'Another account is already linked with that client id');
+
+        return admin.firestore().collection('users').doc(uid).get().then(snap=>{
+            const data = snap.data();
+            
+            if (!data) {
+                throw new functions.https.HttpsError ('not-found', 'The user does not exist')
+            } 
+
+            return admin.firestore().collection('users').doc(uid).update({
+                clientID: client_id
+            });
+        });
+    })
+});
+
 // Triggers
 exports.userCreate = functions.auth.user().onCreate((user) => {
     // Randomly pick default deck for each player

@@ -8,7 +8,7 @@ export default function Login () {
     const firebase = useContext(FirebaseContext);
 
     const [ data, setData ] = useState({
-        'email': __user__ID__,
+        'email': '',
         'password': ''
     });
 
