@@ -3,7 +3,7 @@ unit helpers;
 interface
 
 uses
-  Classes, DBXJSON, SysUtils, IdSync, ComCtrls, Character;
+  Classes, DBXJSON, SysUtils, IdSync, ComCtrls, Character, Variants;
 
 type
   TStrArr = array of string;
@@ -16,7 +16,11 @@ type
   end;
   // //
 
-  TObjProcedure = procedure of object;
+  // Events //
+  TGenericEvent<T1> = procedure (A: T1) of object;
+  TGenericEvent = procedure of object;
+  // For older support before renaming!
+  TObjProcedure = TGenericEvent;
 
   // Code pulled from StackOverflow by user who copied it from an newer version
   // of delphi as this version doesn't include this class
@@ -39,7 +43,16 @@ function LoadJSONFromFile (s: string) : TJSONObject;
 // More JSON helpers from https://gist.github.com/fabriciocolombo/4236ce010787d86b5c65
 function StripNonJson(s: string): string;
 
+//
+function UndefinedVar(v: Variant): boolean;
+
 implementation
+
+function UndefinedVar(v: Variant): boolean;
+begin
+  result := false;
+  result := VarIsClear(v) or VarIsEmpty(v) or VarIsNull(v);
+end;
 
 function LoadJSONFromFile (s: string) : TJSONObject;
 var

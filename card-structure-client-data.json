@@ -1,7 +1,6 @@
 {
     "id": "1",
     "type": "pokemon",
-    "image": "card-icon",
     "set": {
         "id": "1",
         "name": "Base Set",
@@ -38,6 +37,7 @@
         "base-image": "card-icon",
         "stage": 1,
         "hp": 50,
+        "image": "card-icon",
         "gx": 0
     }
 }

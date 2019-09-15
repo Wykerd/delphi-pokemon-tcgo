@@ -94,6 +94,7 @@
 			<DCCReference Include="cardDeck.pas"/>
 			<DCCReference Include="clientState.pas"/>
 			<DCCReference Include="UI\preGameUI.pas"/>
+			<DCCReference Include="cardData.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

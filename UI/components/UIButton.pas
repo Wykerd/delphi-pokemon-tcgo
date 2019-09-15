@@ -144,6 +144,7 @@ end;
 procedure TUIButton.SetText(const Value: string);
 begin
   FText := Value;
+  Invalidate;
 end;
 
 procedure TUIButton.SetTextOffset(const Value: real);

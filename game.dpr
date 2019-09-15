@@ -33,17 +33,17 @@ uses
   gameState in 'gameState.pas',
   cardDeck in 'cardDeck.pas',
   clientState in 'clientState.pas',
-  preGameUI in 'UI\preGameUI.pas';
+  preGameUI in 'UI\preGameUI.pas',
+  cardData in 'cardData.pas';
 
 {$R *.res}
 
 begin
   GlobalCEFApp := TCefApplication.Create;
-  GlobalCEFApp.EnableGPU            := True;      // Enable hardware acceleration
+  GlobalCEFApp.EnableGPU := True;      // Enable hardware acceleration
   GlobalCEFApp.UserDataPath := 'cef_userdata';
   GlobalCEFApp.Cache := 'cef_cache';
   GlobalCEFApp.PersistSessionCookies := True;
-  // Disabling some features to improve stability
   GlobalCEFApp.DisableFeatures  := 'NetworkService,OutOfBlinkCors';
 
   if GlobalCEFApp.StartMainProcess then
@@ -51,9 +51,9 @@ begin
       Application.Initialize;
       Application.MainFormOnTaskbar := True;
       Application.CreateForm(TfrmLauncher, frmLauncher);
-  Application.CreateForm(TdmDB, dmDB);
-  Application.CreateForm(TfrmUserEditor, frmUserEditor);
-  Application.Run;
+      Application.CreateForm(TdmDB, dmDB);
+      Application.CreateForm(TfrmUserEditor, frmUserEditor);
+      Application.Run;
     end;
 
   DestroyGlobalCEFApp;

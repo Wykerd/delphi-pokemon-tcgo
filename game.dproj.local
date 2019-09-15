@@ -41,6 +41,7 @@
     <Transaction>2019/09/06 18:03:52.655.pas,C:\Users\danie\Documents\2it-pat\UI\profileUI.pas=C:\Users\danie\Documents\2it-pat\UI\preGameUI.pas</Transaction>
     <Transaction>2019/09/06 18:03:52.666.pas,C:\Users\danie\Documents\2it-pat\UI\preGameUI.pas=C:\Users\danie\Documents\2it-pat\UI\profileUI.pas</Transaction>
     <Transaction>2019/09/06 18:04:04.163.pas,C:\Users\danie\Documents\2it-pat\UI\profileUI.pas=</Transaction>
+    <Transaction>2019/09/08 00:21:36.435.pas,C:\Users\danie\Documents\2it-pat\Unit1.pas=C:\Users\danie\Documents\2it-pat\cardData.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="dependencies"/>
@@ -81,5 +82,6 @@
     <File Path="gameState.pas"/>
     <File Path="cardDeck.pas"/>
     <File Path="clientState.pas"/>
+    <File Path="cardData.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

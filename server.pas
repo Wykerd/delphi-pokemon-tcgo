@@ -7,7 +7,7 @@ uses
   IdTCPConnection, IdTCPClient, IdCustomTCPServer, IdTCPServer, IdContext,
   ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, DBXJSON,
   IdIOHandlerSocket, StrUtils, Windows, serverConfig, serverSessions, gameLogic,
-  IdHTTP, HTTPApp;
+  IdHTTP, HTTPApp, cardDeck;
 
 type
   TServer = class(TIdTCPServer)
@@ -72,7 +72,6 @@ var
     TAnonymousThread.Create(procedure
       var
         sid: TGuid;
-        res: HResult;
         idHttp : TIdHTTP;
         api_res : string;
         err, json, auth_res, auth_res_data, tmp, deckObj : TJSONObject;
@@ -96,6 +95,7 @@ var
             json := TJsonObject(TJSONObject.ParseJSONValue(
                 TEncoding.ASCII.GetBytes(StripNonJson(api_res)),0));
             if json <> nil then
+            begin
               if json.Exists('data') then
               begin
                 decks := TJSONArray(json.Get('data').JsonValue);
@@ -119,7 +119,7 @@ var
 
                   FSessions[High(FSessions)] := TClientSession.Create;
 
-                  res := CreateGUID(sid);
+                  CreateGUID(sid);
                   FSessions[High(FSessions)].sessionid := GuidToString(sid);
 
                   FSessions[High(FSessions)].uid := uid;
@@ -147,8 +147,12 @@ var
 
                 end; //end decks check
                 names.Free;
-              end;
-
+              end // json has data
+              else
+                callback.WriteLn('{"action":"authenticate","data":{"success":"false","reason":"api_error"}}');
+            end // json is defined
+            else
+              callback.WriteLn('{"action":"authenticate","data":{"success":"false","reason":"api_error"}}');
           finally
             idHttp.Free;
           end;
@@ -386,13 +390,36 @@ begin
 end;
 
 procedure TServer.ProcessAction(action: string; data: TJSONObject; username, uid : string);
+var
+  Session: TClientSession;
+  temp : Variant;
+  jsontemp : TJSONObject;
 begin
+  Session := FSessions[GetUserFromUID(uid, FSessions)];
   if action = 'chat' then
   begin
     if data.Get('message') <> nil then
       BroadCast(Format('{"action":"chat","data":{"message":"' + Config.ChatFormat.Chat + '"}}',
         [username, data.Get('message').JsonValue.Value]));
-  end;
+  end
+  else if action = 'game-use-deck' then
+  begin
+    if data.Exists('index') then
+    begin
+      temp := strtoint(data.Get('index').JsonValue.Value);
+      if (temp < session.Decks.Size) and (temp > -1) then
+      begin
+        jsontemp := TJSONObject(Session.Decks.Get(temp));
+        Session.Deck := TCardDeck.CreateFromJSON(jsontemp);
+        Session.Socket.WriteLn(Session.Deck.Deck[0].ToJSON.ToString);
+      end
+      else
+      begin
+        Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"false","reason":"out_of_range"}}');
+      end;
+      UpdateGameQueue;
+    end;
+  end; // end if game-use-deck
 end;
 
 procedure TServer.SetConfig(const Value: TServerConfig);

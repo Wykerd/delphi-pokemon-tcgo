@@ -29,10 +29,11 @@ interface PokemonData {
     "stage": Number; // 0 = base
     "hp": Number;
     "image": String;
-    "attached-stages"?: Card[];
+    "attached-stage"?: Card;
 }
 
 interface TrainerData {
+    "id": String;
     "image": String;
     "function": String;
     "description": String;

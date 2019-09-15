@@ -25,6 +25,7 @@ reasons:
 - user_undefined
 - no_decks
 - internal_error
+- api_error
 */
 
 interface ClientAuthenticate {
@@ -33,4 +34,13 @@ interface ClientAuthenticate {
     // if authenticated
     "sid"?: String; // GUID
     "decks"?: String[]; // Deck names
+}
+
+interface ClientGameUseDeck {
+    index: Number;
+}
+
+interface ServerGameUseDeck {
+    sucess: Boolean; 
+    reason?: String; // out_of_range
 }

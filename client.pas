@@ -1,3 +1,14 @@
+{
+IMPORTANT DEV NOTES REGARDING DATA FLOW FROM CLIENT TO CLIENT UI
+-- All client events run in a seperate thread and has to be synced to main thread
+   before accessing the UI component!
+
+-- Use this boilerplate to fix any issues it this was ommited
+   TThread.Synchronize(nil, procedure
+    begin
+      // Update the ui in this function
+    end);
+}
 unit client;
 
 interface
@@ -34,6 +45,7 @@ type
     procedure SetServersLock(const Value: string);
     procedure SetServerIndex(const Value: integer);
     procedure SetGameState(const Value: TClientState);
+    procedure HandleDeckSelection (index: integer);
   published
     constructor Create (AOwner: TComponent);
     procedure Start (Host: string; Port: integer; ServerIndex: integer = -1);
@@ -107,11 +119,11 @@ begin
     // Run the actions //
     if action = 'authenticate' then
     begin
-      if data.Get('success') <> nil then
+      if data.Exists('success') then
       begin
         if data.Get('success').JsonValue.Value = 'true' then
         begin
-          if data.Get('sid') <> nil then
+          if data.Exists('sid') then
           begin
             threadprint('auth', 'Successfully authenticated');
             // Add the session to the auth credentials!
@@ -119,6 +131,14 @@ begin
             // request the latest server info to update the cache
             IOHandler.WriteLn('{"action":"listing-info","auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
             Authenticated := true;
+            // send the decks to the UI to pick
+            if data.Exists('decks') then
+            begin
+              TThread.Synchronize(nil, procedure
+                begin
+                  UI.PreGameUI.Decks := TJSONArray(data.Get('decks').JsonValue);
+                end);
+            end;
           end
           else
             threadprint('auth', 'Authentication payload does not contain the field "sid"');
@@ -127,9 +147,17 @@ begin
         begin
           threadprint('auth', 'Could not authenticate');
           if data.Exists('reason') then
-            UI.PreGameUI.AuthError('Authentication error: ' + data.get('reason').JsonValue.Value)
+          begin
+            TThread.Synchronize(nil, procedure
+              begin
+                UI.PreGameUI.Error('Authentication error: ' + DecodeAuthReason(data.get('reason').JsonValue.Value))
+              end);
+          end
           else
-            UI.PreGameUI.AuthError('Authentication error: Unknown error. Is the server modded?');
+            TThread.Synchronize(nil, procedure
+              begin
+                UI.PreGameUI.Error('Authentication error: Unknown error. Is the server modded?');
+              end);
         end;
       end;
     end; // end authenticate
@@ -138,7 +166,10 @@ begin
     begin
       if data.Get('message') <> nil then
       begin
-        UI.GameUI.IncomingChat(data.Get('message').JsonValue.Value);
+        TThread.Synchronize(nil, procedure
+        begin
+          UI.GameUI.IncomingChat(data.Get('message').JsonValue.Value);
+        end);
       end;
     end;
 
@@ -200,6 +231,12 @@ begin
     result := JSON;
   end;
 
+end;
+
+procedure TClient.HandleDeckSelection(index: integer);
+begin
+  IOHandler.WriteLn('{"action":"game-use-deck","data":{"index":' + inttostr(index)
+    + '},"auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
 end;
 
 procedure TClient.Authenticate;
@@ -279,6 +316,7 @@ begin
   UI.StartTrigger := Start;
   UI.GameUI.OnChat := SendChat;
   Authenticated := false;
+  UI.PreGameUI.SelectDeck.OnDeckChange := HandleDeckSelection;
 end;
 
 // Use an pre-existing UID
@@ -352,7 +390,10 @@ end;
 
 procedure TClient.PushStateToUI;
 begin
-  UI.GameUI.State := GameState;
+  TThread.Synchronize(nil, procedure
+    begin
+      UI.GameUI.State := GameState;
+    end);
 end;
 
 procedure TClient.Run(Sender: TIdThreadComponent);
@@ -390,7 +431,11 @@ end;
 procedure TClient.SetAuthenticated(const Value: boolean);
 begin
   FAuthenticated := Value;
-  UI.PreGameUI.Authenticated := FAuthenticated;
+
+  TThread.Synchronize(nil, procedure
+    begin
+      UI.PreGameUI.Authenticated := FAuthenticated;
+    end);
 end;
 
 procedure TClient.SetAuthLock(const Value: string);
@@ -433,8 +478,17 @@ begin
   Self.Host := Host;
   Self.Port := Port;
   Self.ServerIndex := ServerIndex;
-  Connect;
-  Authenticate;
+
+  // Non blocking way to connect to server
+  TAnonymousThread.Create(procedure
+  begin
+    Connect;
+    TThread.Synchronize(nil, procedure
+    begin
+      UI.PreGameUI.Connected := true;
+    end);
+    Authenticate;
+  end).Start;
 end;
 
 procedure TClient.threadprint(t, s: string);
