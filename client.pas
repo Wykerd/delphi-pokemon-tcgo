@@ -183,6 +183,20 @@ begin
       end;
     end;
 
+    if action = 'game-use-deck' then
+    begin
+      if data.Exists('success') then
+      begin
+        if data.Get('success').JsonValue.Value = 'true' then
+        begin
+          TThread.Synchronize(nil, procedure
+          begin
+            UI.PreGameUI.Ready := true;
+          end);
+        end;
+      end;
+    end;
+
     // End actions //
   end
   else
@@ -482,12 +496,23 @@ begin
   // Non blocking way to connect to server
   TAnonymousThread.Create(procedure
   begin
-    Connect;
-    TThread.Synchronize(nil, procedure
-    begin
-      UI.PreGameUI.Connected := true;
-    end);
-    Authenticate;
+    try
+      try
+        Connect;
+      finally
+        TThread.Synchronize(nil, procedure
+        begin
+          UI.PreGameUI.Connected := true;
+        end);
+        Authenticate;
+      end;
+    except
+      on e: Exception do
+      TThread.Synchronize(nil, procedure
+      begin
+        UI.PreGameUI.Error(e.Message);
+      end);
+    end;
   end).Start;
 end;
 
@@ -514,7 +539,6 @@ begin
   AssignFile(tf, ServersLock);
 
   try
-
     reset(tf);
   finally
     while not eof(tf) do
@@ -550,21 +574,21 @@ begin
               Writeln(tf, JSON.ToString);
               println('file', 'Updated ' + ServersLock);
 
-            end;
+            end; // presence check end
 
-          end;
+          end; //jsonlisting.listing <> nil
 
-        end;
+        end; //jsonlisting.name <> nil
 
-      end;
+      end; // json.servers <> nil
 
-    end;
+    end; // end json <> nil
 
-  end;
+  end; // finally end
 
   closefile(tF);
 
-  //JSON.Free;
+  JSON.Free;
 end;
 
 end.

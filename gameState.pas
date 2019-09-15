@@ -3,7 +3,7 @@ unit gameState;
 interface
 
 uses
-  DBXJSON, cardDeck;
+  DBXJSON, cardDeck, Consts;
 
 type
   TGameState = class

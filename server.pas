@@ -7,7 +7,7 @@ uses
   IdTCPConnection, IdTCPClient, IdCustomTCPServer, IdTCPServer, IdContext,
   ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, DBXJSON,
   IdIOHandlerSocket, StrUtils, Windows, serverConfig, serverSessions, gameLogic,
-  IdHTTP, HTTPApp, cardDeck;
+  IdHTTP, HTTPApp, cardDeck, versions;
 
 type
   TServer = class(TIdTCPServer)
@@ -189,7 +189,7 @@ begin
   if dmDB.tblUsers.Locate('UID', uid, []) then
   begin
     // user found
-    println('login', 'User found and logged in');
+    println('login', 'User found in database.');
     Authenticate;
     // check that username is up to date on server side
     with dmDB do
@@ -202,7 +202,7 @@ begin
         tblUsers.Edit;
         tblUsers['UserName'] := username;
         tblUsers.Post;
-        println('login', 'Username did not match server and is now updated');
+        println('login', 'Username did not match database record and has been updated.');
         Authenticate;
       end;
     end;
@@ -217,7 +217,7 @@ begin
       tblUsers['UID'] := uid;
       tblUsers.Post;
     end;
-    println('login', 'User created!');
+    println('login', 'User created.');
     Authenticate;
 
   end;
@@ -227,6 +227,10 @@ end;
 procedure TServer.Connected(AContext: TIdContext);
 begin
   println('client', AContext.Binding.PeerIP + ' - Connected');
+  AContext.Connection.Socket.WriteLn(
+    format('{"action":"preflight","data":{"version":"%s","legacy-support":"%s"'+
+    ',"backwards-version":"%s"}}',
+    [SRV_SERVER_VERSION, SRV_LEGACY_SUPPORT, SRV_BACKWARDS_COMPATIBILITY]));
 end;
 
 constructor TServer.Create(AOwner: TComponent);
@@ -385,7 +389,11 @@ begin
   TThread.Queue(nil,
     procedure
     begin
-      Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
+      try
+        Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
+      except
+        // ignore exceptions.
+      end;
     end);
 end;
 
@@ -396,12 +404,14 @@ var
   jsontemp : TJSONObject;
 begin
   Session := FSessions[GetUserFromUID(uid, FSessions)];
+
   if action = 'chat' then
   begin
     if data.Get('message') <> nil then
       BroadCast(Format('{"action":"chat","data":{"message":"' + Config.ChatFormat.Chat + '"}}',
         [username, data.Get('message').JsonValue.Value]));
   end
+
   else if action = 'game-use-deck' then
   begin
     if data.Exists('index') then
@@ -410,8 +420,19 @@ begin
       if (temp < session.Decks.Size) and (temp > -1) then
       begin
         jsontemp := TJSONObject(Session.Decks.Get(temp));
-        Session.Deck := TCardDeck.CreateFromJSON(jsontemp);
-        Session.Socket.WriteLn(Session.Deck.Deck[0].ToJSON.ToString);
+        try
+          try
+            Session.Deck := TCardDeck.CreateFromJSON(jsontemp);
+          finally
+            Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"true"}}');
+          end;
+        except
+          on e: exception do
+          begin
+            println('DECK BUILD', 'ERROR: ' + e.Message);
+            Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"false","reason":"deck_build_failed"}}');
+          end;
+        end;
       end
       else
       begin
@@ -420,6 +441,8 @@ begin
       UpdateGameQueue;
     end;
   end; // end if game-use-deck
+
+
 end;
 
 procedure TServer.SetConfig(const Value: TServerConfig);

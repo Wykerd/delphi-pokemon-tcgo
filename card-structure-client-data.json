@@ -7,7 +7,7 @@
         "quantity": 180
     },
     "set-number": 14,
-    "rarity": 0.1,
+    "rarity": 1,
     "name": "Wartortle",
     "data": {
         "id": "1",
@@ -37,7 +37,6 @@
         "base-image": "card-icon",
         "stage": 1,
         "hp": 50,
-        "image": "card-icon",
-        "gx": 0
+        "image": "card-icon"
     }
 }

@@ -34,7 +34,8 @@ uses
   cardDeck in 'cardDeck.pas',
   clientState in 'clientState.pas',
   preGameUI in 'UI\preGameUI.pas',
-  cardData in 'cardData.pas';
+  cardData in 'cardData.pas',
+  versions in 'versions.pas';
 
 {$R *.res}
 
@@ -51,9 +52,9 @@ begin
       Application.Initialize;
       Application.MainFormOnTaskbar := True;
       Application.CreateForm(TfrmLauncher, frmLauncher);
-      Application.CreateForm(TdmDB, dmDB);
-      Application.CreateForm(TfrmUserEditor, frmUserEditor);
-      Application.Run;
+  Application.CreateForm(TdmDB, dmDB);
+  Application.CreateForm(TfrmUserEditor, frmUserEditor);
+  Application.Run;
     end;
 
   DestroyGlobalCEFApp;

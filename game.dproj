@@ -95,6 +95,7 @@
 			<DCCReference Include="clientState.pas"/>
 			<DCCReference Include="UI\preGameUI.pas"/>
 			<DCCReference Include="cardData.pas"/>
+			<DCCReference Include="versions.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -15,7 +15,7 @@ interface
 
 uses
   Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, DBXJSON,
-  Controls, gameUI, startUI, serversUI, tradeUI, preGameUI;
+  Controls, gameUI, startUI, serversUI, tradeUI, preGameUI, versions;
 
 type
   TClientUI = class (TForm)
@@ -80,7 +80,7 @@ begin
   PreGameUI.Visible := false;
 
   DoubleBuffered := true;
-  Caption := 'Client';
+  Caption := 'Client - ' + CLIENT_APP_VERSION;
   ClientHeight := 360;
   ClientWidth := 640;
 

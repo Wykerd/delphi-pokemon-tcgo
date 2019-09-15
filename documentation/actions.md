@@ -16,8 +16,8 @@
 # Client to Server Actions
 - authenticate () () () // authenticating will cause you to join the game
 - info (server-to-client-payloads.def) () ()
-- chat () (implimented) (implimented)
+- chat () (implimented) (implimented - no render)
 - game-ready () () ()
-- game-use-deck (server-to-client-payloads.def) () (implimented)
+- game-use-deck (server-to-client-payloads.def) (implimented) (implimented)
 - game-action () () ()
 - game-quit () () ()

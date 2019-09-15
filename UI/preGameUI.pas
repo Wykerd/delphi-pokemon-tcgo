@@ -126,6 +126,8 @@ end;
 procedure TPreGameUI.SetReady(const Value: boolean);
 begin
   FReady := Value;
+  SelectDeck.ReadyButton.Text := 'Ready?';
+  SelectDeck.ReadyButton.Enabled := true;
 end;
 
 procedure TPreGameUI.ShowDeckSelect;
