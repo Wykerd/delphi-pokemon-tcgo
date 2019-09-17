@@ -416,29 +416,36 @@ begin
   begin
     if data.Exists('index') then
     begin
-      temp := strtoint(data.Get('index').JsonValue.Value);
-      if (temp < session.Decks.Size) and (temp > -1) then
-      begin
-        jsontemp := TJSONObject(Session.Decks.Get(temp));
+      try
         try
-          try
-            Session.Deck := TCardDeck.CreateFromJSON(jsontemp);
-          finally
-            Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"true"}}');
-          end;
-        except
-          on e: exception do
+          temp := strtoint(data.Get('index').JsonValue.Value);
+        finally
+          if (temp < session.Decks.Size) and (temp > -1) then
           begin
-            println('DECK BUILD', 'ERROR: ' + e.Message);
-            Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"false","reason":"deck_build_failed"}}');
+            jsontemp := TJSONObject(Session.Decks.Get(temp));
+            try
+              try
+                Session.Deck := TCardDeck.CreateFromJSON(jsontemp);
+              finally
+                Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"true"}}');
+              end;
+            except
+              on e: exception do
+              begin
+                println('DECK BUILD', 'ERROR: ' + e.Message);
+                Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"false","reason":"deck_build_failed"}}');
+              end;
+            end;
+          end
+          else
+          begin
+            Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"false","reason":"out_of_range"}}');
           end;
+          UpdateGameQueue;
         end;
-      end
-      else
-      begin
-        Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"false","reason":"out_of_range"}}');
+      except
+        Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"false","reason":"invalid_request"}}');
       end;
-      UpdateGameQueue;
     end;
   end; // end if game-use-deck
 

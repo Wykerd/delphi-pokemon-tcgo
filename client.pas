@@ -193,6 +193,14 @@ begin
           begin
             UI.PreGameUI.Ready := true;
           end);
+        end
+        else
+        begin
+          if  data.Exists('reason') then
+            TThread.Synchronize(nil, procedure
+            begin
+              UI.PreGameUI.Error('Deck Use Error: ' + data.Get('reason').JsonValue.Value);
+            end);
         end;
       end;
     end;
@@ -309,7 +317,11 @@ begin
       // Set the credentials for future use;
       Credentials := JSON.Get('auth');
     except
-      threadprint('error', 'An eror occured while reading / sending the authentication payload');
+      threadprint('error', 'An error occured while reading / sending the authentication payload');
+      TThread.Synchronize(nil, procedure
+        begin
+          UI.PreGameUI.Error('Whoops! An error occured during the authentication process.');
+        end);
     end;
   end;
 

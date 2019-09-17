@@ -75,6 +75,8 @@ implementation
 procedure TPreGameUI.Error(Reason: string);
 begin
   loading.Caption := reason;
+  SelectDeck.Visible := false;
+  loading.Visible := true;
 end;
 
 constructor TPreGameUI.Create(AOwner: TComponent);
@@ -198,6 +200,7 @@ begin
     OnDeckChange(InternalState);
   end;
   ReadyButton.Text := 'Awaiting server...';
+  ReadyButton.Enabled := false;
 end;
 
 procedure TSelectCards.HandleReady(Sender: TObject);

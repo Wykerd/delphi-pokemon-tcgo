@@ -80,7 +80,7 @@ begin
   PreGameUI.Visible := false;
 
   DoubleBuffered := true;
-  Caption := 'Client - ' + CLIENT_APP_VERSION;
+  Caption := 'Client - ' + VERSION_NAME;
   ClientHeight := 360;
   ClientWidth := 640;
 
