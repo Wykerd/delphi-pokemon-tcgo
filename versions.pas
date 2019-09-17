@@ -48,6 +48,7 @@ const
 
       // The info below is only used for datacollection by the API
         // If the game has public repo put the link here for other devs to contribute
+        // Otherwise leave as 'undefined;
         SRV_GIT_REPO = 'https://github.com/Wykerd/card-game-pat.git';
         //
         SRV_WEBSITE = 'pokemon.wykerd.io';

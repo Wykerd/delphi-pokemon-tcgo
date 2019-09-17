@@ -45,8 +45,10 @@ interface ClientGameUseDeck {
     index: Number;
 }
 
-interface ServerGameUseDeck {
+interface ServerConfirming {
     sucess: Boolean; 
     // if not success
-    reason?: String; // out_of_range, deck_build_failed, invalid_request
+    reason?: String; 
+    // game-use-state -> out_of_range, deck_build_failed, invalid_request
+    // game-ready -> no_deck_used
 }

@@ -60,6 +60,7 @@ type
     property Authenticated : boolean read FAuthenticated write SetAuthenticated;
     property Connected : boolean read FConnected write SetConnected;
     procedure Error(Reason : string);
+    procedure Print(s: string);
     property Decks : TJSONArray read FDecks write SetDecks;
     property Ready: boolean read FReady write SetReady;
     procedure ShowDeckSelect;
@@ -75,6 +76,13 @@ implementation
 procedure TPreGameUI.Error(Reason: string);
 begin
   loading.Caption := reason;
+  SelectDeck.Visible := false;
+  loading.Visible := true;
+end;
+
+procedure TPreGameUI.Print(s: string);
+begin
+  loading.Caption := s;
   SelectDeck.Visible := false;
   loading.Visible := true;
 end;
@@ -189,6 +197,7 @@ begin
   ReadyButton := TUIButton.Create(self);
   ReadyButton.Parent := self;
   ReadyButton.Enabled := false;
+  ReadyButton.OnClick := HandleReady;
 
   OnResize := HandleResize;
 end;
@@ -205,7 +214,9 @@ end;
 
 procedure TSelectCards.HandleReady(Sender: TObject);
 begin
-
+  OnReady;
+  ReadyButton.Text := 'Awaiting server...';
+  ReadyButton.Enabled := false;
 end;
 
 procedure TSelectCards.HandleResize(Sender: TObject);

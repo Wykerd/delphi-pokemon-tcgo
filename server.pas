@@ -410,6 +410,17 @@ begin
         [username, data.Get('message').JsonValue.Value]));
   end
 
+  else if action = 'game-ready' then
+  begin
+    if Session.Deck <> nil then
+    begin
+      Session.Ready := true;
+      Session.Socket.WriteLn('{"action":"game-ready","data":{"success":"true"}}');
+    end
+    else
+      Session.Socket.WriteLn('{"action":"game-ready","data":{"success":"false","reason":"no_deck_used"}}');
+  end
+
   else if action = 'game-use-deck' then
   begin
     if data.Exists('index') then
@@ -425,6 +436,7 @@ begin
               try
                 Session.Deck := TCardDeck.CreateFromJSON(jsontemp);
               finally
+                Session.Ready := false;
                 Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"true"}}');
               end;
             except
@@ -439,7 +451,6 @@ begin
           begin
             Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"false","reason":"out_of_range"}}');
           end;
-          UpdateGameQueue;
         end;
       except
         Session.Socket.WriteLn('{"action":"game-use-deck","data":{"success":"false","reason":"invalid_request"}}');
@@ -447,7 +458,8 @@ begin
     end;
   end; // end if game-use-deck
 
-
+  // UPDATE QUEUE
+  UpdateGameQueue;
 end;
 
 procedure TServer.SetConfig(const Value: TServerConfig);

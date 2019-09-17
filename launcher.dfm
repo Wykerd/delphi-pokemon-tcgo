@@ -26,8 +26,6 @@ object frmLauncher: TfrmLauncher
     Caption = 'Start Local Server'
     TabOrder = 0
     OnClick = btnStartClick
-    ExplicitLeft = 1
-    ExplicitTop = 8
   end
   object btnJoin: TButton
     Left = 0

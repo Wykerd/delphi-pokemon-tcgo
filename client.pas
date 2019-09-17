@@ -58,6 +58,7 @@ type
     property UI : TClientUI read FUI write SetUI;
     property ServerIndex: integer read FServerIndex write SetServerIndex;
     procedure SendChat (s: string);
+    procedure SendReady;
     // Actions
     procedure UpdateServerListings (Index: integer; Motd: string; Name: string; CustomName: string = '');
     procedure ExecuteAction (s : string);
@@ -77,12 +78,12 @@ implementation
 procedure TClient.Connected(Sender: TObject);
 begin
   FIdThread.Active := true;
-  println('status', 'Connected');
+  threadprint('status', 'Connected');
 end;
 
 procedure TClient.Disconnected(Sender: TObject);
 begin
-  println('status', 'Disconnected');
+  threadprint('status', 'Disconnected');
 end;
 
 procedure TClient.ExecuteAction(s: string);
@@ -203,6 +204,40 @@ begin
             end);
         end;
       end;
+    end;
+
+    if action='game-ready' then
+    begin
+      if data.Exists('success') then
+      begin
+        if data.Get('success').JsonValue.Value = 'true' then
+        begin
+          TThread.Synchronize(nil, procedure
+          begin
+            UI.PreGameUI.Print('Waiting for more players...');
+          end);
+        end
+        else
+        begin
+          if data.Exists('reason') then
+          begin
+            TThread.Synchronize(nil, procedure
+            begin
+              UI.PreGameUI.Print('Game Ready Error: ' + data.Get('reason').JsonValue.Value);
+            end);
+          end
+          else
+            TThread.Synchronize(nil, procedure
+            begin
+              UI.PreGameUI.Error('Error: Invalid game-ready JSON from server. Is the server modded?');
+            end);
+        end;
+      end
+      else
+        TThread.Synchronize(nil, procedure
+        begin
+          UI.PreGameUI.Error('Error: Invalid game-ready JSON from server. Is the server modded?');
+        end);
     end;
 
     // End actions //
@@ -341,6 +376,7 @@ begin
   UI := TClientUI.CreateNew(Self, 0);
   UI.StartTrigger := Start;
   UI.GameUI.OnChat := SendChat;
+  UI.PreGameUI.SelectDeck.OnReady := SendReady;
   Authenticated := false;
   UI.PreGameUI.SelectDeck.OnDeckChange := HandleDeckSelection;
 end;
@@ -454,6 +490,11 @@ begin
   IOHandler.WriteLn(JSONReq.ToString);
 end;
 
+procedure TClient.SendReady;
+begin
+  IOHandler.WriteLn('{"action":"game-ready","data":{"state":"true"},"auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
+end;
+
 procedure TClient.SetAuthenticated(const Value: boolean);
 begin
   FAuthenticated := Value;
@@ -509,21 +550,19 @@ begin
   TAnonymousThread.Create(procedure
   begin
     try
-      try
-        Connect;
-      finally
-        TThread.Synchronize(nil, procedure
+      Connect;
+      TThread.Synchronize(nil, procedure
         begin
           UI.PreGameUI.Connected := true;
         end);
         Authenticate;
-      end;
     except
       on e: Exception do
-      TThread.Synchronize(nil, procedure
-      begin
+      try
         UI.PreGameUI.Error(e.Message);
-      end);
+      except
+        showmessage(e.Message);
+      end;
     end;
   end).Start;
 end;
