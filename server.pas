@@ -83,11 +83,9 @@ var
         idHttp.HandleRedirects := true;
         try
           try
-            api_res := idHttp.Get(format('%sgetDeckData?uid=%s&motd=%s&name=%s&user=%s',
+            api_res := idHttp.Get(format('%sgetDeckData?uid=%s&user=%s',
               [Config.APIURL,
               String(Httpencode(Config.UID)),
-              String(Httpencode(Config.Listing.Get('motd').JsonValue.Value)),
-              String(Httpencode(Config.Listing.Get('name').JsonValue.Value)),
               String(Httpencode(uid))]));
             println('login', api_res);
 
@@ -468,6 +466,10 @@ begin
 end;
 
 procedure TServer.Start;
+var
+  idHttp: TIdHTTP;
+  api_res: string;
+  json, err: TJSONObject;
 begin
   Self.DefaultPort := Config.Port;
   Active := true;
@@ -480,6 +482,51 @@ begin
   finally
     TIdStack.DecUsage;
   end;
+
+  idHttp := TIdHTTP.Create;
+  idHttp.HandleRedirects := true;
+  try
+    try
+      api_res := idHttp.Get(format('%sregisterServer?uid=%s&motd=%s&name=%s&'+
+        'custom_name=%s&git_repo=%s&website=%s&version_name=%s&'+
+        'spec_api_version=%s&spec_server_version=%s&spec_client_version=%s&'+
+        'spec_legacy_support=%s&spec_backwards_compatibility=%s',
+        [Config.APIURL,
+        String(Httpencode(Config.UID)),
+        String(Httpencode(Config.Listing.Get('motd').JsonValue.Value)),
+        String(Httpencode(Config.Listing.Get('name').JsonValue.Value)),
+        String(Httpencode(SRV_CUSTOM_NAME)),
+        String(Httpencode(SRV_GIT_REPO)),
+        String(Httpencode(SRV_WEBSITE)),
+        String(Httpencode(VERSION_NAME)),
+        String(Httpencode(SRV_API_VERSION)),
+        String(Httpencode(SRV_SERVER_VERSION)),
+        String(Httpencode(SRV_CLIENT_VERSION)),
+        String(Httpencode(SRV_LEGACY_SUPPORT)),
+        String(Httpencode(SRV_BACKWARDS_COMPATIBILITY))]));
+
+      // Check the response for decks
+      json := TJsonObject(TJSONObject.ParseJSONValue(
+          TEncoding.ASCII.GetBytes(StripNonJson(api_res)),0));
+
+      println('api', 'Registration OK');
+
+      if json.Exists('warning') then
+      begin
+        Debug.SelAttributes.Style := [fsBold];
+        println('api', json.Get('warning').JsonValue.Value);
+      end;
+
+    finally
+
+    end;
+  except
+    on E: Exception do
+    begin
+      println('api', 'An error occured during server API registration');
+    end;
+  end;
+  idHttp.Free;
 
 end;
 

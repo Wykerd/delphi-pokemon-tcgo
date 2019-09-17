@@ -4,6 +4,109 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
+const API_VERSION = '1';
+/*
+THE HTTP API
+*/
+
+// Servers
+
+// && motd && name
+/*
+admin.firestore().collection('servers').doc(uid).set({
+        motd: motd,
+        name: name
+    }, { merge: true }).catch(console.error);
+*/
+exports.registerServer = functions.https.onRequest((req, res) => {
+    const { uid, motd, name, custom_name, git_repo, website, version_name, 
+        spec_api_version, spec_server_version, spec_client_version,
+        spec_legacy_support, spec_backwards_compatibility } = req.query;
+    
+    admin.firestore().collection('servers').doc(uid).set({
+        motd: motd,
+        name: name,
+        custom_name: custom_name,
+        git_repo: git_repo,
+        website: website,
+        version_name: version_name,
+        spec_api_version: spec_api_version,
+        spec_server_version: spec_server_version,
+        spec_client_version: spec_client_version,
+        spec_legacy_support: spec_legacy_support === 'true',
+        spec_backwards_compatibility: spec_backwards_compatibility
+    }, { merge: true })
+    .catch(console.error);
+
+    if (spec_api_version !== API_VERSION) {
+        res.status(200).send({
+            status: 200,
+            message: 'registration_ok',
+            warning: `The server is running on an diffirent API spec version which could cause errors. Please use a server that supports the API spec v.${API_VERSION}`
+        });   
+    } else {
+        res.status(200).send({
+            status: 200,
+            message: 'registration_ok'
+        });    
+    }
+    
+});
+
+// getDeckData
+// Required query parameters
+// user: guid of user
+// uid: guid of server
+exports.getDeckData = functions.https.onRequest((req, res) => {
+    const { user, uid } = req.query;
+
+    if ( !(user && uid) ) return res.status(400).send({
+        status: 400, message: 'invalid_query'
+    });
+
+    admin.firestore().collection('servers').doc(uid).get().then(_d=>{
+        admin.firestore().collection('users').where('clientID', '==', user).limit(1).get().then(snap=>{
+            if (snap.docs.length < 1) return res.status(404).send({
+                status:404, message:'user_undefined'
+            });
+    
+            const user_id = snap.docs[0].id;
+    
+            admin.firestore().collection('profiles').doc(snap.docs[0].id).collection('decks').get().then(snap=>{
+                const deckData = [];
+    
+                snap.forEach(doc=>{
+                    deckData.push({ ...doc.data(), _id: doc.id });
+                });
+    
+                if (deckData.length < 1) return res.status(404).send({
+                    status: 404, message: 'no_decks'
+                })
+    
+                admin.firestore().collection('logs').add({
+                    timestamp: new Date().getTime(),
+                    action: 'Get deck data',
+                    server:  admin.firestore().collection('servers').doc(uid),
+                    user: admin.firestore().collection('users').doc(user_id)
+                });
+    
+                res.status(200).send({
+                    status: 200,
+                    data: deckData
+                });
+            })
+        }).catch(_e=>res.status(404).send({
+            status:404, message:'user_undefined'
+        }));    
+    }).catch(_e=>res.status(404).send({
+        status: 404, message: 'server_not_registered'
+    }))
+});
+
+/*
+THE WEB APP FUNCTIONS
+*/
+
 exports.declineInvite = functions.https.onCall((data, context)=>{
     if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
@@ -188,49 +291,3 @@ exports.userCreate = functions.auth.user().onCreate((user) => {
 
     return Promise.all([prom1, prom2]);
 });
-
-// Servers
-exports.getDeckData = functions.https.onRequest((req, res) => {
-    const { user, uid, motd, name } = req.query;
-
-    if ( !(user && uid && motd && name) ) return res.status(400).send({
-        status: 400, details: 'invalid_query'
-    });
-
-    admin.firestore().collection('servers').doc(uid).set({
-        motd: motd,
-        name: name
-    }, { merge: true }).catch(console.error);
-
-    admin.firestore().collection('users').where('clientID', '==', user).limit(1).get().then(snap=>{
-        if (snap.docs.length < 1) return res.status(404).send({
-            status:404, message:'user_undefined'
-        });
-
-        const user_id = snap.docs[0].id;
-
-        admin.firestore().collection('profiles').doc(snap.docs[0].id).collection('decks').get().then(snap=>{
-            const deckData = [];
-    
-            snap.forEach(doc=>{
-                deckData.push({ ...doc.data(), _id: doc.id });
-            });
-    
-            if (deckData.length < 1) return res.status(404).send({
-                status: 404, details: 'no_decks'
-            })
-    
-            admin.firestore().collection('logs').add({
-                timestamp: new Date().getTime(),
-                action: 'Get deck data',
-                server:  admin.firestore().collection('servers').doc(uid),
-                user: admin.firestore().collection('users').doc(user_id)
-            });
-    
-            res.status(200).send({
-                status: 200,
-                data: deckData
-            });
-        })
-    })
-  });

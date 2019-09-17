@@ -6,9 +6,9 @@ interface ServerInfo {
 }
 
 interface PreflightInfo {
-    "type": String; // gameplay / trade-prep
-    "version": String; // server version name scheme LANGUAGE.MAJOR.MINOR.COMMIT(.CUSTOM_NAME) eg. PASCAL.0.1.7f9fe24.PRODUCTION or NODE.0.12.d930200.STABLE
+    "version": String;
     "legacy-support": Boolean;
+    "backwards-version"
 }
 
 interface GameQueue {
@@ -30,6 +30,7 @@ reasons:
 - no_decks
 - internal_error
 - api_error
+- server_not_registered
 */
 
 interface ClientAuthenticate {
@@ -47,5 +48,5 @@ interface ClientGameUseDeck {
 interface ServerGameUseDeck {
     sucess: Boolean; 
     // if not success
-    reason?: String; // out_of_range, deck_build_failed
+    reason?: String; // out_of_range, deck_build_failed, invalid_request
 }
