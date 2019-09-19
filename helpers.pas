@@ -6,6 +6,7 @@ uses
   Classes, DBXJSON, SysUtils, IdSync, ComCtrls, Character, Variants;
 
 type
+  TArray<t> = array of t;
   TStrArr = array of string;
 
   TJsonObjectHelper = class helper for TJsonObject
@@ -72,12 +73,7 @@ begin
 
   AssignFile(tF, s);
   try
-    try
-      reset(tF);
-    except
-      result := nil;
-    end;
-  finally
+    reset(tF);
     while not eof(tF) do
     begin
       readln(tF, tmp);
@@ -89,6 +85,8 @@ begin
 
     // Parse the JSON
     result := TJsonObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(StripNonJson(data)),0));
+  except
+    result := nil;
   end;
 
 end;

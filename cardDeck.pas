@@ -9,13 +9,14 @@ type
   TCardDeck = class (TObject)
   published
     constructor CreateFromJSON (JSON : TJSONObject);
+    procedure Shuffle;
   public
-    Deck: array of TCardRecord;
-    PrizeCards: array of TCardRecord;
+    Deck: TArray<TCardRecord>;
+    PrizeCards: TArray<TCardRecord>;
     Active: TCardRecord;
-    Bench: array of TCardRecord;
-    Discard: array of TCardRecord;
-    Hand: array of TCardRecord;
+    Bench: TArray<TCardRecord>;
+    Discard: TArray<TCardRecord>;
+    Hand: TArray<TCardRecord>;
   end;
 
 implementation
@@ -40,6 +41,26 @@ begin
   SetLength(bench, 0);
   SetLength(discard, 0);
   SetLength(hand, 0);
+end;
+
+procedure CardSwap(var a,b : TCardRecord);
+var
+  temp : TCardRecord;
+begin
+  temp := a;
+  a := b;
+  b := temp;
+end;
+
+procedure TCardDeck.Shuffle;
+var
+  I, J, iR: Integer;
+begin
+  for I := 0 to Length(Deck) - 1 do
+  begin
+    iR := random(Length(Deck));
+    CardSwap(Deck[i], Deck[iR]);
+  end;
 end;
 
 end.
