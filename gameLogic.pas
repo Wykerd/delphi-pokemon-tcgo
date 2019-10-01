@@ -3,7 +3,7 @@ unit gameLogic;
 interface
 
 uses
-  Windows, DBXJSON, Math, helpers, serverSessions, gameState, cardData, cardDeck;
+  Windows, Math, helpers, serverSessions, gameState, cardData, cardDeck;
 
 type
   TBroadcastEvent = procedure (s: string) of object;
@@ -37,21 +37,32 @@ procedure TGameLogic.Init;
 var
   I: Integer;
   plr1_has_basic, plr2_has_basic : boolean;
-  deck1_full, deck2_full : TCardDeck;
 begin
   State.BuildStateFromDecks(FPlayerSessions[0].Deck, FPlayerSessions[1].Deck);
 
   plr1_has_basic := false;
   plr2_has_basic := false;
 
-  deck1_full := State.Deck1;
-  deck2_full := State.Deck2;
-
   while not (plr1_has_basic AND plr2_has_basic) do
   begin
-    State.Deck1 := deck1_full;
-    State.Deck2 := deck2_full;
+    // Put hand back to deck
+    for I := Low(State.Deck1.Hand) to High(State.Deck1.Hand) do
+    begin
+      SetLength(State.Deck1.Deck, Length(State.Deck1.Deck) + 1);
+      State.Deck1.Deck[High(State.Deck1.Deck)] := State.Deck1.Hand[i];
+    end;
 
+    SetLength(State.Deck1.Hand, 0);
+
+    for I := Low(State.Deck2.Hand) to High(State.Deck2.Hand) do
+    begin
+      SetLength(State.Deck2.Deck, Length(State.Deck2.Deck) + 1);
+      State.Deck2.Deck[High(State.Deck2.Deck)] := State.Deck2.Hand[i];
+    end;
+
+    SetLength(State.Deck2.Hand, 0);
+
+    // Shuffle the deck;
     State.Deck1.Shuffle;
     State.Deck2.Shuffle;
 
@@ -76,6 +87,19 @@ begin
 
       setlength(State.Deck2.Deck, length(State.Deck2.Deck) - 1);
     end;
+  end;
+
+  // Pull the prize cards
+  for I := 0 to 5 do
+  begin
+    setlength(State.Deck1.PrizeCards, i + 1);
+    setlength(State.Deck2.PrizeCards, i + 1);
+
+    State.Deck1.PrizeCards[i] := State.Deck1.Deck[high(State.Deck1.Deck)];
+    setlength(State.Deck1.Deck, length(State.Deck1.Deck) - 1);
+
+    State.Deck2.PrizeCards[i] := State.Deck2.Deck[high(State.Deck2.Deck)];
+    setlength(State.Deck2.Deck, length(State.Deck2.Deck) - 1);
   end;
 
   FPlayerSessions[0].Socket.Writeln('{"action":"game-start","data":' + State.ToJSON(0).ToString + '}');

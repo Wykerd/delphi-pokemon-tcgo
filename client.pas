@@ -29,7 +29,6 @@ type
     FUI: TClientUI;
     FServersLock: string;
     FServerIndex: integer;
-    FGameState: TClientState;
     procedure SetDebug(const Value: TRichEdit);
     procedure Run (Sender: TIdThreadComponent);
     // for main thread prints
@@ -44,7 +43,6 @@ type
     procedure SetUI(const Value: TClientUI);
     procedure SetServersLock(const Value: string);
     procedure SetServerIndex(const Value: integer);
-    procedure SetGameState(const Value: TClientState);
     procedure HandleDeckSelection (index: integer);
   published
     constructor Create (AOwner: TComponent);
@@ -62,9 +60,6 @@ type
     // Actions
     procedure UpdateServerListings (Index: integer; Motd: string; Name: string; CustomName: string = '');
     procedure ExecuteAction (s : string);
-    // State
-    property GameState : TClientState read FGameState write SetGameState;
-    procedure PushStateToUI;
   public
     class function GetCredentials (AuthPath : string)  : TJSONObject;
     class procedure CreateCredentials(sUsername, AuthLock : string); overload;
@@ -240,6 +235,10 @@ begin
         end);
     end;
 
+    if action = 'game-start' then
+    begin
+
+    end;
     // End actions //
   end
   else
@@ -450,14 +449,6 @@ begin
   Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
 end;
 
-procedure TClient.PushStateToUI;
-begin
-  TThread.Synchronize(nil, procedure
-    begin
-      UI.GameUI.State := GameState;
-    end);
-end;
-
 procedure TClient.Run(Sender: TIdThreadComponent);
 var
   req : string;
@@ -518,11 +509,6 @@ end;
 procedure TClient.SetDebug(const Value: TRichEdit);
 begin
   FDebug := Value;
-end;
-
-procedure TClient.SetGameState(const Value: TClientState);
-begin
-  FGameState := Value;
 end;
 
 procedure TClient.SetServerIndex(const Value: integer);

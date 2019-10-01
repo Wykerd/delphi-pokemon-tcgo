@@ -15,8 +15,13 @@ type
     procedure SetData(const Value: TJSONObject);
     procedure SetTexture(const Value: GLuint);
     procedure SetAssetsDir(const Value: String);
+    procedure RenderAsPokemon;
+    procedure RenderAsEnergy;
+    procedure RenderAsTrainer;
+    procedure RenderUnknown;
   published
     constructor Create; override;
+    destructor Destroy; override;
     property Texture: GLuint read FTexture write SetTexture;
     property Data: TJSONObject read FData write SetData;
     property AssetsDir: String read FAssetsDir write SetAssetsDir;
@@ -36,9 +41,13 @@ type
     procedure SetSprite(const Value: TCardSprite);
   published
     constructor Create;
+    destructor Destroy;
     property Sprite : TCardSprite read FSprite write SetSprite;
     property ModelType : TCardModelType read FModelType write SetModelType;
     procedure Draw;
+  public
+    name : integer; // store some value; used for locating the object during events
+    index : integer; // store the index of card in state if applicable;
   end;
 
 implementation
@@ -63,6 +72,12 @@ begin
     result := 'colorless';
 end;
 
+destructor TCardSprite.Destroy;
+begin
+  glDeleteTextures(1, FTexture);
+  inherited;
+end;
+
 procedure TCardSprite.GenerateTexture;
 var
   dat : Array of LongWord;
@@ -80,7 +95,7 @@ begin
 
   For H:=0 to Height-1 do
   Begin
-    Line := scanline[Height-H-1];   // flip JPEG
+    Line := scanline[Height-H-1];   // flip image
     For W:=0 to Width-1 do
     Begin
       c:=Line^ and $FFFFFF; // Need to do a color swap
@@ -93,6 +108,72 @@ begin
 end;
 
 procedure TCardSprite.Render;
+var
+  card_type : string;
+begin
+  if Data.Exists('type') then
+  begin
+    card_type := LowerCase(data.Get('type').JsonValue.Value);
+    if length(card_type) > 0 then
+    begin
+      if card_type = 'pokemon' then RenderAsPokemon
+      else if card_type = 'trainer' then RenderAsTrainer
+      else if card_type = 'energy' then RenderAsEnergy
+      else RenderUnknown;
+    end;
+  end;
+
+  GenerateTexture;
+end;
+
+procedure TCardSprite.RenderAsEnergy;
+var
+  bitmap : TBitmap;
+  GetImage : TFunc<string>;
+begin
+  // Define the function
+  GetImage := function : string
+  var
+    energyType : string;
+  begin
+    if data.Exists('name') then
+    begin
+      energyType := data.Get('name').JsonValue.Value;
+      if energyType = 'water' then exit('0-5-2');
+      if energyType = 'psychic' then exit('0-5-5');
+      if energyType = 'grass' then exit('0-5-0');
+      if energyType = 'fire' then exit('0-5-1');
+      if energyType = 'fighting' then exit('0-5-4');
+      if energyType = 'electric' then exit('0-5-3');
+      exit('1-5-6');
+    end;
+  end;
+
+  Canvas.Brush.Style := bsSolid;
+  Canvas.Brush.Color := clWhite;
+  Canvas.FillRect(Rect(0, 0, Width, Height));
+
+  bitmap := TBitmap.Create;
+
+  bitmap.LoadFromResourceName(HInstance, 'cardBackEnergy');
+  bitmap.Transparent := True;
+  bitmap.TransparentColor := clWhite;
+  bitmap.TransparentMode := tmFixed;
+
+  Canvas.StretchDraw(Rect(0, 0, Width, Height), bitmap);
+
+  Canvas.Font.Name := 'Early GameBoy';
+  Canvas.Font.Size := 16;
+
+  Canvas.Brush.Style := bsClear;
+
+  bitmap.LoadFromFile(AssetsDir + '\' + getimage + '.bmp');
+  bitmap.Transparent := false;
+
+  Canvas.StretchDraw(Rect(35, 61, 384, 323), bitmap);
+end;
+
+procedure TCardSprite.RenderAsPokemon;
 var
   bitmap: TBitmap;
   cardData, atk: TJSONObject;
@@ -113,15 +194,6 @@ begin
 
   Canvas.StretchDraw(Rect(0, 0, Width, Height), bitmap);
 
-  if Data.Exists('image') then
-  begin
-    bitmap.LoadFromFile(AssetsDir + '\' + Data.get('image')
-        .JsonValue.Value + '.bmp');
-    bitmap.Transparent := false;
-  end;
-
-  Canvas.StretchDraw(Rect(35, 61, 384, 323), bitmap);
-
   Canvas.Font.Name := 'Early GameBoy';
   Canvas.Font.Size := 16;
 
@@ -139,9 +211,20 @@ begin
     cardData := TJSONObject(Data.get('data').JsonValue);
     if cardData <> nil then
     begin
+      if cardData.Exists('image') then
+      begin
+        bitmap.LoadFromFile(AssetsDir + '\' + cardData.get('image')
+            .JsonValue.Value + '.bmp');
+        bitmap.Transparent := false;
+
+        Canvas.StretchDraw(Rect(35, 61, 384, 323), bitmap);
+      end;
+
       if cardData.Exists('stage') then
       begin
         i := StrToInt(cardData.get('stage').JsonValue.Value);
+
+
         if i = 0 then
           Canvas.TextOut(7, 0, 'BASIC')
         else
@@ -358,8 +441,68 @@ begin
   end; // end exists 'cardData'
 
   bitmap.Free;
+end;
 
-  GenerateTexture;
+procedure TCardSprite.RenderAsTrainer;
+var
+  bitmap : TBitmap;
+  cardData : TJSONObject;
+  rectangle : TRect;
+  text : string;
+const
+  wordWrap : TTextFormat = [tfWordBreak];
+begin
+  bitmap := TBitmap.Create;
+
+  bitmap.LoadFromResourceName(HInstance, 'cardBackTrainer');
+  bitmap.Transparent := True;
+  bitmap.TransparentColor := clWhite;
+  bitmap.TransparentMode := tmFixed;
+
+  Canvas.StretchDraw(Rect(0, 0, Width, Height), bitmap);
+
+  Canvas.Brush.Style := bsClear;
+
+  if Data.Exists('name') then
+  begin
+    Canvas.Font.Name := 'Early GameBoy';
+    Canvas.Font.Size := 16;
+    Canvas.TextOut(34, 346, Data.get('name').JsonValue.Value);
+  end;
+
+
+  if Data.Exists('data') then
+  begin
+    cardData := TJSONObject(Data.get('data').JsonValue);
+    if cardData <> nil then
+    begin
+      if cardData.Exists('description') then
+      begin
+        Canvas.Font.Name := 'Early GameBoy';
+        Canvas.Font.Size := 10;
+        text := cardData.get('description').JsonValue.Value;
+        rectangle := Rect(34, 376, 390, 563);
+        Canvas.TextRect(rectangle, text, wordWrap);
+      end;
+
+      if cardData.Exists('image') then
+      begin
+        bitmap.LoadFromFile(AssetsDir + '\' + cardData.get('image')
+            .JsonValue.Value + '.bmp');
+        bitmap.Transparent := false;
+      end;
+      Canvas.StretchDraw(Rect(35, 61, 384, 323), bitmap);
+
+    end;
+  end;
+
+  bitmap.Free;
+
+end;
+
+procedure TCardSprite.RenderUnknown;
+begin
+
 end;
 
 procedure TCardSprite.SetAssetsDir(const Value: String);
@@ -383,6 +526,11 @@ constructor TCardModel.Create;
 begin
   ModelType := modelDefault;
   Sprite := TCardSprite.Create;
+end;
+
+destructor TCardModel.Destroy;
+begin
+  Sprite.Destroy;
 end;
 
 procedure TCardModel.Draw;

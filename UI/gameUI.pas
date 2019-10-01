@@ -14,16 +14,13 @@ type
     FOnChat: TChatEvent;
     FPanAngleX, FPanAngleY: Extended;
     FBoardTex, FEdgeTex, FBenchEdgeTex, FBenchTex : GLuint;
-    FState: TClientState;
     procedure SetOnChat(const Value: TChatEvent);
     procedure OpenChat(sender: Tobject);
     procedure HandleResize(Sender: TObject);
     procedure HandleMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
-    procedure SetState(const Value: TClientState);
   published
     constructor Create (AOwner: TComponent); override;
-    property State : TClientState read FState write SetState;
     // Events //
     property OnChat : TChatEvent read FOnChat write SetOnChat;
     // -- //
@@ -32,11 +29,31 @@ type
     procedure Paint; override;
     procedure Draw;
     procedure Init;
+    procedure Update;
     // -- //
     // Handlers //
     procedure IncomingChat (s : string);
     // -- //
   public
+    // State //
+    p_deck : TCardModel;
+    p_deck_length: byte;
+    p_prize_cards: byte;
+    p_benched: TArray<TCardModel>;
+    p_hand: TArray<TCardModel>;
+    p_discard: TArray<TCardModel>;
+
+    o_deck_length : byte;
+    o_prize_cards: byte;
+    o_benched_cards: TArray<TCardModel>;
+    o_hand: byte;
+    o_discard: TArray<TCardModel>;
+
+    turn: boolean;
+    stage: string;
+
+    procedure RenderState(state: TJSONObject);
+    // -- //
   end;
 
 var
@@ -444,14 +461,18 @@ begin
   glMatrixMode(GL_MODELVIEW);
 end;
 
+procedure TGameUI.RenderState(state: TJSONObject);
+begin
+  //
+end;
+
 procedure TGameUI.SetOnChat(const Value: TChatEvent);
 begin
   FOnChat := Value;
 end;
 
-procedure TGameUI.SetState(const Value: TClientState);
+procedure TGameUI.Update;
 begin
-  FState := Value;
   // Update
   Draw;
   SwapBuffers(wglGetCurrentDC);
