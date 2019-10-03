@@ -50,6 +50,13 @@ type
     index : integer; // store the index of card in state if applicable;
   end;
 
+var
+  CARD_BACK,
+  CARD_BACK_ENERGY,
+  CARD_BACk_TRAINER,
+  CARD_STAGE : TBitmap;
+
+
 implementation
 
 { TCardSprite }
@@ -161,12 +168,7 @@ begin
 
   bitmap := TBitmap.Create;
 
-  bitmap.LoadFromResourceName(HInstance, 'cardBackEnergy');
-  bitmap.Transparent := True;
-  bitmap.TransparentColor := clWhite;
-  bitmap.TransparentMode := tmFixed;
-
-  Canvas.StretchDraw(Rect(0, 0, Width, Height), bitmap);
+  Canvas.StretchDraw(Rect(0, 0, Width, Height), CARD_BACK_ENERGY);
 
   Canvas.Font.Name := 'Early GameBoy';
   Canvas.Font.Size := 16;
@@ -194,13 +196,11 @@ begin
   Canvas.FillRect(Rect(0, 0, Width, Height));
 
   bitmap := TBitmap.Create;
-
-  bitmap.LoadFromResourceName(HInstance, 'cardBack');
   bitmap.Transparent := True;
   bitmap.TransparentColor := clWhite;
   bitmap.TransparentMode := tmFixed;
 
-  Canvas.StretchDraw(Rect(0, 0, Width, Height), bitmap);
+  Canvas.StretchDraw(Rect(0, 0, Width, Height), CARD_BACK);
 
   Canvas.Font.Name := 'Early GameBoy';
   Canvas.Font.Size := 16;
@@ -239,9 +239,7 @@ begin
         begin
           Canvas.TextOut(7, 0, format('STAGE %d', [i]));
 
-          bitmap.LoadFromResourceName(HInstance, 'cardStage');
-
-          Canvas.Draw(0, 23, bitmap);
+          Canvas.Draw(0, 23, CARD_STAGE);
 
           if cardData.Exists('base-image') then
           begin
@@ -462,12 +460,11 @@ const
 begin
   bitmap := TBitmap.Create;
 
-  bitmap.LoadFromResourceName(HInstance, 'cardBackTrainer');
   bitmap.Transparent := True;
   bitmap.TransparentColor := clWhite;
   bitmap.TransparentMode := tmFixed;
 
-  Canvas.StretchDraw(Rect(0, 0, Width, Height), bitmap);
+  Canvas.StretchDraw(Rect(0, 0, Width, Height), CARD_BACk_TRAINER);
 
   Canvas.Brush.Style := bsClear;
 
@@ -568,4 +565,28 @@ begin
   FSprite := Value;
 end;
 
+begin
+  CARD_BACK := TBitmap.Create;
+  CARD_BACK.LoadFromResourceName(HInstance, 'cardBack');
+  CARD_BACK.Transparent := True;
+  CARD_BACK.TransparentColor := clWhite;
+  CARD_BACK.TransparentMode := tmFixed;
+
+  CARD_STAGE := TBitmap.Create;
+  CARD_STAGE.LoadFromResourceName(HInstance, 'cardStage');
+  CARD_STAGE.Transparent := True;
+  CARD_STAGE.TransparentColor := clWhite;
+  CARD_STAGE.TransparentMode := tmFixed;
+
+  CARD_BACk_TRAINER := TBitmap.Create;
+  CARD_BACk_TRAINER.LoadFromResourceName(HInstance, 'cardBackTrainer');
+  CARD_BACk_TRAINER.Transparent := True;
+  CARD_BACk_TRAINER.TransparentColor := clWhite;
+  CARD_BACk_TRAINER.TransparentMode := tmFixed;
+
+  CARD_BACK_ENERGY := TBitmap.Create;
+  CARD_BACK_ENERGY.LoadFromResourceName(HInstance, 'cardBackEnergy');
+  CARD_BACK_ENERGY.Transparent := True;
+  CARD_BACK_ENERGY.TransparentColor := clWhite;
+  CARD_BACK_ENERGY.TransparentMode := tmFixed;
 end.

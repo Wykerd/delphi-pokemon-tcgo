@@ -514,6 +514,10 @@ begin
       // assume it is jsonobject here aswell
       TCardModel(fill[i]).Sprite.Data := TJSONObject(arr.Get(i));
     end);
+    for I := 0 to arr.Count - 1 do
+    begin
+      
+    end;
   end;
 
   _fill := fill;
