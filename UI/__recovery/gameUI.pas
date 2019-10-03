@@ -537,7 +537,7 @@ var
       temp_model := TCardModel(arr[i]);
       if temp_model <> nil then
       begin
-        temp_model.Destroy;
+        //temp_model.Destroy;
         freeandnil(temp_model);
       end;
     end;

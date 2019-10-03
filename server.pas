@@ -37,6 +37,8 @@ type
     procedure ClientLogin(username, uid : string; callback : TIdIOHandlerSocket);
     property Debug: TRichEdit read FDebug write SetDebug;
     property GameLogic : TGameLogic read FGameLogic write SetGameLogic;
+  public
+    InGame: boolean;
   end;
 
 implementation
@@ -234,6 +236,7 @@ end;
 constructor TServer.Create(AOwner: TComponent);
 begin
   inherited;
+  InGame := false;
   SetLength(FSessions, 0);
   OnExecute := Execute;
   OnConnect := Connected;
@@ -416,6 +419,7 @@ begin
     begin
       Session.Ready := true;
       Session.Socket.WriteLn('{"action":"game-ready","data":{"success":"true"}}');
+      sleep(1000);
     end
     else
       Session.Socket.WriteLn('{"action":"game-ready","data":{"success":"false","reason":"no_deck_used"}}');
@@ -547,6 +551,8 @@ begin
   if Length(Sessions) <> 2 then
   raise Exception.Create('Woops, that''''s an error! Invalid arguments sent to TServer.StartGame. It has to be length 2');
 
+  ingame := true;
+
   FInGameSessions[0] := Sessions[0];
   FInGameSessions[1] := Sessions[1];
 
@@ -566,6 +572,8 @@ var
   PlayersReady: TSessionsArr;
   iPlayersReady, iSLength, i : integer;
 begin
+  if ingame then exit;
+
   SetLength(PlayersReady, 2);
   iPlayersReady := 0;
   iSLength := Length(FSessions);
