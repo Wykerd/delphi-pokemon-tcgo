@@ -59,6 +59,7 @@ begin
   inherited;
   Height := 590;
   Width := 420;
+  AssetsDir := GetCurrentDir + '\client\assets\cards';
 end;
 
 class function TCardSprite.decodeType(s: string): string;
@@ -78,6 +79,8 @@ begin
   inherited;
 end;
 
+
+// Do not generate textures in the same thread as OpenGL
 procedure TCardSprite.GenerateTexture;
 var
   dat : Array of LongWord;
@@ -86,8 +89,6 @@ var
   C : LongWord;
   Line : ^LongWord;
 begin
-  // delete the existing texture
-  glDeleteTextures(1, FTexture);
   // The following code is adapted from the dependency "Textures" function
   // LoadJPGTexture!
 
@@ -104,7 +105,12 @@ begin
     End;
   End;
 
-  FTexture := CreateTexture(Width, Height, GL_RGBA, addr(dat[0]));
+  TThread.Synchronize(nil, procedure
+  begin
+    // delete the existing texture
+    glDeleteTextures(1, FTexture);
+    FTexture := CreateTexture(Width, Height, GL_RGBA, addr(dat[0]));
+  end);
 end;
 
 procedure TCardSprite.Render;
@@ -171,6 +177,8 @@ begin
   bitmap.Transparent := false;
 
   Canvas.StretchDraw(Rect(35, 61, 384, 323), bitmap);
+
+  bitmap.Free;
 end;
 
 procedure TCardSprite.RenderAsPokemon;
@@ -513,6 +521,8 @@ end;
 procedure TCardSprite.SetData(const Value: TJSONObject);
 begin
   FData := Value;
+  // Automatically render the new data
+  Render;
 end;
 
 procedure TCardSprite.SetTexture(const Value: GLuint);

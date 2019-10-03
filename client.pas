@@ -237,7 +237,14 @@ begin
 
     if action = 'game-start' then
     begin
-
+      TThread.Synchronize(nil, procedure
+      begin
+        UI.ShowGameUI;
+        TAnonymousThread.Create(procedure
+        begin
+          UI.GameUI.RenderState(data);
+        end).Start;
+      end);
     end;
     // End actions //
   end

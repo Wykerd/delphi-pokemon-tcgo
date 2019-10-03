@@ -44,7 +44,7 @@ function LoadJSONFromFile (s: string) : TJSONObject;
 // More JSON helpers from https://gist.github.com/fabriciocolombo/4236ce010787d86b5c65
 function StripNonJson(s: string): string;
 
-//
+// Check if a variant is undefined. Used to check for empty Text fields in db.
 function UndefinedVar(v: Variant): boolean;
 
 implementation
@@ -79,7 +79,6 @@ begin
       readln(tF, tmp);
       data := data + tmp;
     end;
-
 
     closefile(tf);
 
@@ -142,6 +141,8 @@ begin
   // Check to see if the pair exists
   result := false;
 
+  // This might be a bit slow due to it being a linear search... For a lot
+  // usage a binary search might be better - DWykerd
   pair := Get(PairName);
 
   if pair <> nil then

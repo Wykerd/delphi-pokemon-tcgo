@@ -45,6 +45,7 @@ type
     property TradeUI : TTradeUI read FTradeUI write SetTradeUI;
     property ServersUI : TServersUI read FServersUI write SetServersUI;
     property StartTrigger : TClientStart read FStartTrigger write SetStartTrigger;
+    procedure ShowGameUI;
   protected
     procedure CreateParams(var Params: TCreateParams); override;
   end;
@@ -176,6 +177,11 @@ end;
 procedure TClientUI.SetTradeUI(const Value: TTradeUI);
 begin
   FTradeUI := Value;
+end;
+
+procedure TClientUI.ShowGameUI;
+begin
+  HandleStartGame(self);
 end;
 
 end.
