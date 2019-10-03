@@ -6,7 +6,7 @@ uses
   Classes, DBXJSON, SysUtils, IdSync, ComCtrls, Character, Variants;
 
 type
-  TArray<t> = array of t;
+  //TArray<t> = array of t;
   TStrArr = array of string;
 
   TJsonObjectHelper = class helper for TJsonObject
@@ -14,6 +14,7 @@ type
     //Helper to find a JSON pair based on the pair string part
     function Get(const PairName: UnicodeString): TJSONPair; overload;
     function Exists (const PairName: UnicodeString): boolean;
+    procedure ExistCall (const PairName: UnicodeString; callback: TProc<TJSONPair>);
   end;
   // //
 
@@ -133,6 +134,23 @@ begin
 end;
 
 { TJsonObjectHelper }
+
+procedure TJsonObjectHelper.ExistCall(const PairName: UnicodeString;
+  callback: TProc<TJSONPair>);
+var
+  pair : TJSONPair;
+begin
+  // Check to see if the pair exists
+
+
+  // This might be a bit slow due to it being a linear search... For a lot
+  // usage a binary search might be better - DWykerd
+  pair := Get(PairName);
+
+  if pair <> nil then
+    if pair.JsonValue <> nil then
+      callback(pair);
+end;
 
 function TJsonObjectHelper.Exists(const PairName: UnicodeString): boolean;
 var

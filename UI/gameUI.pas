@@ -54,6 +54,8 @@ type
     turn: boolean;
     stage: string;
 
+    prohibit_render : boolean;
+
     procedure RenderState(state: TJSONObject);
     // -- //
   end;
@@ -116,6 +118,7 @@ end;
 constructor TGameUI.Create(AOwner: TComponent);
 begin
   inherited;
+  prohibit_render := false;
   OnClick := OpenChat;
   OnMouseMove := HandleMouseMove;
   OnResize := HandleResize;
@@ -150,6 +153,7 @@ var
     i: Integer;
   begin
     if arr <> nil then
+    if length(arr) <> 0 then
     begin
       for I := 0 to Length(arr) - 1 do
       begin
@@ -361,6 +365,8 @@ begin
 
   last_index := 1;
 
+  if prohibit_render then exit;
+
   RenderModelArr(p_hand, 0, 1.5, 0);
 
 end;
@@ -476,13 +482,32 @@ begin
   glMatrixMode(GL_MODELVIEW);
 end;
 
+// Function used below
+procedure PopulateArray (var fill: TArray<TCardModel>; prop: string; plr_state: TJSONObject);
+var
+  i: integer;
+  arr : TJSONArray;
+begin
+  if plr_state.Exists(prop) then
+  begin
+    // Assume it is array. Might require validation in future but works for now.
+    arr := TJSONArray(plr_state.Get(prop).JsonValue);
+    setlength(fill, arr.Size);
+    for I := 0 to arr.Size - 1 do
+    begin
+      fill[i] := TCardModel.Create;
+      // assume it is jsonobject here aswell
+      TCardModel(fill[i]).Sprite.Data := TJSONObject(arr.Get(i));
+    end;
+  end;
+end;
+
 // Pass the data JSONObject as state argument;
 // This function should always be run in a anonymous or seperate thread to the main
 // opengl thread to prevent blocking
 procedure TGameUI.RenderState(state: TJSONObject);
 var
-  arr : TJSONArray;
-  json, plr_state: TJSONObject;
+  json: TJSONObject;
   temp_model: TCardModel;
   // Destroy, Free and nil the elements of the array and set length to 0
   procedure ClearArray (var arr: TArray<TCardModel>);
@@ -501,25 +526,8 @@ var
 
     setlength(arr, 0);
   end;
-
-  procedure PopulateArray (var fill: TArray<TCardModel>; prop: string);
-  var
-    i: integer;
-  begin
-    if plr_state.Exists(prop) then
-    begin
-      // Assume it is array. Might require validation in future but works for now.
-      arr := TJSONArray(plr_state.Get(prop).JsonValue);
-      setlength(fill, arr.Size);
-      for I := 0 to arr.Size - 1 do
-      begin
-        fill[i] := TCardModel.Create;
-        // assume it is jsonobject here aswell
-        TCardModel(fill[i]).Sprite.Data := TJSONObject(arr.Get(i));
-      end;
-    end;
-  end;
 begin
+  prohibit_render := true;
   // Clear the variables for new data to be loaded
   // Keep memory clean
   if p_deck <> nil then
@@ -549,89 +557,86 @@ begin
 
   // Build the new state
   // build player state ( p_ )
-  if state.Exists('player') then
+  state.ExistCall('player', procedure (plr_state: TJSONPair)
   begin
-    plr_state := TJSONObject(state.Get('player').JsonValue);
-    if plr_state.Exists('deck') then
+    TJSONObject(plr_state.JsonValue).ExistCall('deck', procedure (s: TJSONPair)
     begin
       p_deck := TCardModel.Create;
-      p_deck.Sprite.Data := TJSONObject(plr_state.Get('deck').JsonValue);
-    end;
+      p_deck.Sprite.Data := TJSONObject(s.JsonValue);
+    end);
 
-    if plr_state.Exists('deck-length') then
+    TJSONObject(plr_state.JsonValue).ExistCall('deck-length', procedure (s: TJSONPair)
     begin
       try
-        p_deck_length := strtoint(plr_state.Get('deck-length').JsonValue.Value);
+        p_deck_length := strtoint(s.JsonValue.Value);
       except
         // fallback incase strtoint fails
         p_deck_length := 0;
       end;
-    end;
+    end);
 
-    if plr_state.Exists('prize-cards') then
+    TJSONObject(plr_state.JsonValue).ExistCall('prize-cards', procedure (s: TJSONPair)
     begin
       try
-        p_prize_cards := strtoint(plr_state.Get('prize-cards').JsonValue.Value);
+        p_prize_cards := strtoint(s.JsonValue.Value);
       except
         p_prize_cards := 0;
       end;
-    end;
+    end);
 
-    PopulateArray(p_benched, 'benched-cards');
+    PopulateArray(p_benched, 'benched-cards', TJSONObject(plr_state.JsonValue));
 
-    PopulateArray(p_hand, 'hand');
+    PopulateArray(p_hand, 'hand', TJSONObject(plr_state.JsonValue));
 
-    PopulateArray(p_discard, 'discard');
+    PopulateArray(p_discard, 'discard', TJSONObject(plr_state.JsonValue));
 
-    if plr_state.Exists('active') then
+    TJSONObject(plr_state.JsonValue).ExistCall('active', procedure (s: TJSONPair)
     begin
       p_active := TCardModel.Create;
-      p_active.Sprite.Data := TJSONObject(plr_state.Get('active').JsonValue);
-    end;
-  end; // end player
+      p_active.Sprite.Data := TJSONObject(s.JsonValue);
+    end);
+  end); // end player
 
-  if state.Exists('oponent') then
+  state.ExistCall('oponent', procedure (plr_state: TJSONPair)
   begin
-    plr_state := TJSONObject(state.Get('oponent').JsonValue);
-
-    if plr_state.Exists('deck-length') then
+    TJSONObject(plr_state.JsonValue).ExistCall('deck-length', procedure (s: TJSONPair)
     begin
       try
-        o_deck_length := strtoint(plr_state.Get('deck-length').JsonValue.Value);
+        o_deck_length := strtoint(s.JsonValue.Value);
       except
         // fallback incase strtoint fails
         o_deck_length := 0;
       end;
-    end;
+    end);
 
-    if plr_state.Exists('prize-cards') then
+    TJSONObject(plr_state.JsonValue).ExistCall('prize-cards', procedure (s: TJSONPair)
     begin
       try
-        o_prize_cards := strtoint(plr_state.Get('prize-cards').JsonValue.Value);
+        o_prize_cards := strtoint(s.JsonValue.Value);
       except
         o_prize_cards := 0;
       end;
-    end;
+    end);
 
-    PopulateArray(o_benched_cards, 'benched-cards');
+    PopulateArray(o_benched_cards, 'benched-cards', TJSONObject(plr_state.JsonValue));
 
-    if plr_state.Exists('hand') then
+    TJSONObject(plr_state.JsonValue).ExistCall('hand', procedure (s: TJSONPair)
     begin
       try
-        o_hand := StrToInt(plr_state.Get('hand').JsonValue.Value);
+        o_hand := StrToInt(s.JsonValue.Value);
       except
         o_hand := 0;
       end;
-    end;
+    end);
 
-    PopulateArray(o_discard, 'discard');
+    PopulateArray(o_discard, 'discard', TJSONObject(plr_state.JsonValue));
 
-    if plr_state.Exists('active') then
+    TJSONObject(plr_state.JsonValue).ExistCall('active', procedure (s: TJSONPair)
     begin
       o_active := TCardModel.Create;
-      o_active.Sprite.Data := TJSONObject(plr_state.Get('active').JsonValue);
-    end;
-  end; // end oponent
+      o_active.Sprite.Data := TJSONObject(s.JsonValue);
+    end);
+  end); // end oponent
 
   turn := False;
   if state.Exists('gameplay') then
@@ -647,6 +652,7 @@ begin
   // RENDER THE STATE!!
   TThread.Synchronize(nil, procedure
   begin
+    prohibit_render := false;
     Update;
   end);
 end;
