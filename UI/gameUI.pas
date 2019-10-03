@@ -3,7 +3,7 @@ unit gameUI;
 interface
 // Page 148
 uses
-  Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, DBXJSON,
+  Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, System.JSON,
   Controls, ExtCtrls, UIContainer, OpenGL, Textures, pkmCard, clientState;
 
 type

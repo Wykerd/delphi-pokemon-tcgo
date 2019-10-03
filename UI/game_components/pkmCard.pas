@@ -3,7 +3,7 @@ unit pkmCard;
 interface
 
 uses
-  Windows, OpenGL, Graphics, Classes, Math, SysUtils, StrUtils, DBXJSON,
+  Windows, OpenGL, Graphics, Classes, Math, SysUtils, StrUtils, System.JSON,
   helpers, Textures;
 
 type

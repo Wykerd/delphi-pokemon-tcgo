@@ -3,7 +3,7 @@ unit cardData;
 interface
 
 uses
-  DBXJSON, dbunit, sysutils, helpers, dialogs;
+  System.JSON, dbunit, sysutils, helpers, dialogs;
 
 type
   TCardType = (ctPokemon, ctTrainer, ctEnergy);

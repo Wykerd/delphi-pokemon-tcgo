@@ -3,7 +3,7 @@ unit gameState;
 interface
 
 uses
-  DBXJSON, cardDeck, Consts, sysutils, cardData, Dialogs;
+  System.JSON, cardDeck, Consts, sysutils, cardData, Dialogs;
 
 type
   TGameState = class (TObject)

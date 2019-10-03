@@ -3,7 +3,7 @@ unit cardDeck;
 interface
 
 uses
-  DBXJSON, cardData, helpers, sysutils;
+  System.JSON, cardData, helpers, sysutils;
 
 type
   TCardDeck = class (TObject)

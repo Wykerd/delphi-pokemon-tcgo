@@ -16,7 +16,7 @@ interface
 uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdContext, IdThreadComponent, ComCtrls,
-  Graphics, SysUtils, helpers, DBXJSON, clientUI, clientState;
+  Graphics, SysUtils, helpers, System.JSON, clientUI, clientState;
 
 type
   TClient = class (TIdTCPClient)

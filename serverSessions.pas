@@ -3,7 +3,7 @@ unit serverSessions;
 interface
 
 uses
-  IdIOHandlerSocket, cardDeck, DBXJSON;
+  IdIOHandlerSocket, cardDeck, System.JSON;
 
 type
   TClientSession = class

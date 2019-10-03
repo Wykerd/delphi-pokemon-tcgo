@@ -3,7 +3,7 @@ unit helpers;
 interface
 
 uses
-  Classes, DBXJSON, SysUtils, IdSync, ComCtrls, Character, Variants;
+  Classes, System.JSON, SysUtils, IdSync, ComCtrls, Character, Variants;
 
 type
   //TArray<t> = array of t;

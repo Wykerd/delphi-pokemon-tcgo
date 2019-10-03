@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, server, ComCtrls, client, DBXJSON, helpers, ExtCtrls,
+  Dialogs, StdCtrls, server, ComCtrls, client, System.JSON, helpers, ExtCtrls,
   userWizard;
 
 type

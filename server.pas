@@ -5,7 +5,7 @@ interface
 uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdCustomTCPServer, IdTCPServer, IdContext,
-  ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, DBXJSON,
+  ComCtrls, Graphics, SysUtils, IdStack, dbUnit, db, helpers, System.JSON,
   IdIOHandlerSocket, StrUtils, Windows, serverConfig, serverSessions, gameLogic,
   IdHTTP, HTTPApp, cardDeck, versions;
 

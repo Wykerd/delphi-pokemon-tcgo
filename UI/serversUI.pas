@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, ExtCtrls, Classes, StdCtrls, Controls, Graphics, Dialogs, Math,
-  Forms, DBXJSON, UIContainer, helpers, SysUtils, UIButton, UIImgButton;
+  Forms, System.JSON, UIContainer, helpers, SysUtils, UIButton, UIImgButton;
 
 type
   TClientStart = procedure (Host : string; Port : integer; ServerIndex: integer = -1) of object;

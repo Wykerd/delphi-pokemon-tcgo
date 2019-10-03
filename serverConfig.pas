@@ -3,7 +3,7 @@ unit serverConfig;
 interface
 
 uses
-  DBXJSON, SysUtils, helpers, ExtCtrls;
+  System.JSON, SysUtils, helpers, ExtCtrls;
 
 type
   TChatFormat = record

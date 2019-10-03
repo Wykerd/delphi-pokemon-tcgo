@@ -51,6 +51,7 @@ object frmLauncher: TfrmLauncher
     ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 2
+    Zoom = 100
     OnChange = redDebugChange
   end
   object redClient: TRichEdit
@@ -67,6 +68,7 @@ object frmLauncher: TfrmLauncher
     ParentFont = False
     ScrollBars = ssVertical
     TabOrder = 3
+    Zoom = 100
     OnChange = redClientChange
   end
   object pnlUser: TPanel

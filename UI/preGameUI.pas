@@ -3,7 +3,7 @@ unit preGameUI;
 interface
 
 uses
-  Windows, Messages, ExtCtrls, Classes, StdCtrls, Controls, Graphics, Dialogs, DBXJSON,
+  Windows, Messages, ExtCtrls, Classes, StdCtrls, Controls, Graphics, Dialogs, System.JSON,
   UIContainer, helpers, SysUtils, UIButton, Forms, Math;
 
 type
