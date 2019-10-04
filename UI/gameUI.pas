@@ -4,7 +4,8 @@ interface
 // Page 148
 uses
   Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, System.JSON,
-  Controls, ExtCtrls, UIContainer, OpenGL, Textures, pkmCard, clientState, System.threading;
+  Controls, ExtCtrls, UIContainer, OpenGL, Textures, pkmCard, clientState, System.threading,
+  IdGlobal, idhash, IdHashSHA;
 
 type
   TChatEvent = procedure (s : string) of object;
@@ -14,51 +15,54 @@ type
     FOnChat: TChatEvent;
     FPanAngleX, FPanAngleY: Extended;
     FLastState : TJSONObject;
+    FRenderCache: TArray<TCardModel>;
     FBoardTex, FEdgeTex, FBenchEdgeTex, FBenchTex : GLuint;
     procedure SetOnChat(const Value: TChatEvent);
     procedure OpenChat(sender: Tobject);
     procedure HandleResize(Sender: TObject);
     procedure HandleMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
-    procedure HandleKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   published
     constructor Create (AOwner: TComponent); override;
     // Events //
     property OnChat : TChatEvent read FOnChat write SetOnChat;
     // -- //
     // OpenGL //
+    // Rendering cycle //
     procedure Pick (X, Y: Integer);
     procedure Paint; override;
     procedure Draw;
     procedure Init;
     procedure Update;
+    procedure RenderState(state: TJSONObject);
+    procedure PopulateArray (var _fill: TArray<integer>; prop: string; plr_state: TJSONObject);
+    procedure LocateInCache(json: string; callback: TProc<Boolean, Integer>);
     // -- //
     // Handlers //
     procedure IncomingChat (s : string);
     // -- //
   public
+    // Rendering cycle variables //
     // State //
-    p_deck : TCardModel;
+    p_deck : integer;
     p_deck_length: byte;
     p_prize_cards: byte;
-    p_benched: TArray<TCardModel>;
-    p_hand: TArray<TCardModel>;
-    p_discard: TArray<TCardModel>;
-    p_active: TCardModel;
+    p_benched: TArray<integer>;
+    p_hand: TArray<integer>;
+    p_discard: TArray<integer>;
+    p_active: integer;
 
     o_deck_length : byte;
     o_prize_cards: byte;
-    o_benched_cards: TArray<TCardModel>;
+    o_benched_cards: TArray<integer>;
     o_hand: byte;
-    o_discard: TArray<TCardModel>;
-    o_active: TCardModel;
+    o_discard: TArray<integer>;
+    o_active: integer;
 
     turn: boolean;
     stage: string;
 
     prohibit_render : boolean;
-
-    procedure RenderState(state: TJSONObject);
     // -- //
   end;
 
@@ -120,9 +124,7 @@ end;
 constructor TGameUI.Create(AOwner: TComponent);
 begin
   inherited;
-  // debug
-  OnKeyDown := HandleKeyDown;
-  //
+  SetLength(FRenderCache, 0);
   prohibit_render := false;
   OnClick := OpenChat;
   OnMouseMove := HandleMouseMove;
@@ -150,10 +152,34 @@ begin
   LoadTexture('benchTexture.jpg', FBenchTex, true);
 end;
 
+procedure TGameUI.LocateInCache(json: string;
+  callback: TProc<Boolean, Integer>);
+var
+  I: Integer;
+  hash: string;
+  hasher : TIdHashSHA1;
+begin
+  hasher := TIdHashSHA1.Create;
+  with hasher do
+  begin
+    hash := HashStringAsHex(json);
+  end;
+  hasher.Free;
+  for I := 0 to High(FRenderCache) do
+  begin
+    if FRenderCache[i].Sprite.hash = hash then
+    begin
+      callback(true, i);
+      exit;
+    end;
+  end;
+  callback(false, -1);
+end;
+
 procedure TGameUI.Draw;
 var
   last_index: Integer;
-  procedure RenderModelArr (arr : TArray<TCardModel>; x, y, z_offset: Extended);
+  procedure RenderModelArr (arr : TArray<integer>; x_offset, y_offset, z_offset: Extended);
   var
     i: Integer;
   begin
@@ -162,16 +188,20 @@ var
     begin
       for I := 0 to Length(arr) - 1 do
       begin
-        glPushMatrix;
-        glPushName(i + 1 + last_index);
-        glTranslatef(x + (i/2), y, -10.0 + z_offset);
-        glRotate(FPanAngleX, 0, 1, 0);
-        glRotate(FPanAngleY, 1, 0, 0);
-        glRotate(315, 1, 0, 0);
-          TCardModel(arr[i]).Draw;
-          TCardModel(arr[i]).name := i + 1 + last_index;
-        glPopName;
-        glPopMatrix;
+        if (arr[i] > -1) then
+        begin
+          glPushMatrix;
+          glPushName(i + 1 + last_index);
+          glTranslatef(0.0, 1.5, -10.0);
+          glRotate(FPanAngleX, 0, 1, 0);
+          glRotate(FPanAngleY, 1, 0, 0);
+          glRotate(315, 1, 0, 0);
+          glTranslatef(x_offset + (i/2), y_offset, z_offset);
+            FRenderCache[arr[i]].Draw;
+            FRenderCache[arr[i]].name := i + 1 + last_index;
+          glPopName;
+          glPopMatrix;
+        end;
       end;
       last_index := last_index + length(arr);
     end;
@@ -376,12 +406,6 @@ begin
 
 end;
 
-procedure TGameUI.HandleKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-  RenderState(FLastState);
-end;
-
 procedure TGameUI.HandleMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
@@ -411,12 +435,14 @@ end;
 procedure TGameUI.IncomingChat(s: string);
 begin
   //ChatMemo.Lines.Add(s);
-  showmessage(s);
+  //showmessage(s);
 end;
 
 procedure TGameUI.OpenChat(sender: Tobject);
 begin
-  OnChat(Inputbox('Chat', 'Enter message', ''));
+  showmessage('ok');
+  renderState(FLastState);
+  //OnChat(Inputbox('Chat', 'Enter message', ''));
 end;
 
 procedure TGameUI.Paint;
@@ -495,10 +521,10 @@ begin
 end;
 
 // Function used below
-procedure PopulateArray (var _fill: TArray<TCardModel>; prop: string; plr_state: TJSONObject);
+procedure TGameUI.PopulateArray (var _fill: TArray<integer>; prop: string; plr_state: TJSONObject);
 var
   arr : TJSONArray;
-  fill :  TArray<TCardModel>;
+  fill :  TArray<integer>;
   I: Integer;
 begin
   SetLength(fill, length(_fill));
@@ -507,13 +533,25 @@ begin
   begin
     // Assume it is array. Might require validation in future but works for now.
     arr := TJSONArray(plr_state.Get(prop).JsonValue);
-    setlength(fill, arr.Size);
-    TParallel.&For(0, arr.Size - 1, procedure (i: integer)
+    setlength(fill, arr.Size);                                    
+    
+    for I := 0 to arr.Count - 1 do
     begin
-      fill[i] := TCardModel.Create;
-      // assume it is jsonobject here aswell
-      TCardModel(fill[i]).Sprite.Data := TJSONObject(arr.Get(i));
-    end);
+      LocateInCache(TJSONObject(arr.Get(i)).ToString, procedure (found: boolean; index: integer)
+      begin
+        if found then 
+        begin
+          fill[i] := index;
+        end
+        else 
+        begin
+          setlength(FRenderCache, length(FRenderCache) + 1);
+          FRenderCache[high(FRenderCache)] := TCardModel.Create;
+          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(arr.Get(i)); 
+          fill[i] := high(FRenderCache);
+        end;
+      end);
+    end;
   end;
 
   _fill := fill;
@@ -527,21 +565,9 @@ var
   ticks : integer;
   json: TJSONObject;
   temp_model: TCardModel;
-  // Destroy, Free and nil the elements of the array and set length to 0
-  procedure ClearArray (var arr: TArray<TCardModel>);
-  var
-    I: Integer;
+  // This was usefull trust me!
+  procedure ClearArray (var arr: TArray<integer>);
   begin
-    for I := 0 to length(arr) - 1 do
-    begin
-      temp_model := TCardModel(arr[i]);
-      if temp_model <> nil then
-      begin
-        temp_model.Destroy;
-        freeandnil(temp_model);
-      end;
-    end;
-
     setlength(arr, 0);
   end;
 begin
@@ -558,23 +584,13 @@ begin
   ClearArray(o_benched_cards);
   ClearArray(o_discard);
 
-  if p_deck <> nil then
-    begin
-      p_deck.Destroy;
-      freeandnil(p_deck);
-    end;
-
-  if p_active <> nil then
-    begin
-      p_active.Destroy;
-      freeandnil(p_active);
-    end;
-
-  if o_active <> nil then
-    begin
-      o_active.Destroy;
-      freeandnil(o_active);
-    end;
+  p_deck_length := 0;
+  p_prize_cards := 0;
+  p_active := -1;
+  o_deck_length := 0;
+  o_prize_cards := 0;
+  o_hand := 0;
+  o_active := -1;
 
   // Build the new state
   // build player state ( p_ )
@@ -582,8 +598,17 @@ begin
   begin
     TJSONObject(plr_state.JsonValue).ExistCall('deck', procedure (s: TJSONPair)
     begin
-      p_deck := TCardModel.Create;
-      p_deck.Sprite.Data := TJSONObject(s.JsonValue);
+      LocateInCache(TJSONObject(s).ToString, procedure (found: boolean; index: integer)
+      begin
+        if found then p_deck := index
+        else 
+        begin
+          setlength(FRenderCache, length(FRenderCache) + 1);
+          FRenderCache[high(FRenderCache)] := TCardModel.Create;
+          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue); 
+          p_deck := high(FRenderCache);
+        end;
+      end);
     end);
 
     TJSONObject(plr_state.JsonValue).ExistCall('deck-length', procedure (s: TJSONPair)
@@ -608,13 +633,23 @@ begin
     PopulateArray(p_benched, 'benched-cards', TJSONObject(plr_state.JsonValue));
 
     PopulateArray(p_hand, 'hand', TJSONObject(plr_state.JsonValue));
+    
 
     PopulateArray(p_discard, 'discard', TJSONObject(plr_state.JsonValue));
 
     TJSONObject(plr_state.JsonValue).ExistCall('active', procedure (s: TJSONPair)
     begin
-      p_active := TCardModel.Create;
-      p_active.Sprite.Data := TJSONObject(s.JsonValue);
+      LocateInCache(TJSONObject(s).ToString, procedure (found: boolean; index: integer)
+      begin
+        if found then p_active := index
+        else 
+        begin
+          setlength(FRenderCache, length(FRenderCache)+1);
+          FRenderCache[high(FRenderCache)] := TCardModel.Create;
+          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue); 
+          p_active := high(FRenderCache);
+        end;
+      end);
     end);
   end);
 
@@ -654,8 +689,17 @@ begin
 
     TJSONObject(plr_state.JsonValue).ExistCall('active', procedure (s: TJSONPair)
     begin
-      o_active := TCardModel.Create;
-      o_active.Sprite.Data := TJSONObject(s.JsonValue);
+      LocateInCache(TJSONObject(s).ToString, procedure (found: boolean; index: integer)
+      begin
+        if found then o_active := index
+        else 
+        begin
+          setlength(FRenderCache, length(FRenderCache)+1);
+          FRenderCache[high(FRenderCache)] := TCardModel.Create;
+          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue); 
+          o_active := high(FRenderCache);
+        end;
+      end);
     end);
   end);
 

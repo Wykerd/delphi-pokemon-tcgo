@@ -418,8 +418,9 @@ begin
     if Session.Deck <> nil then
     begin
       Session.Ready := true;
+      UpdateGameQueue;
       Session.Socket.WriteLn('{"action":"game-ready","data":{"success":"true"}}');
-      sleep(1000);
+      exit;
     end
     else
       Session.Socket.WriteLn('{"action":"game-ready","data":{"success":"false","reason":"no_deck_used"}}');

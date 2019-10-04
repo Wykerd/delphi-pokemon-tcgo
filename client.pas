@@ -115,7 +115,7 @@ begin
 
     if action = 'authenticate'    then
     begin
-      HandleAuth
+      HandleAuth(data);
     end;
 
 

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, OpenGL, Graphics, Classes, Math, SysUtils, StrUtils, System.JSON,
-  helpers, Textures;
+  helpers, Textures, IdGlobal, idhash, IdHashSHA;
 
 type
   TCardSprite = class(TBitmap)
@@ -28,6 +28,7 @@ type
     procedure Render;
     procedure GenerateTexture;
   public
+    hash: string;
     class function decodeType(s: string): string;
   end;
 
@@ -516,8 +517,17 @@ begin
 end;
 
 procedure TCardSprite.SetData(const Value: TJSONObject);
+var
+  hasher : TIdHashSHA1;
 begin
   FData := Value;
+  // Use to check if state has changed during render cycle.
+  hasher := TIdHashSHA1.Create;
+  with hasher do
+  begin
+    hash := HashStringAsHex(FData.ToString);
+  end;
+  hasher.Free;
   // Automatically render the new data
   Render;
 end;
