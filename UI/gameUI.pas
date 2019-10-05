@@ -12,11 +12,12 @@ type
 
   TGameUI = class (TUIContainer)
   private
+    last_render_ticks : integer;
     FOnChat: TChatEvent;
     FPanAngleX, FPanAngleY: Extended;
     FLastState : TJSONObject;
     FRenderCache: TArray<TCardModel>;
-    FBoardTex, FEdgeTex, FBenchEdgeTex, FBenchTex : GLuint;
+    FBoardTex, FEdgeTex, FBenchEdgeTex, FBenchTex, FFontTexture : GLuint;
     procedure SetOnChat(const Value: TChatEvent);
     procedure OpenChat(sender: Tobject);
     procedure HandleResize(Sender: TObject);
@@ -115,6 +116,10 @@ begin
   // Enable GL capabilities
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_NORMALIZE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_ALPHA_TEST);
+  glAlphaFunc(GL_GREATER, 0.4);
   // Default textures to enabled
   glEnable(GL_TEXTURE_2D);
 end;
@@ -150,6 +155,7 @@ begin
   LoadTexture('edgeTexture.jpg', FEdgeTex, true);
   LoadTexture('greyEdgeTexture.jpg', FBenchEdgeTex, true);
   LoadTexture('benchTexture.jpg', FBenchTex, true);
+  LoadTexture('fontTexture.tga', FFontTexture, true);
 end;
 
 procedure TGameUI.LocateInCache(json: string;
@@ -208,6 +214,7 @@ var
   end;
 begin
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+  glLoadIdentity;
 
   // Render the main board
   glPushMatrix;
@@ -404,6 +411,11 @@ begin
 
   RenderModelArr(p_hand, 0, 1.5, 0);
 
+  glPushMatrix;
+    glTranslatef(1, 1, -5.0);
+    glBindTexture(GL_TEXTURE_2D, FFontTexture);
+    glImgWrite('Previous render: ' + last_render_ticks.ToString + 'ms');
+  glPopMatrix;
 end;
 
 procedure TGameUI.HandleMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -722,7 +734,7 @@ begin
   end);
 
   ticks := TThread.GetTickCount - ticks;
-  showmessage(ticks.ToString);
+  last_render_ticks := ticks;
 end;
 
 procedure TGameUI.SetOnChat(const Value: TChatEvent);

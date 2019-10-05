@@ -3,7 +3,7 @@ unit helpers;
 interface
 
 uses
-  Classes, System.JSON, SysUtils, IdSync, ComCtrls, Character, Variants;
+  Classes, System.JSON, SysUtils, IdSync, ComCtrls, Character, Variants, Textures, OpenGL;
 
 type
   //TArray<t> = array of t;
@@ -47,8 +47,44 @@ function StripNonJson(s: string): string;
 
 // Check if a variant is undefined. Used to check for empty Text fields in db.
 function UndefinedVar(v: Variant): boolean;
+procedure glImgWrite(strText : string);
 
 implementation
+
+procedure glImgWrite(strText : string);
+var I, intAsciiCode : integer;
+    imgcharWidth : GLfloat;
+    imgcharPosX : GLfloat;
+begin
+
+  imgcharWidth := 1.0/66;
+  strText := UpperCase(strText);
+
+  for I := 1 to length(strText) do
+  begin
+
+    if ord(strText[I]) > 31 then //only handle 66 chars
+    begin
+      intAsciiCode := ord(strText[I]) - 32;
+      imgcharPosX := length(strText)/2*0.08-length(strText)*0.08 + (i-1) * 0.08; // Find the character position from the origin [0.0 , 0.0 , 0.0]  to center the text
+      glBegin(GL_QUADS);
+
+        glTexCoord2f(imgcharWidth*intAsciiCode, 0.0);
+        glVertex3f(-0.04+imgcharPosX, -0.04,  0.0);
+
+        glTexCoord2f(imgcharWidth*intAsciiCode+imgcharWidth, 0.0);
+        glVertex3f( 0.04+imgcharPosX, -0.04,  0.0);
+
+        glTexCoord2f(imgcharWidth*intAsciiCode+imgcharWidth, 1.0);
+        glVertex3f( 0.04+imgcharPosX,  0.04,  0.0);
+
+        glTexCoord2f(imgcharWidth*intAsciiCode, 1.0);
+        glVertex3f(-0.04+imgcharPosX,  0.04,  0.0);
+      glEnd;
+    end;
+  end;
+end;
+
 
 function UndefinedVar(v: Variant): boolean;
 begin
