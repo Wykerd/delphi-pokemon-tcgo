@@ -19,8 +19,6 @@ type
     FoundIn: string;
   end;
 
-  TPickEvent = procedure (c: TPickContext) of object;
-
   TGameUI = class (TUIContainer)
   private
     last_render_ticks : integer;
@@ -35,8 +33,11 @@ type
     procedure HandleResize(Sender: TObject);
     procedure HandleMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
+    procedure HandleMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure HandleKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure HandleCardClick(Context: TPickContext);
   published
     constructor Create (AOwner: TComponent); override;
     // Events //
@@ -62,7 +63,7 @@ type
     p_deck : integer;
     p_deck_length: byte;
     p_prize_cards: byte;
-    p_benched: TArray<integer>;
+    p_benched_cards: TArray<integer>;
     p_hand: TArray<integer>;
     p_discard: TArray<integer>;
     p_active: integer;
@@ -149,6 +150,7 @@ begin
   OnKeyDown := HandleKeyDown;
   OnClick := OpenChat;
   OnMouseMove := HandleMouseMove;
+  OnMouseDown := HandleMouseDown;
   OnResize := HandleResize;
   RenderState(TJSONObject.Create);
 end;
@@ -219,7 +221,10 @@ var
           glRotate(FPanAngleX, 0, 1, 0);
           glRotate(FPanAngleY, 1, 0, 0);
           glRotate(315, 1, 0, 0);
-          glTranslatef(x_offset + (((7-0.57)/(Length(arr) - 1)) * i), y_offset, z_offset);
+          if Length(arr) <> 1 then
+            glTranslatef(x_offset + (((7-0.57)/(Length(arr) - 1)) * i), y_offset, 0.1)
+          else
+            glTranslatef(x_offset, y_offset, 0.1);
           if i + 1 + last_index = last_pick then
           begin
             glTranslatef(0, 0, 0.2);
@@ -246,7 +251,10 @@ var
       glRotate(FPanAngleX, 0, 1, 0);
       glRotate(FPanAngleY, 1, 0, 0);
       glRotate(315, 1, 0, 0);
-      glTranslatef(x_offset + (((7-0.57)/(Length - 1)) * i)-7, y_offset, z_offset);
+      if Length <> 1 then
+        glTranslatef(x_offset + (((7-0.57)/(Length - 1)) * i)-7, y_offset, z_offset)
+      else
+        glTranslatef(x_offset - 7, y_offset, 0.1);
         TCardModel.RenderBackCard;
       glPopMatrix;
     end;
@@ -345,14 +353,16 @@ var
           glRotate(FPanAngleX, 0, 1, 0);
           glRotate(FPanAngleY, 1, 0, 0);
           glRotate(315, 1, 0, 0);
-          glTranslatef(x_offset + (((3.8-0.57)/(Length(arr) - 1)) * i), y_offset, 0.1);
+          if Length(arr) <> 1 then
+            glTranslatef(x_offset + (((3.8-0.57)/(Length(arr) - 1)) * i), y_offset, 0.1)
+          else
+            glTranslatef(x_offset, y_offset, 0.1);
           if i + 1 + last_index = last_pick then
           begin
             glTranslatef(0, 0, 0.2);
             glRotate(20, 1, 0, 0);
           end;
             FRenderCache[arr[i]].Draw;
-            FRenderCache[arr[i]].name := i + 1 + last_index;
           glPopName;
           glPopMatrix;
         end;
@@ -378,9 +388,11 @@ var
           glRotate(FPanAngleY, 1, 0, 0);
           glRotate(315, 1, 0, 0);
           glRotate(180, 0, 0, 1);
-          glTranslatef(x_offset + (((3.8-0.57)/(Length(arr) - 1)) * i), y_offset, 0.1);
+          if Length(arr) <> 1 then
+            glTranslatef(x_offset + (((3.8-0.57)/(Length(arr) - 1)) * i), y_offset, 0.1)
+          else
+            glTranslatef(x_offset, y_offset, 0.1);
             FRenderCache[arr[i]].Draw;
-          glPopName;
           glPopMatrix;
         end;
       end;
@@ -586,7 +598,7 @@ begin
 
   RenderHandArr(p_hand, -3.5, -3.75 - 0.8, -0.1);
 
-  RenderBench(p_benched, -1.9, -3.4);
+  RenderBench(p_benched_cards, -1.9, -3.4);
 
   if p_active > -1 then
   begin
@@ -621,6 +633,8 @@ begin
 
   RenderOpBench(o_benched_cards, -1.9, -3.4);
 
+  RenderOpHandArr(o_hand, 3.5, 3.75, -0.1);
+
   if o_active > -1 then
   begin
     glPushMatrix;
@@ -633,8 +647,6 @@ begin
     FRenderCache[o_active].Draw(modelActive);
     glPopMatrix;
   end;
-
-  RenderOpHandArr(o_hand, 3.5, 3.75, -0.1);
 
   glPushMatrix;
     glTranslatef(0.0, 1.5, -10.0);
@@ -668,6 +680,22 @@ begin
     glBindTexture(GL_TEXTURE_2D, FFontTexture);
     glImgWrite('Render Cache Size: ' + length(FRenderCache).ToString);
   glPopMatrix;
+
+  glPushMatrix;
+    glTranslatef(0.0, 1.5, -10.0);
+    glRotate(FPanAngleX, 0, 1, 0);
+    glRotate(FPanAngleY, 1, 0, 0);
+    glRotate(315, 1, 0, 0);
+    glTranslate(0, -5.4, 0);
+    glBindTexture(GL_TEXTURE_2D, FFontTexture);
+    glImgWrite('Last Picked: ' + last_pick.ToString);
+  glPopMatrix;
+end;
+
+procedure TGameUI.HandleCardClick(Context: TPickContext);
+begin
+  showmessage(Context.FoundIn);
+  showmessage(Context.Model.Sprite.Data.Get('name').JsonValue.Value);
 end;
 
 procedure TGameUI.HandleKeyDown(Sender: TObject; var Key: Word;
@@ -695,6 +723,36 @@ begin
         RELOADPKMCARDVAR;
         Showmessage('Reloaded card generation varables');
       end;
+  end;
+end;
+
+procedure TGameUI.HandleMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  Pick(x, y);
+  if last_pick > 1 then
+  begin
+    if last_pick < length(p_hand) + 2 then
+    begin
+      HandleCardClick(TPickContext.Create(last_pick - 2,
+        FRenderCache[p_hand[last_pick - 2]],
+        'hand'));
+    end
+    else if last_pick < length(p_hand) + 2 + length(p_benched_cards) then
+    begin
+      HandleCardClick(TPickContext.Create(last_pick - 2 - Length(p_hand),
+        FRenderCache[p_benched_cards[last_pick - 2 - Length(p_hand)]],
+        'bench'
+        ));
+    end
+    else if last_pick = length(p_hand) + 2 + length(p_benched_cards) then
+    begin
+      HandleCardClick(TPickContext.Create(0,
+        FRenderCache[p_active],
+        'active'
+        ));
+    end;
+
   end;
 end;
 
@@ -732,8 +790,8 @@ end;
 
 procedure TGameUI.OpenChat(sender: Tobject);
 begin
-  showmessage('ok');
-  renderState(FLastState);
+  //showmessage('ok');
+  //renderState(FLastState);
   //OnChat(Inputbox('Chat', 'Enter message', ''));
 end;
 
@@ -799,12 +857,10 @@ begin
 
     ptr := ptrNames;
 
-    for i := 0 to numberOfNames - 1 do
+    for i := 0 to numberOfNames - 2 do
     begin
-      // showmessage(IntToStr(ptr^));
       inc(ptr);
     end;
-    Dec(ptr);
     last_pick := ptr^;
   end;
   // end hit processing
@@ -829,7 +885,7 @@ begin
   begin
     // Assume it is array. Might require validation in future but works for now.
     arr := TJSONArray(plr_state.Get(prop).JsonValue);
-    setlength(fill, arr.Size);                                    
+    setlength(fill, arr.count);
     
     for I := 0 to arr.Count - 1 do
     begin
@@ -860,7 +916,6 @@ procedure TGameUI.RenderState(state: TJSONObject);
 var
   ticks : integer;
   json: TJSONObject;
-  temp_model: TCardModel;
   // This was usefull trust me!
   procedure ClearArray (var arr: TArray<integer>);
   begin
@@ -874,7 +929,7 @@ begin
   // Clear the variables for new data to be loaded
   // Keep memory clean
 
-  ClearArray(p_benched);
+  ClearArray(p_benched_cards);
   ClearArray(p_hand);
   ClearArray(p_discard);
   ClearArray(o_benched_cards);
@@ -926,10 +981,9 @@ begin
       end;
     end);
 
-    PopulateArray(p_benched, 'benched-cards', TJSONObject(plr_state.JsonValue));
-
     PopulateArray(p_hand, 'hand', TJSONObject(plr_state.JsonValue));
-    
+
+    PopulateArray(p_benched_cards, 'benched-cards', TJSONObject(plr_state.JsonValue));
 
     PopulateArray(p_discard, 'discard', TJSONObject(plr_state.JsonValue));
 
