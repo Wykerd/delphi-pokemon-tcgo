@@ -10,12 +10,24 @@ uses
 type
   TChatEvent = procedure (s : string) of object;
 
+  TPickContext = class (TObject)
+  published
+    constructor Create(_index: integer; _model: TCardModel; found_in: string); overload;
+  public
+    Index: integer;
+    Model: TCardModel;
+    FoundIn: string;
+  end;
+
+  TPickEvent = procedure (c: TPickContext) of object;
+
   TGameUI = class (TUIContainer)
   private
     last_render_ticks : integer;
     FOnChat: TChatEvent;
     FPanAngleX, FPanAngleY: Extended;
     FLastState : TJSONObject;
+    last_pick : integer;
     FRenderCache: TArray<TCardModel>;
     FBoardTex, FEdgeTex, FBenchEdgeTex, FBenchTex, FFontTexture : GLuint;
     procedure SetOnChat(const Value: TChatEvent);
@@ -23,6 +35,8 @@ type
     procedure HandleResize(Sender: TObject);
     procedure HandleMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
+    procedure HandleKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   published
     constructor Create (AOwner: TComponent); override;
     // Events //
@@ -75,7 +89,8 @@ implementation
 { GL Setup Functions }
 procedure setupPixelFormat(DC: HDC);
 const
-  pfd: TPIXELFORMATDESCRIPTOR = (nSize: sizeof(TPIXELFORMATDESCRIPTOR); // size
+  pfd: TPIXELFORMATDESCRIPTOR = (
+    nSize: sizeof(TPIXELFORMATDESCRIPTOR); // size
     nVersion: 1; // version
     dwFlags: PFD_SUPPORT_OPENGL or PFD_DRAW_TO_WINDOW or PFD_DOUBLEBUFFER;
     // support double-buffering
@@ -131,6 +146,7 @@ begin
   inherited;
   SetLength(FRenderCache, 0);
   prohibit_render := false;
+  OnKeyDown := HandleKeyDown;
   OnClick := OpenChat;
   OnMouseMove := HandleMouseMove;
   OnResize := HandleResize;
@@ -156,6 +172,7 @@ begin
   LoadTexture('greyEdgeTexture.jpg', FBenchEdgeTex, true);
   LoadTexture('benchTexture.jpg', FBenchTex, true);
   LoadTexture('fontTexture.tga', FFontTexture, true);
+  LoadPkmModelTextures;
 end;
 
 procedure TGameUI.LocateInCache(json: string;
@@ -185,7 +202,7 @@ end;
 procedure TGameUI.Draw;
 var
   last_index: Integer;
-  procedure RenderModelArr (arr : TArray<integer>; x_offset, y_offset, z_offset: Extended);
+  procedure RenderHandArr (arr : TArray<integer>; x_offset, y_offset, z_offset: Extended);
   var
     i: Integer;
   begin
@@ -202,7 +219,12 @@ var
           glRotate(FPanAngleX, 0, 1, 0);
           glRotate(FPanAngleY, 1, 0, 0);
           glRotate(315, 1, 0, 0);
-          glTranslatef(x_offset + (i/2), y_offset, z_offset);
+          glTranslatef(x_offset + (((7-0.57)/(Length(arr) - 1)) * i), y_offset, z_offset);
+          if i + 1 + last_index = last_pick then
+          begin
+            glTranslatef(0, 0, 0.2);
+            glRotate(20, 1, 0, 0);
+          end;
             FRenderCache[arr[i]].Draw;
             FRenderCache[arr[i]].name := i + 1 + last_index;
           glPopName;
@@ -212,6 +234,159 @@ var
       last_index := last_index + length(arr);
     end;
   end;
+
+  procedure RenderOpHandArr (length : byte; x_offset, y_offset, z_offset: Extended);
+  var
+    i: Integer;
+  begin
+    for I := 0 to length - 1 do
+    begin
+      glPushMatrix;
+      glTranslatef(0.0, 1.5, -10.0);
+      glRotate(FPanAngleX, 0, 1, 0);
+      glRotate(FPanAngleY, 1, 0, 0);
+      glRotate(315, 1, 0, 0);
+      glTranslatef(x_offset + (((7-0.57)/(Length - 1)) * i)-7, y_offset, z_offset);
+        TCardModel.RenderBackCard;
+      glPopMatrix;
+    end;
+  end;
+
+  procedure RenderDeck(length: integer; x, y: Extended; rotation : extended = 0);
+  var
+    i: integer;
+  begin
+    for I := 0 to length - 1 do
+    begin
+    glPushMatrix;
+    glTranslatef(0.0, 1.5, -10.0);
+    glRotate(FPanAngleX, 0, 1, 0);
+    glRotate(FPanAngleY, 1, 0, 0);
+    glRotate(315, 1, 0, 0);
+    glTranslatef(x + (StaticRandom_1[i] * 0.05), y + (StaticRandom_1[59-i] * 0.05), i * 0.01);
+    glRotate(10 * StaticRandom_2[i], 0, 0, 1);
+    glRotate(rotation, 0, 0, 1);
+      TCardModel.RenderBackCard;
+    glPopMatrix;
+    end;
+  end;
+
+  // Slightly diffirent usage of the static random numbers
+  procedure RenderPrizes(length: integer; x, y: Extended; rotation : extended = 0);
+  var
+    i: integer;
+  begin
+    for I := 0 to length - 1 do
+    begin
+    glPushMatrix;
+    glTranslatef(0.0, 1.5, -10.0);
+    glRotate(FPanAngleX, 0, 1, 0);
+    glRotate(FPanAngleY, 1, 0, 0);
+    glRotate(315, 1, 0, 0);
+    glTranslatef(x + (StaticRandom_2[i] * 0.05), y + (StaticRandom_2[59-i] * 0.05), i * 0.01);
+    glRotate(10 * StaticRandom_1[i], 0, 0, 1);
+    glRotate(rotation, 0, 0, 1);
+      TCardModel.RenderBackCard;
+    glPopMatrix;
+    end;
+    glPushMatrix;
+    glTranslatef(0.0, 1.5, -10.0);
+    glRotate(FPanAngleX, 0, 1, 0);
+    glRotate(FPanAngleY, 1, 0, 0);
+    glRotate(315, 1, 0, 0);
+    glTranslate(x, y, 0.01);
+    glScale(2, 2, 2);
+    glBindTexture(GL_TEXTURE_2D, FFontTexture);
+    glImgWrite(inttostr(length));
+    glPopMatrix;
+  end;
+
+  procedure RenderDiscard(arr: TArray<integer>; x, y: Extended; rotation : extended = 0);
+  var
+    i: Integer;
+  begin
+    if arr <> nil then
+    if length(arr) <> 0 then
+    begin
+      for I := 0 to Length(arr) - 1 do
+      begin
+        if (arr[i] > -1) then
+        begin
+          glPushMatrix;
+          glTranslatef(0.0, 1.5, -10.0);
+          glRotate(FPanAngleX, 0, 1, 0);
+          glRotate(FPanAngleY, 1, 0, 0);
+          glRotate(315, 1, 0, 0);
+          glTranslatef(x + (StaticRandom_2[i] * 0.05),
+            y + (StaticRandom_2[59-i] * 0.05), i * 0.01);
+          glRotate(10 * StaticRandom_2[i], 0, 0, 1);
+          glRotate(rotation, 0, 0, 1);
+            FRenderCache[arr[i]].Draw;
+          glPopMatrix;
+        end;
+      end;
+    end;
+  end;
+
+  procedure RenderBench (arr : TArray<integer>; x_offset, y_offset: Extended);
+  var
+    i: Integer;
+  begin
+    if arr <> nil then
+    if length(arr) <> 0 then
+    begin
+      for I := 0 to Length(arr) - 1 do
+      begin
+        if (arr[i] > -1) then
+        begin
+          glPushMatrix;
+          glPushName(i + 1 + last_index);
+          glTranslatef(0.0, 1.5, -10.0);
+          glRotate(FPanAngleX, 0, 1, 0);
+          glRotate(FPanAngleY, 1, 0, 0);
+          glRotate(315, 1, 0, 0);
+          glTranslatef(x_offset + (((3.8-0.57)/(Length(arr) - 1)) * i), y_offset, 0.1);
+          if i + 1 + last_index = last_pick then
+          begin
+            glTranslatef(0, 0, 0.2);
+            glRotate(20, 1, 0, 0);
+          end;
+            FRenderCache[arr[i]].Draw;
+            FRenderCache[arr[i]].name := i + 1 + last_index;
+          glPopName;
+          glPopMatrix;
+        end;
+      end;
+      last_index := last_index + length(arr);
+    end;
+  end;
+
+  procedure RenderOpBench (arr : TArray<integer>; x_offset, y_offset: Extended);
+  var
+    i: Integer;
+  begin
+    if arr <> nil then
+    if length(arr) <> 0 then
+    begin
+      for I := 0 to Length(arr) - 1 do
+      begin
+        if (arr[i] > -1) then
+        begin
+          glPushMatrix;
+          glTranslatef(0.0, 1.5, -10.0);
+          glRotate(FPanAngleX, 0, 1, 0);
+          glRotate(FPanAngleY, 1, 0, 0);
+          glRotate(315, 1, 0, 0);
+          glRotate(180, 0, 0, 1);
+          glTranslatef(x_offset + (((3.8-0.57)/(Length(arr) - 1)) * i), y_offset, 0.1);
+            FRenderCache[arr[i]].Draw;
+          glPopName;
+          glPopMatrix;
+        end;
+      end;
+    end;
+  end;
+
 begin
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   glLoadIdentity;
@@ -409,20 +584,125 @@ begin
 
   if prohibit_render then exit;
 
-  RenderModelArr(p_hand, 0, 1.5, 0);
+  RenderHandArr(p_hand, -3.5, -3.75 - 0.8, -0.1);
+
+  RenderBench(p_benched, -1.9, -3.4);
+
+  if p_active > -1 then
+  begin
+    glPushMatrix;
+    inc(last_index);
+    glPushName(last_index);
+    glTranslatef(0.0, 1.5, -10.0);
+    glRotate(FPanAngleX, 0, 1, 0);
+    glRotate(FPanAngleY, 1, 0, 0);
+    glRotate(315, 1, 0, 0);
+    glTranslatef(-0.7125, -2.25, 0);
+    if last_index = last_pick then
+    begin
+      glTranslatef(0, 0, 0.2);
+      glRotate(20, 1, 0, 0);
+    end;
+    FRenderCache[p_active].Draw(modelActive);
+    FRenderCache[p_active].name := last_index;
+    glPopName;
+    glPopMatrix;
+  end;
+
+  // Static primitives (no names)
+  RenderDeck(p_deck_length, 2.5, -1);
+  RenderDeck(o_deck_length, -2.5, 1, 180);
+
+  RenderPrizes(p_prize_cards, -3, -1.75);
+  RenderPrizes(o_prize_cards, 2.5, 0.95);
+
+  RenderDiscard(p_discard, 2.5, -2);
+  RenderDiscard(o_discard, -2.5, 2, 180);
+
+  RenderOpBench(o_benched_cards, -1.9, -3.4);
+
+  if o_active > -1 then
+  begin
+    glPushMatrix;
+    glTranslatef(0.0, 1.5, -10.0);
+    glRotate(FPanAngleX, 0, 1, 0);
+    glRotate(FPanAngleY, 1, 0, 0);
+    glRotate(315, 1, 0, 0);
+    glRotate(180, 0, 0, 1);
+    glTranslatef(-0.7125, -2.25, 0);
+    FRenderCache[o_active].Draw(modelActive);
+    glPopMatrix;
+  end;
+
+  RenderOpHandArr(o_hand, 3.5, 3.75, -0.1);
 
   glPushMatrix;
-    glTranslatef(1, 1, -5.0);
+    glTranslatef(0.0, 1.5, -10.0);
+    glRotate(FPanAngleX, 0, 1, 0);
+    glRotate(FPanAngleY, 1, 0, 0);
+    glRotate(315, 1, 0, 0);
+    glTranslate(0, -4.8, 0);
+    glBindTexture(GL_TEXTURE_2D, FFontTexture);
+    if Turn then
+      glImgWrite('Your turn; ' + stage + ' stage')
+    else
+      glImgWrite('Oponent'#39's turn; ' + stage + ' stage');
+  glPopMatrix;
+
+  glPushMatrix;
+    glTranslatef(0.0, 1.5, -10.0);
+    glRotate(FPanAngleX, 0, 1, 0);
+    glRotate(FPanAngleY, 1, 0, 0);
+    glRotate(315, 1, 0, 0);
+    glTranslate(0, -5, 0);
     glBindTexture(GL_TEXTURE_2D, FFontTexture);
     glImgWrite('Previous render: ' + last_render_ticks.ToString + 'ms');
   glPopMatrix;
+
+  glPushMatrix;
+    glTranslatef(0.0, 1.5, -10.0);
+    glRotate(FPanAngleX, 0, 1, 0);
+    glRotate(FPanAngleY, 1, 0, 0);
+    glRotate(315, 1, 0, 0);
+    glTranslate(0, -5.2, 0);
+    glBindTexture(GL_TEXTURE_2D, FFontTexture);
+    glImgWrite('Render Cache Size: ' + length(FRenderCache).ToString);
+  glPopMatrix;
+end;
+
+procedure TGameUI.HandleKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  case Key of
+    VK_F1:
+      TAnonymousThread.Create(procedure
+      var
+        i : integer;
+      begin
+        for I := Low(FRenderCache) to High(FRenderCache) do
+        begin
+          freeandnil(FRenderCache[i]);
+        end;
+        setlength(FRenderCache, 0);
+        renderstate(flaststate);
+      end).start;
+
+    VK_F2:
+      RenderState(FLastState);
+
+    VK_F3:
+      begin
+        RELOADPKMCARDVAR;
+        Showmessage('Reloaded card generation varables');
+      end;
+  end;
 end;
 
 procedure TGameUI.HandleMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
   FPanAngleX := (8 * (x / ClientWidth)) - 4;
-  //FPanAngleX := (180 * (x / ClientWidth)) - 90; // View Whole model pan
+  // FPanAngleX := (180 * (x / ClientWidth)) - 90; // View Whole model pan - for debugging
   FPanAngleY := (4.5 * (y / ClientHeight)) - 2.25;
   Pick(X, Y);
   Draw;
@@ -475,6 +755,8 @@ var
   i: Integer;
   minZ: Integer;
 begin
+  last_pick := 0;
+
   glSelectBuffer(100, addr(buf)); // Create the select buffer
   glRenderMode(GL_SELECT); // For debugging comment out this line
   glInitNames; // Initialize / clear the names buffer
@@ -522,6 +804,8 @@ begin
       // showmessage(IntToStr(ptr^));
       inc(ptr);
     end;
+    Dec(ptr);
+    last_pick := ptr^;
   end;
   // end hit processing
 
@@ -551,15 +835,15 @@ begin
     begin
       LocateInCache(TJSONObject(arr.Get(i)).ToString, procedure (found: boolean; index: integer)
       begin
-        if found then 
+        if found then
         begin
           fill[i] := index;
         end
-        else 
+        else
         begin
           setlength(FRenderCache, length(FRenderCache) + 1);
           FRenderCache[high(FRenderCache)] := TCardModel.Create;
-          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(arr.Get(i)); 
+          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(arr.Get(i));
           fill[i] := high(FRenderCache);
         end;
       end);
@@ -610,14 +894,14 @@ begin
   begin
     TJSONObject(plr_state.JsonValue).ExistCall('deck', procedure (s: TJSONPair)
     begin
-      LocateInCache(TJSONObject(s).ToString, procedure (found: boolean; index: integer)
+      LocateInCache(TJSONObject(s.JsonValue).ToString, procedure (found: boolean; index: integer)
       begin
         if found then p_deck := index
         else 
         begin
           setlength(FRenderCache, length(FRenderCache) + 1);
           FRenderCache[high(FRenderCache)] := TCardModel.Create;
-          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue); 
+          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue);
           p_deck := high(FRenderCache);
         end;
       end);
@@ -649,16 +933,16 @@ begin
 
     PopulateArray(p_discard, 'discard', TJSONObject(plr_state.JsonValue));
 
-    TJSONObject(plr_state.JsonValue).ExistCall('active', procedure (s: TJSONPair)
+    TJSONObject(plr_state.JsonValue).ExistCall('active-card', procedure (s: TJSONPair)
     begin
-      LocateInCache(TJSONObject(s).ToString, procedure (found: boolean; index: integer)
+      LocateInCache(TJSONObject(s.JsonValue).ToString, procedure (found: boolean; index: integer)
       begin
         if found then p_active := index
-        else 
+        else
         begin
           setlength(FRenderCache, length(FRenderCache)+1);
           FRenderCache[high(FRenderCache)] := TCardModel.Create;
-          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue); 
+          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue);
           p_active := high(FRenderCache);
         end;
       end);
@@ -699,9 +983,9 @@ begin
 
     PopulateArray(o_discard, 'discard', TJSONObject(plr_state.JsonValue));
 
-    TJSONObject(plr_state.JsonValue).ExistCall('active', procedure (s: TJSONPair)
+    TJSONObject(plr_state.JsonValue).ExistCall('active-card', procedure (s: TJSONPair)
     begin
-      LocateInCache(TJSONObject(s).ToString, procedure (found: boolean; index: integer)
+      LocateInCache(TJSONObject(s.JsonValue).ToString, procedure (found: boolean; index: integer)
       begin
         if found then o_active := index
         else 
@@ -726,15 +1010,15 @@ begin
     if json.Exists('stage') then stage := json.Get('stage').JsonValue.Value;
   end; // end gameplay;
 
+  ticks := TThread.GetTickCount - ticks;
+  last_render_ticks := ticks;
+
   // RENDER THE STATE!!
   TThread.Synchronize(nil, procedure
   begin
     prohibit_render := false;
     Update;
   end);
-
-  ticks := TThread.GetTickCount - ticks;
-  last_render_ticks := ticks;
 end;
 
 procedure TGameUI.SetOnChat(const Value: TChatEvent);
@@ -747,6 +1031,17 @@ begin
   // Update
   Draw;
   SwapBuffers(wglGetCurrentDC);
+end;
+
+{ TPickContext }
+
+constructor TPickContext.Create(_index: integer; _model: TCardModel;
+  found_in: string);
+begin
+  inherited Create;
+  Index := _index;
+  Model := _model;
+  FoundIn := found_in;
 end;
 
 end.

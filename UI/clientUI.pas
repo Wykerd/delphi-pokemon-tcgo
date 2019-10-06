@@ -109,6 +109,7 @@ begin
   TradeUI.Visible := false;
   PreGameUI.Visible := false;
   GameUI.Init;
+  GameUI.SetFocus;
 end;
 
 procedure TClientUI.HandleStartServer(Sender: TObject);

@@ -124,11 +124,8 @@ begin
       TThread.Synchronize(nil, procedure
       begin
         UI.ShowGameUI;
-        TAnonymousThread.Create(procedure
-        begin
-          UI.GameUI.RenderState(data);
-        end).Start;
       end);
+      UI.GameUI.RenderState(data);
     end;
 
     if (action = 'join') OR (action = 'chat') then

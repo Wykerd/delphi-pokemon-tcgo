@@ -45,10 +45,11 @@ type
     destructor Destroy;
     property Sprite : TCardSprite read FSprite write SetSprite;
     property ModelType : TCardModelType read FModelType write SetModelType;
-    procedure Draw;
+    procedure Draw(RenderType: TCardModelType = modelDefault);
   public
     name : integer; // store some value; used for locating the object during events
     index : integer; // store the index of card in state if applicable;
+    class procedure RenderBackCard;
   end;
 
 var
@@ -57,6 +58,11 @@ var
   CARD_BACk_TRAINER,
   CARD_STAGE : TBitmap;
 
+  MODEL_SIDE_TEX: GLUint;
+  MODEL_BACK_TEX: GLUint;
+
+procedure RELOADPKMCARDVAR;
+procedure LoadPkmModelTextures;
 
 implementation
 
@@ -143,10 +149,7 @@ end;
 procedure TCardSprite.RenderAsEnergy;
 var
   bitmap : TBitmap;
-  GetImage : TFunc<string>;
-begin
-  // Define the function
-  GetImage := function : string
+  function GetImage : string;
   var
     energyType : string;
   begin
@@ -162,7 +165,7 @@ begin
       exit('1-5-6');
     end;
   end;
-
+begin
   Canvas.Brush.Style := bsSolid;
   Canvas.Brush.Color := clWhite;
   Canvas.FillRect(Rect(0, 0, Width, Height));
@@ -550,18 +553,143 @@ begin
   Sprite.Destroy;
 end;
 
-procedure TCardModel.Draw;
+procedure TCardModel.Draw(RenderType: TCardModelType = modelDefault);
+var
+  x, y : extended;
 begin
+  if RenderType = modelActive then
+  begin
+    y := 2;
+    x := 1.425;
+  end
+  else
+  begin
+    x := 0.57;
+    y := 0.8;
+  end;
   glBindTexture(GL_TEXTURE_2D, Sprite.Texture);
   glBegin(GL_QUADS);
     glTexCoord2f(0.0, 1.0);
-    glVertex3f(0, 0.8, 0.11);
+    glVertex3f(0, y, 0.01);
     glTexCoord2f(0.0, 0.0);
-    glVertex3f(0, 0, 0.11);
+    glVertex3f(0, 0, 0.01);
     glTexCoord2f(1.0, 0.0);
-    glVertex3f(0.57, 0, 0.11);
+    glVertex3f(x, 0, 0.01);
     glTexCoord2f(1.0, 1.0);
-    glVertex3f(0.57, 0.8, 0.11);
+    glVertex3f(x, y, 0.01);
+  glEnd;
+
+  glBindTexture(GL_TEXTURE_2D, MODEL_BACK_TEX);
+  glBegin(GL_QUADS);
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(0, y, 0);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(0, 0, 0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(x, 0, 0);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(x, y, 0);
+  glEnd;
+
+  glBindTexture(GL_TEXTURE_2D, MODEL_SIDE_TEX);
+  glBegin(GL_QUADS);
+    // left
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(0, y, 0);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(0, 0, 0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(0, 0, 0.01);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(0.0, y, 0.01);
+
+    // right
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(x, y, 0);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(x, 0, 0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(x, 0, 0.01);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(x, y, 0.01);
+
+    // back
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(0.0, y, 0);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(x, y, 0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(x, y, 0.01);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(0.0, y, 0.01);
+
+    // front
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(0.0, 0.0, 0);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(x, 0.0, 0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(x, 0.0, 0.01);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(0.0, 0.0, 0.01);
+  glEnd;
+end;
+
+class procedure TCardModel.RenderBackCard;
+begin
+  glBindTexture(GL_TEXTURE_2D, MODEL_BACK_TEX);
+  glBegin(GL_QUADS);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(0, 0.8, 0.01);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(0, 0, 0.01);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(0.57, 0, 0.01);
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(0.57, 0.8, 0.01);
+  glEnd;
+
+  glBindTexture(GL_TEXTURE_2D, MODEL_SIDE_TEX);
+  glBegin(GL_QUADS);
+    // left
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(0, 0.8, 0);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(0, 0, 0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(0, 0, 0.01);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(0.0, 0.8, 0.01);
+
+    // right
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(0.57, 0.8, 0);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(0.57, 0, 0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(0.57, 0, 0.01);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(0.57, 0.8, 0.01);
+
+    // back
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(0.0, 0.8, 0);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(0.57, 0.8, 0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(0.57, 0.8, 0.01);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(0.0, 0.8, 0.01);
+
+    // front
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(0.0, 0.0, 0);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(0.57, 0.0, 0);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(0.57, 0.0, 0.01);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(0.0, 0.0, 0.01);
   glEnd;
 end;
 
@@ -575,6 +703,7 @@ begin
   FSprite := Value;
 end;
 
+procedure RELOADPKMCARDVAR;
 begin
   CARD_BACK := TBitmap.Create;
   CARD_BACK.LoadFromResourceName(HInstance, 'cardBack');
@@ -599,4 +728,12 @@ begin
   CARD_BACK_ENERGY.Transparent := True;
   CARD_BACK_ENERGY.TransparentColor := clWhite;
   CARD_BACK_ENERGY.TransparentMode := tmFixed;
+end;
+
+procedure LoadPkmModelTextures;
+begin
+  LoadTexture('modelBack.bmp', MODEL_BACK_TEX, true);
+  LoadTexture('modelSides.bmp', MODEL_SIDE_TEX, true);
+end;
+
 end.

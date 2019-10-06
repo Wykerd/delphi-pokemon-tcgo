@@ -87,23 +87,23 @@ begin
 
   // oponent state //
   state := TJSONObject.Create;
-  state.AddPair(TJSONPair.Create('deck-length', inttostr(length(plr.Deck))));
+  state.AddPair(TJSONPair.Create('deck-length', inttostr(length(opnt.Deck))));
 
-  state.addpair(TJSONPair.Create('prize-cards', inttostr(length(plr.prizecards))));
+  state.addpair(TJSONPair.Create('prize-cards', inttostr(length(opnt.prizecards))));
 
   arr := TJSONArray.create;
-  for I := 0 to length(plr.bench) - 1 do
-    arr.Add(TCardRecord(plr.bench[i]).tojson);
+  for I := 0 to length(opnt.bench) - 1 do
+    arr.Add(TCardRecord(opnt.bench[i]).tojson);
   state.addpair(TJSONPair.create('benched-cards', arr));
 
-  if plr.active <> nil then
-    state.addpair(TJSONPair.create('active-card', plr.active.tojson));
+  if opnt.active <> nil then
+    state.addpair(TJSONPair.create('active-card', opnt.active.tojson));
 
-  state.AddPair(TJSONPair.Create('hand', inttostr(length(plr.hand))));
+  state.AddPair(TJSONPair.Create('hand', inttostr(length(opnt.hand))));
 
   arr := TJSONArray.create;
-  for I := 0 to length(plr.discard) - 1 do
-    arr.Add(TCardRecord(plr.discard[i]).tojson);
+  for I := 0 to length(opnt.discard) - 1 do
+    arr.Add(TCardRecord(opnt.discard[i]).tojson);
   state.addpair(TJSONPair.create('discard', arr));
   // end oponent state //
 

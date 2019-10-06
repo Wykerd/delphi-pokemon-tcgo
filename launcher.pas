@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, server, ComCtrls, client, System.JSON, helpers, ExtCtrls,
-  userWizard;
+  userWizard, pkmCard;
 
 type
   TfrmLauncher = class(TForm)
@@ -104,6 +104,8 @@ var
   ResStream : TResourceStream;
   FontsCount : DWORD;
 begin
+  RELOADPKMCARDVAR;
+
   ResStream := TResourceStream.Create(hInstance, 'UIFont', RT_RCDATA);
   try
     AddFontMemResourceEx(ResStream.Memory, ResStream.Size, nil, @FontsCount);

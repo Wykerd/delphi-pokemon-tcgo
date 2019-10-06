@@ -87,6 +87,16 @@ begin
 
       setlength(State.Deck2.Deck, length(State.Deck2.Deck) - 1);
     end;
+
+    // DEBUG ONLY! //
+    {
+      State.Deck1.Active := State.Deck1.Deck[0];
+      State.Deck2.Active := State.Deck2.Deck[0];
+      setlength(State.Deck1.Discard, 1);
+      State.Deck1.Discard[0] := State.Deck1.Deck[0];
+      setlength(State.Deck2.Discard, 1);
+      State.Deck2.Discard[0] := State.Deck2.Deck[0];
+    }
   end;
 
   // Pull the prize cards
