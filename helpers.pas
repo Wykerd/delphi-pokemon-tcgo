@@ -9,7 +9,6 @@ uses
 
 type
   // TArray<t> = array of t;
-  TStrArr = array of string;
 
   TJsonObjectHelper = class helper for TJsonObject
   public
@@ -85,7 +84,7 @@ const
 
   // String manipulation functions
 function strJoin(const arr: array of string; const delim: string): string;
-function strSplit(s: string; delimiter: string): TStrArr;
+function strSplit(s: string; delimiter: string): TArray<string>;
 
 // JSON LOADER
 function LoadJSONFromFile(s: string): TJsonObject;
@@ -190,7 +189,7 @@ begin
 end;
 
 // Created to act as javascript string helpers
-function strSplit(s: string; delimiter: string): TStrArr;
+function strSplit(s: string; delimiter: string): TArray<string>;
 var
   iP: integer;
   remain: string;

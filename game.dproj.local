@@ -2,21 +2,21 @@
 <BorlandProject>
 	<Transactions>
     <Transaction>2019/07/22 17:24:26.994.pas,C:\Users\danie\Documents\RAD Studio\Projects\server.pas=C:\Users\danie\Documents\RAD Studio\Projects\Unit2.pas</Transaction>
-    <Transaction>2019/07/22 17:38:11.469.dfm,C:\Users\danie\Documents\RAD Studio\Projects\launcher.dfm=C:\Users\danie\Documents\RAD Studio\Projects\Unit1.dfm</Transaction>
     <Transaction>2019/07/22 17:38:11.469.pas,C:\Users\danie\Documents\RAD Studio\Projects\launcher.pas=C:\Users\danie\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2019/07/22 17:38:11.469.dfm,C:\Users\danie\Documents\RAD Studio\Projects\launcher.dfm=C:\Users\danie\Documents\RAD Studio\Projects\Unit1.dfm</Transaction>
     <Transaction>2019/07/22 17:38:51.588.pas,E:\IT_PAT_2019\server.pas=C:\Users\danie\Documents\RAD Studio\Projects\server.pas</Transaction>
     <Transaction>2019/07/22 17:38:53.417.dfm,E:\IT_PAT_2019\launcher.dfm=C:\Users\danie\Documents\RAD Studio\Projects\launcher.dfm</Transaction>
     <Transaction>2019/07/22 17:38:53.417.pas,E:\IT_PAT_2019\launcher.pas=C:\Users\danie\Documents\RAD Studio\Projects\launcher.pas</Transaction>
     <Transaction>2019/07/22 17:39:04.420.dproj,E:\IT_PAT_2019\game.dproj=C:\Users\danie\Documents\RAD Studio\Projects\Project1.dproj</Transaction>
     <Transaction>2019/07/22 18:00:26.393.pas,E:\IT_PAT_2019\client.pas=E:\IT_PAT_2019\Unit1.pas</Transaction>
-    <Transaction>2019/07/22 21:10:06.224.pas,E:\IT_PAT_2019_\dbUnit.pas=E:\IT_PAT_2019_\Unit1.pas</Transaction>
     <Transaction>2019/07/22 21:10:06.224.dfm,E:\IT_PAT_2019_\dbUnit.dfm=E:\IT_PAT_2019_\Unit1.dfm</Transaction>
+    <Transaction>2019/07/22 21:10:06.224.pas,E:\IT_PAT_2019_\dbUnit.pas=E:\IT_PAT_2019_\Unit1.pas</Transaction>
     <Transaction>2019/07/22 21:17:40.712.pas,E:\IT_PAT_2019_\DBWrapper.pas=E:\IT_PAT_2019_\Unit1.pas</Transaction>
     <Transaction>2019/07/22 21:34:53.254.xml,E:\IT_PAT_2019_\config.xml=E:\IT_PAT_2019_\Untitled1.xml</Transaction>
     <Transaction>2019/07/22 21:54:36.706.xml,E:\IT_PAT_2019_\config.xml=</Transaction>
     <Transaction>2019/07/22 22:51:25.044.pas,E:\IT_PAT_2019_\helpers.pas=E:\IT_PAT_2019_\Unit1.pas</Transaction>
-    <Transaction>2019/07/23 21:49:20.972.pas,E:\IT_PAT_2019_\userWizard.pas=E:\IT_PAT_2019_\Unit1.pas</Transaction>
     <Transaction>2019/07/23 21:49:20.972.dfm,E:\IT_PAT_2019_\userWizard.dfm=E:\IT_PAT_2019_\Unit1.dfm</Transaction>
+    <Transaction>2019/07/23 21:49:20.972.pas,E:\IT_PAT_2019_\userWizard.pas=E:\IT_PAT_2019_\Unit1.pas</Transaction>
     <Transaction>2019/07/25 11:12:09.800.pas,E:\IT_PAT_2019_\gameUI.pas=E:\IT_PAT_2019_\Unit1.pas</Transaction>
     <Transaction>2019/07/25 11:18:29.281.pas,E:\IT_PAT_2019_\clientUI.pas=E:\IT_PAT_2019_\gameUI.pas</Transaction>
     <Transaction>2019/07/30 21:58:53.817.pas,E:\IT_PAT_2019_\serverConfig.pas=E:\IT_PAT_2019_\Unit1.pas</Transaction>
@@ -49,6 +49,7 @@
     <Transaction>2019/09/15 19:59:39.258.pas,C:\Users\danie\Documents\2it-pat\version.pas=C:\Users\danie\Documents\2it-pat\constants.pas</Transaction>
     <Transaction>2019/09/15 20:01:08.591.pas,C:\Users\danie\Documents\2it-pat\srvVersion.pas=C:\Users\danie\Documents\2it-pat\version.pas</Transaction>
     <Transaction>2019/09/15 20:44:04.978.pas,C:\Users\danie\Documents\2it-pat\versions.pas=C:\Users\danie\Documents\2it-pat\srvVersion.pas</Transaction>
+    <Transaction>2019/10/07 16:09:21.960,=C:\Users\danie\Documents\2it-pat\UI\gameActionUI.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="dependencies"/>
@@ -69,6 +70,7 @@
     <File Path="UI\textures"/>
     <File Path="UI\textures\textureres.rc"/>
     <File Path="UI\clientUI.pas"/>
+    <File Path="UI\gameActionUI.pas"/>
     <File Path="UI\gameUI.pas"/>
     <File Path="UI\preGameUI.pas"/>
     <File Path="UI\serversUI.pas"/>

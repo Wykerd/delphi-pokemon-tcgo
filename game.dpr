@@ -35,7 +35,8 @@ uses
   clientState in 'clientState.pas',
   preGameUI in 'UI\preGameUI.pas',
   cardData in 'cardData.pas',
-  versions in 'versions.pas';
+  versions in 'versions.pas',
+  gameActionUI in 'UI\gameActionUI.pas';
 
 {$R *.res}
 

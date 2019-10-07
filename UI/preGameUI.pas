@@ -153,16 +153,7 @@ end;
 constructor TSelectCards.Create(AOwner: TComponent);
 begin
   inherited;
-  (*
-  Decks: TScrollBox;
-  TitleLabel : TLabel;
-  ReadyButton : TUIButton;
-  FOnDeckChange: TGenericEvent<integer>;
-  FPushReady: TGenericEvent;
-  procedure HandleDeckPick(Sender: TObject);
-  procedure HandleReady(Sender: TObject);
-  procedure HandleResize(Sender: TObject);
-  *)
+  
   DoubleBuffered := true;
   color := rgb(148, 180, 197);
 

@@ -72,7 +72,7 @@ const
     // PRE_RELEASE types = beta, alpha, indev, rc (beta that could be final)
     // Non production builds eg. PASCAL.0.1.0-beta.7f9fe24 or NODE.0.12.0-rc.d930200
     // Production builds eg. PASCAL.0.1.12 or NODE.1.2.0
-  VERSION_NAME = 'PASCAL.0.1.0-indev.c2afc80';
+  VERSION_NAME = 'PASCAL.0.1.0-indev.6783729';
 
 implementation
 

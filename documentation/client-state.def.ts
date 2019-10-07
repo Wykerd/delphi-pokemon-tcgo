@@ -36,7 +36,8 @@ interface ClientOponentState {
 
 interface GameplayState {
     "turn": String; // oponent or player
-    "stage": String; // card (hand-to-bench, evolve) (many) -> energy (one) -> trainer (many) -> retreat (once) -> attack (once then end) 
+    "stage": String;
+    // init, card_retreat+energy, attack
 }
 
 interface ClientState {

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, System.JSON,
   Controls, ExtCtrls, UIContainer, OpenGL, Textures, pkmCard, clientState, System.threading,
-  IdGlobal, idhash, IdHashSHA;
+  IdGlobal, idhash, IdHashSHA, gameActionUI;
 
 type
   TChatEvent = procedure (s : string) of object;
@@ -28,6 +28,8 @@ type
     last_pick : integer;
     FRenderCache: TArray<TCardModel>;
     FBoardTex, FEdgeTex, FBenchEdgeTex, FBenchTex, FFontTexture : GLuint;
+    ActiveUI : TActiveUI;
+    HandUI : THandUI;
     procedure SetOnChat(const Value: TChatEvent);
     procedure OpenChat(sender: Tobject);
     procedure HandleResize(Sender: TObject);
@@ -153,6 +155,12 @@ begin
   OnMouseDown := HandleMouseDown;
   OnResize := HandleResize;
   RenderState(TJSONObject.Create);
+  ActiveUI := TActiveUI.Create(self);
+  ActiveUI.Visible := false;
+  ActiveUI.Parent := AOwner as TWinControl;
+  HandUI := THandUI.Create(self);
+  HandUI.Visible := false;
+  HandUI.Parent := AOwner as TWinControl;;
 end;
 
 procedure TGameUI.Init;
@@ -694,8 +702,39 @@ end;
 
 procedure TGameUI.HandleCardClick(Context: TPickContext);
 begin
-  showmessage(Context.FoundIn);
-  showmessage(Context.Model.Sprite.Data.Get('name').JsonValue.Value);
+  if turn then
+    case UpCase(Context.FoundIn[1]) of
+      'A':
+        begin
+          Self.Visible := false;
+          ActiveUI.Visible := true;
+          ActiveUI.ShowWithState(context.Model, stage, procedure (CallContext: TModelViewerContext)
+            begin
+              self.Visible := true;
+              activeUI.Visible := false;
+              self.SetFocus;
+              if callcontext <> nil then
+              begin
+                //
+              end;
+            end);
+        end;
+      'H':
+        begin
+          Self.Visible := false;
+          HandUI.Visible := true;
+          HandUI.ShowWithFullState(context.Model, stage, FLastState, procedure (CallContext: TModelViewerContext)
+            begin
+              self.Visible := true;
+              HandUI.Visible := false;
+              self.SetFocus;
+              if callcontext <> nil then
+              begin
+                //
+              end;
+            end);
+        end;
+    end;
 end;
 
 procedure TGameUI.HandleKeyDown(Sender: TObject; var Key: Word;

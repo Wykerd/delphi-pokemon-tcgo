@@ -59,7 +59,7 @@ type
     Rarity: byte;
     name: string;
     data: TCardData;
-    AttachedEnergy: array of TCardEnergy;
+    AttachedEnergy: array of TCardRecord;
   end;
 
   //implimented + json
@@ -188,13 +188,13 @@ end;
 function TCardRecord.ToJSON: TJSONObject;
 var
   arr : TJSONArray;
-  e: TCardEnergy;
+  e: TCardRecord;
 begin
   result := TJSONObject.Create;
   arr := TJSONArray.Create;
   for e in AttachedEnergy do
   begin
-    arr.Add(EnergyToString(e));
+    arr.Add(e.name);
   end;
 
   with result do
@@ -312,7 +312,7 @@ end;
 
 constructor TPokemonAttack.CreateFromID(id: integer);
 var
-  energy_temp : TStrArr;
+  energy_temp : TArray<string>;
   s: string;
 begin
   SetLength(energy, 0);
