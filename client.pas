@@ -128,6 +128,11 @@ begin
       UI.GameUI.RenderState(data);
     end;
 
+    if action = 'game-state' then
+    begin
+      UI.GameUI.RenderState(data);
+    end;
+
     if (action = 'join') OR (action = 'chat') then
     begin
       if data.Get('message') <> nil then
@@ -382,13 +387,14 @@ begin
   AuthLock := GetCurrentDir + '\client\auth.json';
   ServersLock := GetCurrentDir + '\client\server-list.json';
   ServerIndex := -1;
-  Credentials := nil;
   UI := TClientUI.CreateNew(Self, 0);
   UI.StartTrigger := Start;
   UI.GameUI.OnChat := SendChat;
   UI.PreGameUI.SelectDeck.OnReady := SendReady;
   Authenticated := false;
   UI.PreGameUI.SelectDeck.OnDeckChange := HandleDeckSelection;
+  Credentials := nil;
+  UI.GameUI.IOHandler := self.iohandler;
 end;
 
 // Use an pre-existing UID
@@ -515,6 +521,7 @@ end;
 procedure TClient.SetCredentials(const Value: TJSONPair);
 begin
   FCredentials := Value;
+  UI.GameUI.Credentials := value;
 end;
 
 procedure TClient.SetDebug(const Value: TRichEdit);
@@ -551,6 +558,7 @@ begin
       TThread.Synchronize(nil, procedure
         begin
           UI.PreGameUI.Connected := true;
+          UI.GameUI.IOHandler := self.iohandler;
         end);
         Authenticate;
     except

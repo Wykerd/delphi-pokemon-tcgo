@@ -3,7 +3,7 @@ unit UIButton;
 interface
 
 uses
-  Windows, ExtCtrls, Classes, StdCtrls, Controls, Graphics, Dialogs, Math;
+  Windows, ExtCtrls, Classes, StdCtrls, Controls, Graphics, Dialogs, Math, Variants;
 
 type
   TUIButton = class (TPanel)
@@ -23,6 +23,11 @@ type
     property TextOffset : real read FTextOffset write SetTextOffset;
     procedure MouseEnter (Sender: TObject); virtual;
     procedure MouseLeave (Sender: TObject); virtual;
+  end;
+
+  TUIButtonStatefull = class (TUIButton)
+  public
+    internal_state : Variant;
   end;
 
 implementation

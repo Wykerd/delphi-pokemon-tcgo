@@ -5,7 +5,7 @@ interface
 uses
   Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, System.JSON,
   Controls, ExtCtrls, UIContainer, OpenGL, Textures, pkmCard, clientState, System.threading,
-  IdGlobal, idhash, IdHashSHA, gameActionUI;
+  IdGlobal, idhash, IdHashSHA, gameActionUI, idIohandler;
 
 type
   TChatEvent = procedure (s : string) of object;
@@ -30,6 +30,9 @@ type
     FBoardTex, FEdgeTex, FBenchEdgeTex, FBenchTex, FFontTexture : GLuint;
     ActiveUI : TActiveUI;
     HandUI : THandUI;
+    BenchUI: TBenchUI;
+    FIOhandler: TIdIOHandler;
+    FCredentials: TJSONPair;
     procedure SetOnChat(const Value: TChatEvent);
     procedure OpenChat(sender: Tobject);
     procedure HandleResize(Sender: TObject);
@@ -40,10 +43,14 @@ type
     procedure HandleKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure HandleCardClick(Context: TPickContext);
+    procedure SetCredentials(const Value: TJSONPair);
+    procedure SetIOhandler(const Value: TIdIOHandler);
   published
     constructor Create (AOwner: TComponent); override;
-    // Events //
+    // Event Handlers //
     property OnChat : TChatEvent read FOnChat write SetOnChat;
+    property IOhandler: TIdIOHandler read FIOhandler write SetIOhandler;
+    property Credentials: TJSONPair read FCredentials write SetCredentials;
     // -- //
     // OpenGL //
     // Rendering cycle //
@@ -155,12 +162,22 @@ begin
   OnMouseDown := HandleMouseDown;
   OnResize := HandleResize;
   RenderState(TJSONObject.Create);
+
   ActiveUI := TActiveUI.Create(self);
   ActiveUI.Visible := false;
   ActiveUI.Parent := AOwner as TWinControl;
+
   HandUI := THandUI.Create(self);
   HandUI.Visible := false;
   HandUI.Parent := AOwner as TWinControl;;
+  HandUI.RenderCache := FRenderCache;
+  HandUI.Benched := p_benched_cards;
+
+  ActiveUI.Benched := p_benched_cards;
+
+  BenchUI := TBenchUI.Create(self);
+  BenchUI.Parent := AOwner as TWinControl;;
+  BenchUI.Visible := false;
 end;
 
 procedure TGameUI.Init;
@@ -702,12 +719,13 @@ end;
 
 procedure TGameUI.HandleCardClick(Context: TPickContext);
 begin
-  if turn then
+  if (turn) and (stage <> 'awaiting') then
     case UpCase(Context.FoundIn[1]) of
       'A':
         begin
           Self.Visible := false;
           ActiveUI.Visible := true;
+          ActiveUI.Benched := p_benched_cards;
           ActiveUI.ShowWithState(context.Model, stage, procedure (CallContext: TModelViewerContext)
             begin
               self.Visible := true;
@@ -715,7 +733,18 @@ begin
               self.SetFocus;
               if callcontext <> nil then
               begin
-                //
+                if Credentials <> nil then
+                begin
+                  if callcontext.action <> nil then
+                  begin
+                    // Authenticate the payload
+                    callcontext.action.AddPair(Credentials);
+                    // send it!
+                    IOHandler.Writeln(callcontext.action.ToString);
+                    // prevent further actions
+                    stage := 'awaiting';
+                  end;
+                end;
               end;
             end);
         end;
@@ -723,14 +752,54 @@ begin
         begin
           Self.Visible := false;
           HandUI.Visible := true;
-          HandUI.ShowWithFullState(context.Model, stage, FLastState, procedure (CallContext: TModelViewerContext)
+          HandUI.Benched := p_benched_cards;
+          HandUI.RenderCache := FRenderCache;
+          HandUI.ShowWithFullState(context.Model, stage, FLastState, context.index, procedure (CallContext: TModelViewerContext)
             begin
               self.Visible := true;
               HandUI.Visible := false;
               self.SetFocus;
               if callcontext <> nil then
               begin
-                //
+                if Credentials <> nil then
+                begin
+                  if callcontext.action <> nil then
+                  begin
+                    // Authenticate the payload
+                    callcontext.action.AddPair(Credentials);
+                    // send it!
+                    IOHandler.Writeln(callcontext.action.ToString);
+                    // prevent further actions
+                    stage := 'awaiting';
+                  end;
+                end;
+              end;
+            end);
+        end;
+      'B':
+        begin
+          Self.Visible := false;
+          BenchUI.Visible := true;
+          BenchUI.index := context.Index;
+          BenchUI.ShowWithState(context.Model, stage, procedure (CallContext: TModelViewerContext)
+            begin
+              self.Visible := true;
+              activeUI.Visible := false;
+              self.SetFocus;
+              if callcontext <> nil then
+              begin
+                if Credentials <> nil then
+                begin
+                  if callcontext.action <> nil then
+                  begin
+                    // Authenticate the payload
+                    callcontext.action.AddPair(Credentials);
+                    // send it!
+                    IOHandler.Writeln(callcontext.action.ToString);
+                    // prevent further actions
+                    stage := 'awaiting';
+                  end;
+                end;
               end;
             end);
         end;
@@ -918,7 +987,7 @@ var
   fill :  TArray<integer>;
   I: Integer;
 begin
-  SetLength(fill, length(_fill));
+  // SetLength(fill, length(_fill));
 
   if plr_state.Exists(prop) then
   begin
@@ -938,7 +1007,11 @@ begin
         begin
           setlength(FRenderCache, length(FRenderCache) + 1);
           FRenderCache[high(FRenderCache)] := TCardModel.Create;
-          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(arr.Get(i));
+          try
+            FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(arr.Get(i));
+          except
+            showmessage('whoops, render error');
+          end;
           fill[i] := high(FRenderCache);
         end;
       end);
@@ -995,7 +1068,11 @@ begin
         begin
           setlength(FRenderCache, length(FRenderCache) + 1);
           FRenderCache[high(FRenderCache)] := TCardModel.Create;
-          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue);
+          try
+            FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue);
+          except
+            showmessage('whoops, render error');
+          end;
           p_deck := high(FRenderCache);
         end;
       end);
@@ -1030,12 +1107,19 @@ begin
     begin
       LocateInCache(TJSONObject(s.JsonValue).ToString, procedure (found: boolean; index: integer)
       begin
-        if found then p_active := index
+        if found then
+        begin
+          p_active := index
+        end
         else
         begin
           setlength(FRenderCache, length(FRenderCache)+1);
           FRenderCache[high(FRenderCache)] := TCardModel.Create;
-          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue);
+          try
+            FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue);
+          except
+            showmessage('whoops, render error');
+          end;
           p_active := high(FRenderCache);
         end;
       end);
@@ -1085,7 +1169,11 @@ begin
         begin
           setlength(FRenderCache, length(FRenderCache)+1);
           FRenderCache[high(FRenderCache)] := TCardModel.Create;
-          FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue); 
+          try
+            FRenderCache[high(FRenderCache)].Sprite.Data := TJSONObject(s.JsonValue);
+          except
+            showmessage('whoops, render error');
+          end;
           o_active := high(FRenderCache);
         end;
       end);
@@ -1112,6 +1200,16 @@ begin
     prohibit_render := false;
     Update;
   end);
+end;
+
+procedure TGameUI.SetCredentials(const Value: TJSONPair);
+begin
+  FCredentials := Value;
+end;
+
+procedure TGameUI.SetIOhandler(const Value: TIdIOHandler);
+begin
+  FIOhandler := Value;
 end;
 
 procedure TGameUI.SetOnChat(const Value: TChatEvent);

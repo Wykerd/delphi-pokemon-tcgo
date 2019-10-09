@@ -195,6 +195,8 @@ var
   i, i2: integer;
   b, b2: boolean;
 begin
+  if not canvas.TryLock then exit;
+
   Canvas.Brush.Style := bsSolid;
   Canvas.Brush.Color := clWhite;
   Canvas.FillRect(Rect(0, 0, Width, Height));
@@ -451,6 +453,8 @@ begin
   end; // end exists 'cardData'
 
   bitmap.Free;
+
+  canvas.Unlock;
 end;
 
 procedure TCardSprite.RenderAsTrainer;

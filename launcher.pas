@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, server, ComCtrls, client, System.JSON, helpers, ExtCtrls,
-  userWizard, pkmCard;
+  userWizard, pkmCard, adminConsole;
 
 type
   TfrmLauncher = class(TForm)
@@ -17,6 +17,7 @@ type
     btnUser: TButton;
     lblUser: TLabel;
     lblUID: TLabel;
+    btnAdmin: TButton;
     procedure btnStartClick(Sender: TObject);
     procedure btnJoinClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -24,6 +25,7 @@ type
     procedure redClientChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnUserClick(Sender: TObject);
+    procedure btnAdminClick(Sender: TObject);
   private
     { Private declarations }
     jsCredentials : TJSONObject;
@@ -50,6 +52,11 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TfrmLauncher.btnAdminClick(Sender: TObject);
+begin
+  frmAdminConsole.show;
+end;
 
 procedure TfrmLauncher.btnJoinClick(Sender: TObject);
 begin

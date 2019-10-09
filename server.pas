@@ -180,6 +180,7 @@ var
 
 begin
   dmDB.tblUsers.Open;
+  dmDB.tblUsers.First;
   if GetUserFromUID(uid, FSessions) > -1 then
   begin
     println('login', 'Another user with that ID is already authenticated!');
@@ -191,20 +192,18 @@ begin
     // user found
     println('login', 'User found in database.');
     Authenticate;
+
     // check that username is up to date on server side
     with dmDB do
     begin
-      tblUsers.Filter := 'UID=' + QuotedStr(uid);
-      tblUsers.Filtered := true;
-      tblUsers.First;
+      tblUsers.Edit;
+      tblUsers['LastLogin'] := date;
       if tblUsers['UserName'] <> username then
       begin
-        tblUsers.Edit;
         tblUsers['UserName'] := username;
-        tblUsers.Post;
         println('login', 'Username did not match database record and has been updated.');
-        Authenticate;
       end;
+      tblUsers.Post;
     end;
   end
   else
@@ -215,6 +214,7 @@ begin
       tblUsers.Insert;
       tblUsers['UserName'] := username;
       tblUsers['UID'] := uid;
+      tblUsers['LastLogin'] := date;
       tblUsers.Post;
     end;
     println('login', 'User created.');
@@ -364,9 +364,19 @@ begin
         AContext.Connection.Socket.WriteLn('{"action":"error",'+
         '"data":{"details":"401 Unauthorized"}}');
       end
+      else if not json.Exists('data') then
+      begin
+        AContext.Connection.Socket.writeln('{"action":"error",'+
+        '"data":{"details":"no_data"}}');
+      end
       else
       begin
-        if JSON.Get('data') <> nil then
+        if action = 'game-action' then
+        begin
+          GameLogic.ProcessGameAction(json, sUID, TJSONObject(JSON.Get('data').JsonValue));
+        end
+
+        else if JSON.Get('data') <> nil then
           ProcessAction(action, TJSONObject(JSON.Get('data').JsonValue), sUsername, sUID);
       end;
       // End Check for action //

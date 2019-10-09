@@ -17,7 +17,7 @@ interface
 uses
   Windows, Classes, Forms, Dialogs, StdCtrls, Graphics, SysUtils, helpers, System.JSON,
   Controls, ExtCtrls, UIContainer, OpenGL, Textures, pkmCard, clientState, UIButton,
-  math, strutils;
+  math, strutils, variants;
 
 type
   TActionCardSprite = class (TPanel)
@@ -65,28 +65,63 @@ type
     move_to: THandPokemonMove;
     state: TJSONObject;
     has_state_passed: boolean;
+    index: integer;
+    card_container: TScrollBox;
+    BenchCandidates: TArray<integer>;
+    // handlers
+    procedure HandleToActive (Sender: TObject);
+    procedure handletobench_init (Sender: TObject);
+    procedure HandleAttachActive (Sender: TObject);
+    procedure HandleMoveBench (Sender: TObject);
+    procedure HandleAttachBench (Sender: TObject);
+    procedure HandleBenchAttachment (Sender: TObject);
+    procedure HandleEnergyActive (Sender: TObject);
+    procedure HandleEnergyBenched (Sender: TObject);
+    procedure HandleBenchEnergyAttachment (Sender: TObject);
+    procedure ShowCardContainer;
   published
     constructor Create(AOwner: TComponent); override;
     procedure ShowWithState(_model: TCardModel; _stage: string; _callback: TProc<TModelViewerContext>); override;
     procedure ShowWithFullState(_model: TCardModel; _stage: string;
-      _state: TJSONObject; _callback: TProc<TModelViewerContext>);
+      _state: TJSONObject; _index: integer; _callback: TProc<TModelViewerContext>);
     procedure HandleResize(Sender: TObject); override;
     // returns the indexes!
     // requires FRenderCache and
     procedure FindStageInBenched(_stage: string; callback: TProc<TArray<integer>>);
     destructor Destroy; override;
+  public
+    RenderCache: TArray<TCardModel>;
+    Benched: TArray<integer>;
   end;
 
   TActiveUI = class (TModelViewer)
   private
-    btnAttack1, btnAttack2, btnRetreat : TUIButton;
-    attached_energy: TArray<string>;
+    btnAttack1, btnAttack2, btnRetreat, btnEnd : TUIButton;
+    procedure HandleUseAttackOne (Sender: TObject);
+    procedure HandleUseAttackTwo (Sender: TObject);
+    procedure HandleRetreat (Sender: TObject);
+    procedure HandleEndTurn (Sender: TObject);
   published
     constructor Create(AOwner: TComponent); override;
     procedure ShowWithState(_model: TCardModel; _stage: string; _callback: TProc<TModelViewerContext>); override;
     destructor Destroy; override;
     function HasRequiredEnergy(req_energy: TJSONArray): boolean;
     procedure HandleResize(Sender: TObject); override;
+  public
+    Benched: TArray<integer>;
+  end;
+
+  TBenchUI = class (TModelViewer)
+  private
+    btnToActive : TUIButton;
+    procedure HandleToActive (Sender: TObject);
+  published
+    constructor Create(AOwner: TComponent); override;
+    procedure ShowWithState(_model: TCardModel; _stage: string; _callback: TProc<TModelViewerContext>); override;
+    destructor Destroy; override;
+    procedure HandleResize(Sender: TObject); override;
+  public
+    index: integer;
   end;
 
 // Used to scale the card.
@@ -103,14 +138,22 @@ begin
   btnAttack1 := TUIButton.Create(component_view);
   btnAttack1.Parent := component_view;
   btnAttack1.Text := 'Use Attack One';
+  btnAttack1.OnClick := HandleUseAttackOne;
 
   btnAttack2 := TUIButton.Create(component_view);
   btnAttack2.Parent := component_view;
   btnAttack2.Text := 'Use Attack Two';
+  btnAttack2.OnClick := HandleUseAttackTwo;
+
+  btnEnd := TUIButton.Create(component_view);
+  btnEnd.Parent := component_view;
+  btnEnd.Text := 'End your turn';
+  btnEnd.OnClick := HandleEndTurn;
 
   btnRetreat := TUIButton.Create(component_view);
   btnRetreat.Parent := component_view;
   btnRetreat.Text := 'Retreat Card';
+  btnRetreat.OnClick := HandleRetreat;
 end;
 
 destructor TActiveUI.Destroy;
@@ -118,7 +161,27 @@ begin
   freeandnil(btnAttack1);
   freeandnil(btnAttack2);
   freeandnil(btnRetreat);
+  freeandnil(btnEnd);
   inherited;
+end;
+
+procedure TActiveUI.HandleEndTurn(Sender: TObject);
+var
+  Action, Data: TJSONObject;
+begin
+  Action := TJSONObject.Create;
+  Data := TJSONObject.Create;
+
+  Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+  Action.AddPair(TJSONPair.Create('game-action', 'end-turn'));
+
+  // literally anything as data, as the server requires it!
+  Data.AddPair(TJSONPair.Create('end', 'true'));
+
+  Action.AddPair(TJSONPair.Create('data', Data));
+
+  callback(TModelViewerContext.CreateWithState(Action));
 end;
 
 procedure TActiveUI.HandleResize(Sender: TObject);
@@ -151,6 +214,21 @@ begin
     Margins.Bottom := 0;
   end;
 
+  with btnEnd do
+  begin
+    align := alBottom;
+    AlignWithMargins := true;
+
+    visible := not ((stage = 'init') or (stage = 'set-active'));
+
+    Height := floor(self.ClientHeight / 10);
+
+    Margins.Left := floor(self.ClientWidth / 24);
+    Margins.Right := floor(self.ClientWidth / 24);
+    Margins.Top := floor(self.ClientHeight / 24);
+    Margins.Bottom := 0;
+  end;
+
   with btnRetreat do
   begin
     align := alBottom;
@@ -166,36 +244,95 @@ begin
 
 end;
 
+procedure TActiveUI.HandleRetreat(Sender: TObject);
+var
+  Action, Data: TJSONObject;
+begin
+  Action := TJSONObject.Create;
+  Data := TJSONObject.Create;
+
+  Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+  Action.AddPair(TJSONPair.Create('game-action', 'retreat'));
+
+  // literally anything as data, as the server requires it!
+  Data.AddPair(TJSONPair.Create('retreat', 'true'));
+
+  Action.AddPair(TJSONPair.Create('data', Data));
+
+  callback(TModelViewerContext.CreateWithState(Action));
+end;
+
+procedure TActiveUI.HandleUseAttackOne(Sender: TObject);
+var
+  Action, Data: TJSONObject;
+begin
+  Action := TJSONObject.Create;
+  Data := TJSONObject.Create;
+
+  Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+  Action.AddPair(TJSONPair.Create('game-action', 'use-attack'));
+
+  Data.AddPair(TJSONPair.Create('index', '1'));
+
+  Action.AddPair(TJSONPair.Create('data', Data));
+
+  callback(TModelViewerContext.CreateWithState(Action));
+end;
+
+procedure TActiveUI.HandleUseAttackTwo(Sender: TObject);
+var
+  Action, Data: TJSONObject;
+begin
+  Action := TJSONObject.Create;
+  Data := TJSONObject.Create;
+
+  Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+  Action.AddPair(TJSONPair.Create('game-action', 'use-attack'));
+
+  Data.AddPair(TJSONPair.Create('index', '2'));
+
+  Action.AddPair(TJSONPair.Create('data', Data));
+
+  callback(TModelViewerContext.CreateWithState(Action));
+end;
+
 function TActiveUI.HasRequiredEnergy(req_energy: TJSONArray): boolean;
 var
-  _attached_energy: TArray<string>;
   I: Integer;
   J: Integer;
   b: boolean;
+  attached_energy: TArray<string>;
+  arr: TJSONArray;
 const
   FOUND = '_';
 begin
-  result := true;
-
-  setlength(_attached_energy, length(attached_energy));
-
-  for I := Low(attached_energy) to High(attached_energy) do
-    _attached_energy[i] := attached_energy[i];
-
-  for I := 0 to req_energy.Count do
+  if model.Sprite.Data.Exists('attached-energy') then
   begin
-    b := false;
-    for J := 0 to length(_attached_energy) - 1 do
+    arr := TJSONArray(model.Sprite.Data.Get('attached-energy').JsonValue);
+    SetLength(attached_energy, arr.Count);
+
+    for I := Low(attached_energy) to High(attached_energy) do
+      attached_energy[i] := arr.get(i).Value;
+
+    for I := 0 to req_energy.Count - 1 do
     begin
-      if _attached_energy[j] = req_energy.Get(i).Value then
+      b := false;
+      for J := 0 to length(attached_energy) - 1 do
       begin
-        _attached_energy[j] := FOUND;
-        b := true;
-        break;
+        if attached_energy[j] = req_energy.Get(i).Value then
+        begin
+          attached_energy[j] := FOUND;
+          b := true;
+          break;
+        end;
       end;
+      if not b then exit(false);
     end;
-    if not b then exit(false);
-  end;
+  end
+  else exit(false);
 end;
 
 procedure TActiveUI.ShowWithState(_model: TCardModel; _stage: string;
@@ -240,7 +377,7 @@ begin
           begin
             if TJSONArray(js.JsonValue).Count >= retreat_cost then
             begin
-              btnRetreat.Visible := true;
+              if length(benched) > 0 then btnRetreat.Visible := true;
             end;
           end);
         finally
@@ -403,14 +540,205 @@ end;
 
 destructor THandUI.Destroy;
 begin
-
+  freeandnil(btnAction1);
+  FreeAndNil(btnAction2);
   inherited;
 end;
 
 procedure THandUI.FindStageInBenched(_stage: string;
   callback: TProc<TArray<integer>>);
+var
+  arr: TArray<integer>;
+  i : integer;
 begin
-  //
+  setlength(arr, 0);
+  for I := 0 to length(Benched) - 1 do
+  begin
+    if RenderCache[Benched[i]].Sprite.Data.Exists('type') then
+    begin
+      if RenderCache[Benched[i]].Sprite.Data.Get('type').JsonValue.Value = 'pokemon' then
+      begin
+        if RenderCache[Benched[i]].Sprite.Data.Exists('data') then
+        begin
+          if TJSONObject(RenderCache[Benched[i]].Sprite.Data.Get('data')).Exists('stage') then
+          begin
+            if TJSONObject(RenderCache[Benched[i]].Sprite.Data.Get('data')).Get('stage').JsonValue.Value = _stage then
+            begin
+              setlength(arr, length(arr) + 1);
+              arr[high(arr)] := i;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  callback(arr);
+end;
+
+procedure THandUI.HandleAttachActive(Sender: TObject);
+var
+  Action, Data: TJSONObject;
+begin
+  Action := TJSONObject.Create;
+  Data := TJSONObject.Create;
+
+  Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+  Action.AddPair(TJSONPair.Create('game-action', 'evolve'));
+
+  Data.AddPair(TJSONPair.Create('index', index.ToString));
+
+  Action.AddPair(TJSONPair.Create('data', Data));
+
+  callback(TModelViewerContext.CreateWithState(Action));
+end;
+
+procedure THandUI.HandleAttachBench(Sender: TObject);
+var
+  I: Integer;
+  _temp : TUIButtonStatefull;
+begin
+  showcardcontainer;
+  for I := 0 to length(BenchCandidates) - 1 do
+  begin
+    _temp := TUIButtonStatefull.Create(card_container);
+    _temp.Parent := card_container;
+    _temp.internal_state := BenchCandidates[i].ToString;
+    _temp.Text := RenderCache[benched[BenchCandidates[i]]].Sprite.Data.getvalue<string>('name');
+    _temp.OnClick := HandleBenchAttachment;
+    with _temp do
+    begin
+      align := altop;
+      AlignWithMargins := true;
+
+      Height := floor(self.ClientHeight / 10);
+
+      Margins.Left := floor(self.ClientWidth / 24);
+      Margins.Right := floor(self.ClientWidth / 24);
+      Margins.Top := floor(self.ClientHeight / 24);
+      Margins.Bottom := 0;
+    end;
+  end;
+end;
+
+procedure THandUI.HandleBenchAttachment(Sender: TObject);
+var
+  _sender: TUIButtonStatefull;
+  Action, Data: TJSONObject;
+begin
+  if sender is TUIButtonStatefull then
+  begin
+    _sender := sender as TUIButtonStatefull;
+    Action := TJSONObject.Create;
+    Data := TJSONObject.Create;
+
+    Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+    Action.AddPair(TJSONPair.Create('game-action', 'evolve-bench'));
+
+    Data.AddPair(TJSONPair.Create('index', index.ToString));
+
+    Data.AddPair(TJSONPair.Create('bench-index', VarToStr(_sender.internal_state)));
+
+    Action.AddPair(TJSONPair.Create('data', Data));
+
+    card_container.Visible := false;
+
+    callback(TModelViewerContext.CreateWithState(Action));
+  end;
+  card_container.Visible := false;
+end;
+
+procedure THandUI.HandleBenchEnergyAttachment(Sender: TObject);
+var
+  _sender: TUIButtonStatefull;
+  Action, Data: TJSONObject;
+begin
+  if sender is TUIButtonStatefull then
+  begin
+    _sender := sender as TUIButtonStatefull;
+    Action := TJSONObject.Create;
+    Data := TJSONObject.Create;
+
+    Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+    Action.AddPair(TJSONPair.Create('game-action', 'energy-bench'));
+
+    Data.AddPair(TJSONPair.Create('index', index.ToString));
+
+    Data.AddPair(TJSONPair.Create('bench-index', VarToStr(_sender.internal_state)));
+
+    Action.AddPair(TJSONPair.Create('data', Data));
+
+    card_container.Visible := false;
+
+    callback(TModelViewerContext.CreateWithState(Action));
+  end;
+  card_container.Visible := false;
+end;
+
+procedure THandUI.HandleEnergyActive(Sender: TObject);
+var
+  Action, Data: TJSONObject;
+begin
+  Action := TJSONObject.Create;
+  Data := TJSONObject.Create;
+
+  Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+  Action.AddPair(TJSONPair.Create('game-action', 'energy-active'));
+
+  Data.AddPair(TJSONPair.Create('index', index.ToString));
+
+  Action.AddPair(TJSONPair.Create('data', Data));
+
+  callback(TModelViewerContext.CreateWithState(Action));
+end;
+
+procedure THandUI.HandleEnergyBenched(Sender: TObject);
+var
+  I: Integer;
+  _temp : TUIButtonStatefull;
+begin
+  showcardcontainer;
+  for I := 0 to length(benched) - 1 do
+  begin
+    _temp := TUIButtonStatefull.Create(card_container);
+    _temp.Parent := card_container;
+    _temp.internal_state := i.ToString;
+    _temp.Text := RenderCache[benched[i]].Sprite.Data.getvalue<string>('name');
+    _temp.OnClick := HandleBenchEnergyAttachment;
+    with _temp do
+    begin
+      align := altop;
+      AlignWithMargins := true;
+
+      Height := floor(self.ClientHeight / 10);
+
+      Margins.Left := floor(self.ClientWidth / 24);
+      Margins.Right := floor(self.ClientWidth / 24);
+      Margins.Top := floor(self.ClientHeight / 24);
+      Margins.Bottom := 0;
+    end;
+  end;
+end;
+
+procedure THandUI.HandleMoveBench(Sender: TObject);
+var
+  Action, Data: TJSONObject;
+begin
+  Action := TJSONObject.Create;
+  Data := TJSONObject.Create;
+
+  Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+  Action.AddPair(TJSONPair.Create('game-action', 'hand-to-bench'));
+
+  Data.AddPair(TJSONPair.Create('index', index.ToString));
+
+  Action.AddPair(TJSONPair.Create('data', Data));
+
+  callback(TModelViewerContext.CreateWithState(Action));
 end;
 
 procedure THandUI.HandleResize(Sender: TObject);
@@ -429,7 +757,7 @@ begin
     Margins.Bottom := 0;
   end;
 
-  with btnAction1 do
+  with btnAction2 do
   begin
     align := altop;
     AlignWithMargins := true;
@@ -443,11 +771,73 @@ begin
   end;
 end;
 
+procedure THandUI.HandleToActive(Sender: TObject);
+var
+  Action, Data: TJSONObject;
+begin
+  Action := TJSONObject.Create;
+  Data := TJSONObject.Create;
+
+  Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+  Action.AddPair(TJSONPair.Create('game-action', 'init'));
+
+  Data.AddPair(TJSONPair.Create('index', index.ToString));
+
+  Action.AddPair(TJSONPair.Create('data', Data));
+
+  callback(TModelViewerContext.CreateWithState(Action));
+end;
+
+procedure THandUI.handletobench_init(Sender: TObject);
+var
+  Action, Data: TJSONObject;
+begin
+  Action := TJSONObject.Create;
+  Data := TJSONObject.Create;
+
+  Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+  Action.AddPair(TJSONPair.Create('game-action', 'init-bench'));
+
+  Data.AddPair(TJSONPair.Create('index', index.ToString));
+
+  Action.AddPair(TJSONPair.Create('data', Data));
+
+  callback(TModelViewerContext.CreateWithState(Action));
+end;
+
+procedure THandUI.ShowCardContainer;
+begin
+  btnAction1.Visible := false;
+  btnAction2.Visible := false;
+  if card_container <> nil then freeandnil(card_container);
+
+  card_container := TScrollBox.Create(self);
+  card_container.Parent := component_view;
+  card_container.Color := rgb(238, 156, 139);
+  with card_container do
+  begin
+    BevelEdges := [];
+    BevelOuter := bvNone;
+    ParentBackground := false;
+    Visible := true;
+    align := alClient;
+  end;
+end;
+
 procedure THandUI.ShowWithFullState(_model: TCardModel; _stage: string;
-  _state: TJSONObject; _callback: TProc<TModelViewerContext>);
+  _state: TJSONObject; _index: integer; _callback: TProc<TModelViewerContext>);
 begin
   inherited ShowWithState(_model, _stage, _callback);
   if _state <> nil then has_state_passed := true else has_state_passed := false;
+
+  state := _state;
+
+  if card_container <> nil then
+  begin
+    card_container.Visible := false;
+  end;
 
   // if pokemon
   // action1 -> if init -- move to active; else move to bench
@@ -458,7 +848,11 @@ begin
   // if energy
   // btnAction1 -> Attach to active (if active present)
   btnAction1.Visible := false;
+  btnAction1.OnClick := nil;
   btnAction2.Visible := false;
+  btnAction2.OnClick := nil;
+
+  index := _index;
 
   model.Sprite.Data.ExistCall('type', procedure (j: TJSONPair)
   begin
@@ -476,6 +870,25 @@ begin
                 begin
                   move_to := hpmActive;
                   btnAction1.Text := 'Move to active';
+                  //
+                  btnAction1.OnClick := handletoactive;
+                  btnAction1.Visible := true;
+                end;
+              end);
+            end);
+          end
+          else if stage = 'init-bench' then
+          begin
+            model.Sprite.Data.ExistCall('data', procedure(dat: TJSONPair)
+            begin
+              TJSONObject(dat.JsonValue).ExistCall('stage', procedure (pp: TJSONPair)
+              begin
+                if pp.JsonValue.Value = '0' then
+                begin
+                  move_to := hpmActive;
+                  btnAction1.Text := 'Move to bench';
+                  //
+                  btnAction1.OnClick := handletobench_init;
                   btnAction1.Visible := true;
                 end;
               end);
@@ -501,6 +914,8 @@ begin
                           begin
                             move_to := hpmBench;
                             btnAction2.Text := 'Attach to active';
+                            //
+                            btnAction2.OnClick := HandleAttachActive;
                             btnAction2.Visible := true;
                           end;
                         end);
@@ -516,6 +931,8 @@ begin
                         begin
                           move_to := hpmBench;
                           btnAction1.Text := 'Move to bench';
+                          //
+                          btnAction1.OnClick := HandleMoveBench;
                           btnAction1.Visible := true;
                         end
                         else
@@ -530,6 +947,9 @@ begin
                               begin
                                 move_to := hpmBench;
                                 btnAction2.Text := 'Attach to bench';
+                                //
+                                BenchCandidates := indexes;
+                                btnAction2.OnClick := HandleAttachBench;
                                 btnAction2.Visible := true;
                               end;
                             end);
@@ -549,8 +969,12 @@ begin
             if energy_attach then
             begin
               btnAction1.Text := 'Attach to active';
+              //
+              btnAction1.OnClick := HandleEnergyActive;
               btnAction1.Visible := true;
               btnAction2.Text := 'Attach to benched';
+              //
+              btnAction2.OnClick := HandleEnergyBenched;
               btnAction2.Visible := true;
             end;
           end;
@@ -571,7 +995,68 @@ procedure THandUI.ShowWithState(_model: TCardModel; _stage: string;
   _callback: TProc<TModelViewerContext>);
 begin
   inherited;
-  ShowWithFullState(_model, _stage, nil, _callback);
+  ShowWithFullState(_model, _stage, nil, 0, _callback);
+end;
+
+{ TBenchUI }
+
+constructor TBenchUI.Create(AOwner: TComponent);
+begin
+  inherited;
+  btnToActive := TUIButton.Create(self);
+  btnToActive.Parent := component_view;
+  btnToActive.Text := 'Move to active';
+  btnToActive.OnClick := HandleToActive;
+end;
+
+destructor TBenchUI.Destroy;
+begin
+  freeandnil(btnToActive);
+  inherited;
+end;
+
+procedure TBenchUI.HandleResize(Sender: TObject);
+begin
+  inherited;
+  with btnToActive do
+  begin
+    align := altop;
+    AlignWithMargins := true;
+
+    Height := floor(self.ClientHeight / 10);
+
+    Margins.Left := floor(self.ClientWidth / 24);
+    Margins.Right := floor(self.ClientWidth / 24);
+    Margins.Top := floor(self.ClientHeight / 24);
+    Margins.Bottom := 0;
+  end;
+end;
+
+procedure TBenchUI.HandleToActive(Sender: TObject);
+var
+  Action, Data: TJSONObject;
+begin
+  Action := TJSONObject.Create;
+  Data := TJSONObject.Create;
+
+  Action.AddPair(TJSONPair.Create('action', 'game-action'));
+
+  Action.AddPair(TJSONPair.Create('game-action', 'set-active'));
+
+  Data.AddPair(TJSONPair.Create('index', index.ToString));
+
+  Action.AddPair(TJSONPair.Create('data', Data));
+
+  callback(TModelViewerContext.CreateWithState(Action));
+end;
+
+procedure TBenchUI.ShowWithState(_model: TCardModel; _stage: string;
+  _callback: TProc<TModelViewerContext>);
+begin
+  inherited;
+  btnToActive.Visible := false;
+  if stage = 'set-active' then
+    btnToActive.Visible := true;
 end;
 
 end.

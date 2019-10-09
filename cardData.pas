@@ -3,7 +3,7 @@ unit cardData;
 interface
 
 uses
-  System.JSON, dbunit, sysutils, helpers, dialogs;
+  System.JSON, dbunit, sysutils, helpers, dialogs, classes;
 
 type
   TCardType = (ctPokemon, ctTrainer, ctEnergy);
@@ -11,7 +11,7 @@ type
   TCardEnergy = (ceWater, cePsychic, ceGrass, ceFire,
     ceFighting, ceElectric, ceColorless, ceUndef);
 
-  TCardBase = class (TObject)
+  TCardBase = class (TPersistent)
     function ToJSON: TJSONObject; virtual; abstract;
   end;
 
@@ -412,6 +412,7 @@ constructor TCardSet.CreateFromID(id: integer);
 begin
   with dmDB do
   begin
+    tblSets.open;
     if not tblSets.Locate('ID', id, []) then
       raise Exception.Create('404, There is no set in the database with that ID');
 

@@ -10,11 +10,15 @@ type
   published
     procedure BuildStateFromDecks (plrOneDeck, plrTwoDeck : TCardDeck);
     function ToJSON(player: byte) : TJSONObject;
+    procedure StartTurn;
+    procedure BuildTurnStage;
   public
     Deck1: TCardDeck;
     Deck2 : TCardDeck;
     turn : byte;
     stage: string;
+    turn_retreat: boolean;
+    turn_energy: boolean;
   end;
 
 implementation
@@ -33,6 +37,21 @@ begin
   //
   turn := 0;
   stage := 'init';
+end;
+
+procedure TGameState.BuildTurnStage;
+begin
+  stage := 'card_';
+  if turn_retreat and turn_energy then stage := stage + 'retreat+energy'
+  else if turn_retreat then stage := stage + 'retreat'
+  else if turn_energy then stage := stage + 'energy';
+end;
+
+procedure TGameState.StartTurn;
+begin
+  turn_retreat := true;
+  turn_energy := true;
+  BuildTurnStage;
 end;
 
 function TGameState.ToJSON(player: byte): TJSONObject;

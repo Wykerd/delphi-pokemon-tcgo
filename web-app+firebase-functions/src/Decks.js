@@ -4,6 +4,7 @@ import Page from './Page';
 import { DecksDataContext } from './context/UserDataContexts';
 import FirebaseContext from './context/FirebaseContext';
 import UserContext from './context/UserContext';
+import './css/deck.css';
 
 export default function Decks () {
     return <Page>
@@ -18,13 +19,21 @@ export default function Decks () {
 function ManageDeck ({ match }) {
     const firebase = useContext(FirebaseContext);
     const user = useContext(UserContext);
-    const [ data, setData ] = useState({name: 'Loading...', cards: []});
-    const [ stateChanged, setStateChanged ] = useState(false);
+    const [ data, setData ] = useState({name: 'Loading...', cards: [], card_sorted: {}});
+    // const [ stateChanged, setStateChanged ] = useState(false);
 
     useEffect(()=>{
         if (!user || !firebase) return;
         firebase.firestore().collection('profiles').doc(user.uid).collection('decks').doc(match.params.id).get().then(doc=>{
-            setData({...doc.data(), _id: doc.id});
+            let state = {};
+            
+            if (!doc.data().cards) return;
+            doc.data().cards.forEach(el=>{
+                if (!state.hasOwnProperty(el)) state[el] = 0;
+                state[el]++;
+            });
+
+            setData({...doc.data(), _id: doc.id, card_sorted: state});
         });
     }, [firebase, user]);
 
@@ -32,14 +41,15 @@ function ManageDeck ({ match }) {
         <h2>Build Deck</h2>
         <input type="text" value={data.name} className="deck-name" />
         <ul>
-            {
-                data.cards.map((el, i)=><Card key={i} cardId={el} />)
+            {   
+                //data.cards.map((el, i)=><Card key={i} cardId={el} />)
+                Object.keys(data.card_sorted).map(el=><Card key={el} cardId={el} occurance={data.card_sorted[el]} />)   
             }
         </ul>
     </>
 }
 
-function Card ({ cardId }) {
+function Card ({ cardId, occurance }) {
     const firebase = useContext(FirebaseContext);
     const [ name, setName ] = useState('Loading...');
 
@@ -52,17 +62,18 @@ function Card ({ cardId }) {
     }, [firebase, cardId]);
 
     return <li>
-        {name}
+        <div>{`${occurance}x`}</div>
+        <div>{name}</div>
     </li>;
 }
 
 function DecksList () {
     const decks = useContext(DecksDataContext);
 
-    return <ul>
+    return <ul className="decks">
         {
             decks.map(el=><li key={el._id}>
-                <Link to={`/decks/${el._id}`}>{el.name}</Link>
+                <Link className="log-item" to={`/decks/${el._id}`}>{el.name}</Link>
             </li>)
         }
     </ul>;

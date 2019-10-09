@@ -3,7 +3,7 @@ object frmLauncher: TfrmLauncher
   Top = 0
   BorderStyle = bsSingle
   Caption = 'Card Game'
-  ClientHeight = 596
+  ClientHeight = 620
   ClientWidth = 645
   Color = clBtnFace
   DoubleBuffered = True
@@ -26,6 +26,7 @@ object frmLauncher: TfrmLauncher
     Caption = 'Start Local Server'
     TabOrder = 0
     OnClick = btnStartClick
+    ExplicitWidth = 569
   end
   object btnJoin: TButton
     Left = 0
@@ -79,6 +80,8 @@ object frmLauncher: TfrmLauncher
     Align = alTop
     ParentBackground = False
     TabOrder = 4
+    ExplicitLeft = -112
+    ExplicitTop = 126
     object lblUser: TLabel
       Left = 16
       Top = 16
@@ -101,5 +104,17 @@ object frmLauncher: TfrmLauncher
       TabOrder = 0
       OnClick = btnUserClick
     end
+  end
+  object btnAdmin: TButton
+    Left = 0
+    Top = 595
+    Width = 645
+    Height = 25
+    Align = alClient
+    Caption = 'Admin Console'
+    TabOrder = 5
+    OnClick = btnAdminClick
+    ExplicitLeft = -1
+    ExplicitTop = 240
   end
 end

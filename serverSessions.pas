@@ -35,7 +35,7 @@ type
   end;
 
 
-  TSessionsArr = array of TClientSession;
+  TSessionsArr = TArray<TClientSession>;
 
 function GetUserFromUID (UID: string; Sessions: TSessionsArr): integer;
 function GetUserFromSID (SID: string; Sessions: TSessionsArr): integer;
@@ -89,6 +89,7 @@ begin
   FUsername := Value;
 end;
 
+// returns the index!
 function GetUserFromUID (UID: string; Sessions: TSessionsArr): integer;
 var
   i : integer;

@@ -52,7 +52,6 @@ begin
   //
   tblSets.Connection := con;
   tblSets.TableName := 'Sets';
-  tblSets.Active := true;
   //
   tblPokemon.Connection := con;
   tblPokemon.TableName := 'Pokemon';
@@ -65,6 +64,10 @@ begin
   tblAttacks.Connection := con;
   tblAttacks.TableName := 'Attacks';
   tblAttacks.Active := true;
+
+  dsc.DataSet := tblUsers;
+  dsc.Enabled := true;
+  tblUsers.Active := true;
 end;
 
 end.

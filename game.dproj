@@ -139,6 +139,10 @@
         <DCCReference Include="cardData.pas"/>
         <DCCReference Include="versions.pas"/>
         <DCCReference Include="UI\gameActionUI.pas"/>
+        <DCCReference Include="adminConsole.pas">
+            <Form>frmAdminConsole</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

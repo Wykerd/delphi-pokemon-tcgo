@@ -36,7 +36,8 @@ uses
   preGameUI in 'UI\preGameUI.pas',
   cardData in 'cardData.pas',
   versions in 'versions.pas',
-  gameActionUI in 'UI\gameActionUI.pas';
+  gameActionUI in 'UI\gameActionUI.pas',
+  adminConsole in 'adminConsole.pas' {frmAdminConsole};
 
 {$R *.res}
 
@@ -55,6 +56,7 @@ begin
       Application.CreateForm(TfrmLauncher, frmLauncher);
   Application.CreateForm(TdmDB, dmDB);
   Application.CreateForm(TfrmUserEditor, frmUserEditor);
+  Application.CreateForm(TfrmAdminConsole, frmAdminConsole);
   Application.Run;
     end;
 
