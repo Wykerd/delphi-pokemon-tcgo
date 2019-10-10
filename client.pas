@@ -154,6 +154,23 @@ begin
       end;
     end;
 
+    if action = 'game-end' then
+    begin
+      data.ExistCall('win', procedure (s: TJSONPair)
+      begin
+        showmessage(s.JsonValue.Value + ' won');
+      end);
+    end;
+
+    if action = 'error' then
+    begin
+      data.ExistCall('details', procedure (s: TJSONPair)
+      begin
+        showmessage('ERROR: ' + s.JsonValue.Value);
+        Showmessage('The game most likely requires a relaunch to fix this issue!');
+      end);
+    end;
+
     if action = 'game-use-deck' then
     begin
       if data.Exists('success') then

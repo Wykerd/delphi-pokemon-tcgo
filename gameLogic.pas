@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Math, helpers, serverSessions, gameState, cardData, cardDeck, JSON,
-  sysutils;
+  sysutils, dbUnit;
 
 type
   TBroadcastEvent = procedure (s: string) of object;
@@ -39,8 +39,14 @@ end;
 
 procedure TGameLogic.GameEnd(winner: integer);
 begin
-  FPlayerSessions[0].Socket.Writeln('The game is done');
-  FPlayerSessions[1].Socket.Writeln('The game is done');
+  FPlayerSessions[winner - 1].Socket.Writeln('{"action":"game-end","data":{"win":"You"}}');
+  if winner = 1 then  FPlayerSessions[0].Socket.Writeln('{"action":"game-end","data":{"win":"Oponent"}}')
+  else FPlayerSessions[1].Socket.Writeln('{"action":"game-end","data":{"win":"Oponent"}}');
+  if dmDB.tblUsers.Locate('UID', FPlayerSessions[winner - 1].UID, []) then
+  begin
+    dmDB.tblUsers.Edit;
+    dmDB.tblUsers['Wins'] := dmDB.tblUsers['Wins'] + 1;
+  end;
 end;
 
 procedure TGameLogic.Init;
@@ -195,11 +201,11 @@ begin
               Session.Socket.WriteLn('{"action":"error","data":{"details":"invalid_card_stage(init)"}}');
               exit;
             end;
-            if Session.Deck.Active <> nil then
+            (* if Session.Deck.Active <> nil then
             begin
               Session.Socket.WriteLn('{"action":"error","data":{"details":"active_not_nil(init)"}}');
               exit;
-            end;
+            end; *)
 
             Session.Deck.Active := Session.Deck.Hand[init_index];
 
@@ -331,8 +337,8 @@ begin
         for I := 0 to TPokemonData(Session.Deck.Active.data).RetreatCost do
         begin
           setlength(Session.Deck.Discard, length(Session.Deck.Discard) + 1);
-          Session.Deck.Discard[HIGH(Session.Deck.Discard)]
-            := Session.Deck.Active.AttachedEnergy[High(Session.Deck.Active.AttachedEnergy)];
+          // Session.Deck.Discard[HIGH(Session.Deck.Discard)]
+          //  := Session.Deck.Active.AttachedEnergy[High(Session.Deck.Active.AttachedEnergy)];
           setlength(Session.Deck.Active.AttachedEnergy, length(Session.Deck.Active.AttachedEnergy) - 1);
         end;
 
@@ -523,7 +529,7 @@ begin
           end;
         end;
       end
-
+      (*
       else if action = 'evolve-bench' then
       begin
         if data.Exists('index') then
@@ -632,12 +638,12 @@ begin
             Session.Socket.WriteLn('{"action":"error","data":{"details":"invalid_index(energy-bench)"}}');
           end;
         end;
-      end
+      end        *)
 
-      else if action = 'trainer' then
+      (* else if action = 'trainer' then
       begin
 
-      end
+      end *)
 
       else if action = 'energy-active' then
       begin

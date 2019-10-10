@@ -945,12 +945,12 @@ begin
                             begin
                               if length(indexes) > 0 then
                               begin
-                                move_to := hpmBench;
+                                (* move_to := hpmBench;
                                 btnAction2.Text := 'Attach to bench';
                                 //
                                 BenchCandidates := indexes;
                                 btnAction2.OnClick := HandleAttachBench;
-                                btnAction2.Visible := true;
+                                btnAction2.Visible := true; *)
                               end;
                             end);
                           end);
@@ -972,10 +972,10 @@ begin
               //
               btnAction1.OnClick := HandleEnergyActive;
               btnAction1.Visible := true;
-              btnAction2.Text := 'Attach to benched';
+              (* btnAction2.Text := 'Attach to benched';
               //
               btnAction2.OnClick := HandleEnergyBenched;
-              btnAction2.Visible := true;
+              btnAction2.Visible := true;   *)
             end;
           end;
         end;
