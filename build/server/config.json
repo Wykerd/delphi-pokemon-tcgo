@@ -1,0 +1,17 @@
+{
+    "chat-format": "%s > %s",
+    "join-format": "%s joined the game",
+    "port": "8080",
+    "max-players": "10",
+    "whitelist": "false",
+    "api": "http://us-central1-pokemon-central.cloudfunctions.net/",
+    "listing": {
+        "motd": "Just another Pokemon TCG server",
+        "name": "Wykerd's Server"
+    },
+    "auth-server": {
+        "host": "localhost",
+        "port": "3000"
+    },
+    "uid": "{A06D31F2-11E7-4724-8181-90BEB417359F}"
+}

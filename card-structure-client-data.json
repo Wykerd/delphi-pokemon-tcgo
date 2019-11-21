@@ -1,0 +1,42 @@
+{
+    "id": "1",
+    "type": "pokemon",
+    "set": {
+        "id": "1",
+        "name": "Base Set",
+        "quantity": 180
+    },
+    "set-number": 14,
+    "rarity": 1,
+    "name": "Wartortle",
+    "data": {
+        "id": "1",
+        "type": "water",
+        "resistance": "fire",
+        "weakness": "electric",
+        "resistance-multiplier": "-30",
+        "weakness-multiplier": "x2",
+        "retreat-cost": 5,
+        "attack1": {
+            "id": "1",
+            "name": "Scratch",
+            "energy": ["water", "water", "colorless", "colorless", "fire", "fighting"],
+            "damage": 10,
+            "coin-flip": 0,
+            "effect": "burn"
+        },
+        "attack2": {
+            "id": "1",
+            "name": "Bubbles",
+            "energy": ["water", "colorless"],
+            "damage": 10,
+            "multiplier": "+15",
+            "coin-flip": 1
+        },
+        "base": "0",
+        "base-image": "card-icon",
+        "stage": 1,
+        "hp": 50,
+        "image": "card-icon"
+    }
+}

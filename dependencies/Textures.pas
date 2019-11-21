@@ -29,12 +29,16 @@ uses
 
 function LoadTexture(Filename: String; var Texture: GLuint; LoadFromRes : Boolean): Boolean;
 
+// Added By Daniel Wykerd to have interface with other units
+procedure glDeleteTextures(n: GLsizei; var textures: GLuint); stdcall; external opengl32;
+function CreateTexture(Width, Height, Format : Word; pData : Pointer) : Integer;
+procedure glBindTexture(target: GLenum; texture: GLuint); stdcall; external opengl32;
+
 implementation
 
 
 function gluBuild2DMipmaps(Target: GLenum; Components, Width, Height: GLint; Format, atype: GLenum; Data: Pointer): GLint; stdcall; external glu32;
 procedure glGenTextures(n: GLsizei; var textures: GLuint); stdcall; external opengl32;
-procedure glBindTexture(target: GLenum; texture: GLuint); stdcall; external opengl32;
 
 
 {------------------------------------------------------------------}
@@ -65,8 +69,8 @@ var
 begin
   glGenTextures(1, Texture);
   glBindTexture(GL_TEXTURE_2D, Texture);
-//  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  {Texture blends with object background}
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);  {Texture does NOT blend with object background}
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  {Texture blends with object background}
+//  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);  {Texture does NOT blend with object background}
 
   { Select a filtering type. BiLinear filtering produces very good results with little performance impact
     GL_NEAREST               - Basic texture (grainy looking texture)

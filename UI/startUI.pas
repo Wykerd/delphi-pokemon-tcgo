@@ -18,13 +18,16 @@ type
     SettingsButton : TUIImgButton;
     TradesButton : TUIButton;
     FOnServersClick: TNotifyEvent;
+    FOnTradesClick: TNotifyEvent;
     procedure SetBackground(const Value: TImage);
     procedure HandleResize (Sender : TObject);
     procedure SetOnServersClick(const Value: TNotifyEvent);
+    procedure SetOnTradesClick(const Value: TNotifyEvent);
   published
     constructor Create (AOwner: TComponent); override;
     property Background : TImage read FBackground write SetBackground;
     property OnServersClick : TNotifyEvent read FOnServersClick write SetOnServersClick;
+    property OnTradesClick : TNotifyEvent read FOnTradesClick write SetOnTradesClick;
   end;
 
 implementation
@@ -109,6 +112,12 @@ procedure TStartUI.SetOnServersClick(const Value: TNotifyEvent);
 begin
   FOnServersClick := Value;
   ServersButton.OnClick := Value;
+end;
+
+procedure TStartUI.SetOnTradesClick(const Value: TNotifyEvent);
+begin
+  FOnTradesClick := Value;
+  TradesButton.OnClick := Value;
 end;
 
 end.

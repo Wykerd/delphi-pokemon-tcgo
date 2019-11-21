@@ -12,6 +12,35 @@ For this project, it was desided that a trading card game would best meet the re
 To allow for multiplayer gameplay the program should allow users to create their own servers.
 Thus the project and final project will consist of two parts, the server and client.
 
+## The Game
+Pokemon Trading Card Game is a collectible card game, based on Nintendo's Pokémon franchise.
+
+Each player has a deck of 60 cards.
+
+The players draw the first 7 cards, and then set aside the top 6 cards as prize cards.
+
+Each player places one basic pokemon as their active pokemon and bench up to 5 others.
+
+A coin is then fliped to determine who starts.
+
+\* Pokemon is abbreviated to pkm
+
+Each turn consist of the following steps:
+1. Draw a card
+2. Do any of the following actions in any order
+    - Bench basic pkm
+    - Evolve benched or active pkm
+    - Attach energy to benched or active pkm
+    - Play trainer card
+    - Retreat (once)
+3. Attach and end turn.
+4. If you K.O. your oponent's active card, you draw one of your prize cards.
+
+The game is won by the following criteria:
+1. Taking all your prize cards.
+2. K.O. all your oponents in-game pkm (benched and active)
+3. If your oponent has no cards in their deck at the begining of their turn
+
 ## The Server
 The server does most of the processing during a game and handles all the database processing. 
 

@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, server, ComCtrls, client, DBXJSON, helpers, ExtCtrls,
-  userWizard;
+  Dialogs, StdCtrls, server, ComCtrls, client, System.JSON, helpers, ExtCtrls,
+  userWizard, pkmCard, adminConsole;
 
 type
   TfrmLauncher = class(TForm)
@@ -17,6 +17,7 @@ type
     btnUser: TButton;
     lblUser: TLabel;
     lblUID: TLabel;
+    btnAdmin: TButton;
     procedure btnStartClick(Sender: TObject);
     procedure btnJoinClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -24,6 +25,7 @@ type
     procedure redClientChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnUserClick(Sender: TObject);
+    procedure btnAdminClick(Sender: TObject);
   private
     { Private declarations }
     jsCredentials : TJSONObject;
@@ -51,6 +53,11 @@ implementation
 
 {$R *.dfm}
 
+procedure TfrmLauncher.btnAdminClick(Sender: TObject);
+begin
+  frmAdminConsole.show;
+end;
+
 procedure TfrmLauncher.btnJoinClick(Sender: TObject);
 begin
   if not bLaunchable then
@@ -59,6 +66,7 @@ begin
     exit;
   end;
   Client := TClient.Create(Self);
+  Client.UI.TradeUI.UserID := UID;
   Client.Debug := redClient;
   Client.ServersLock := 'client\server-list.json';
   Client.UI.ServersUI.LoadFromFile(Client.ServersLock);
@@ -103,6 +111,8 @@ var
   ResStream : TResourceStream;
   FontsCount : DWORD;
 begin
+  RELOADPKMCARDVAR;
+
   ResStream := TResourceStream.Create(hInstance, 'UIFont', RT_RCDATA);
   try
     AddFontMemResourceEx(ResStream.Memory, ResStream.Size, nil, @FontsCount);

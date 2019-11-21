@@ -1,0 +1,9 @@
+UIButtonBack BITMAP "UIButtonBack.bmp"
+UIButtonRE BITMAP "UIButtonRE.bmp"
+UIButtonLE BITMAP "UIButtonLE.bmp"
+
+UIButtonBackHov BITMAP "UIButtonBackHov.bmp"
+UIButtonREHov BITMAP "UIButtonREHov.bmp"
+UIButtonLEHov BITMAP "UIButtonLEHov.bmp"
+
+UIFont RCDATA "Early GameBoy.ttf"

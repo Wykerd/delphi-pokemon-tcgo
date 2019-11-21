@@ -1,0 +1,120 @@
+.profile .header {
+    display: flex;
+    flex-flow: row;
+    margin: 25px 0;
+    background-color: #ff5959;
+    box-sizing: border-box;
+    border: 10px solid #ff5959;
+}
+
+.profile .header img {
+    object-fit: contain;
+}
+
+.profile .header .profile-image {
+    height: 200px;
+    width: 200px;
+    position: relative;
+}
+
+.profile .header .profile-image img, .profile .header .profile-image .image-upload {
+    height: 200px;
+    width: 200px;
+    position: absolute;
+}
+
+.profile .header .profile-image .image-upload {
+    z-index : 10;
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 66%);
+    transition: opacity 200ms ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile .header .profile-image .image-upload:hover {
+    opacity: 1;
+}
+
+.profile .header .profile-image .image-upload:hover::before {
+    content: 'Drag to upload image';
+    font-family: 'Montserrat', sans-serif;
+    display: block;
+    color: white;
+}
+
+.profile .header .wrapper {
+    padding: 25px 50px;
+    flex-grow: 1;
+}
+
+.profile .header .display-name {
+    padding-bottom: 10px;
+    font-size: 3em;
+}
+
+.profile .header .bio {
+    font-family: 'Montserrat', sans-serif;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #3d5685;
+    margin-bottom: 10px;
+}
+
+.profile .quick-actions ul {
+    display: flex;
+    flex-flow: row;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.profile .quick-actions li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    height: 40px;
+    cursor: pointer;
+    background-color: #4766a0;
+    color: white;
+    font-weight: 400;
+    margin-right: 10px;
+    transition: background-color 200ms ease;
+}
+
+.profile .quick-actions li:last-child {
+    margin-right: 0 !important;
+}
+
+.profile .quick-actions li:hover {
+    background-color: #d85555;
+}
+
+.profile .quick-actions a {
+    color: white;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile .quick-actions a:link {
+    color: white;
+}
+
+.profile .quick-actions a:visited {
+    color: #ffffff;
+}
+
+.profile .quick-actions a:hover {
+    color: #ffffff;
+}
+
+.profile .quick-actions a:active {
+    color: #ffffff;
+}
+

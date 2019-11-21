@@ -1,0 +1,11 @@
+
+ul.decks li {
+    display: flex;
+    flex-flow: column;
+}
+
+ul.decks a {
+    padding: 15px 50px;
+    background-color: #facfc8;
+    color: #000;
+}

@@ -3,7 +3,7 @@ unit serverConfig;
 interface
 
 uses
-  DBXJSON, SysUtils, helpers, ExtCtrls;
+  System.JSON, SysUtils, helpers, ExtCtrls;
 
 type
   TChatFormat = record
@@ -25,12 +25,16 @@ type
     FPort: integer;
     FMaxPlayers: integer;
     FAuthServer: TJSONObject;
+    FAPIURL: string;
+    FUID: string;
     procedure SetChatFormat(const Value: TChatFormat);
     procedure SetListing(const Value: TJSONObject);
     procedure SetMaxPlayers(const Value: integer);
     procedure SetPort(const Value: integer);
     procedure SetWhitelist(const Value: boolean);
     procedure SetAuthServer(const Value: TJSONObject);
+    procedure SetAPIURL(const Value: string);
+    procedure SetUID(const Value: string);
   published
     constructor Create;
     property ChatFormat : TChatFormat read FChatFormat write SetChatFormat;
@@ -39,8 +43,13 @@ type
     property Whitelist : boolean read FWhitelist write SetWhitelist;
     property Listing : TJSONObject read FListing write SetListing;
     property AuthServer : TJSONObject read FAuthServer write SetAuthServer;
+    property APIURL : string read FAPIURL write SetAPIURL;
+    property UID : string read FUID write SetUID;
     procedure LoadFromFile (APath : string);
   end;
+
+const
+  SERVER_VERSION = 'PASCAL.0.0.7f9fe24.INDEV';
 
 implementation
 
@@ -68,6 +77,7 @@ var
   json, jsonlisting, jsonauth: TJSONObject;
   tF : textfile;
   dat, s : string;
+  uid: TGUID;
 begin
   assignfile(tf, APath);
 
@@ -94,16 +104,29 @@ begin
     with json do
     begin
       // Make sure required fields are found
+      if not Exists('uid') then
+      begin
+        CreateGUID(uid);
+        AddPair(TJSONPair.Create('uid', GUIDToString(uid)));
+        // add the UID!
+        rewrite(tf);
+        writeln(tf, json.ToString);
+      end;
+
+      self.uid := get('uid').JsonValue.Value;
+
       if (get('chat-format') = nil) or (get('join-format') = nil) or
         (get('port') = nil) or (get('max-players') = nil) or
         (get('whitelist') = nil) or (get('listing') = nil) or
-        (get('auth-server') = nil) then
+        (get('auth-server') = nil) or (get('api') = nil) then
         raise Exception.CreateFmt('The config at %s is missing required fields',
           [QuotedStr(APath)])
       else
       begin
         ChatFormat.Chat := get('chat-format').JsonValue.Value;
         ChatFormat.Join := get('join-format').JsonValue.Value;
+
+        APIURL := get('api').JsonValue.Value;
 
         Port := strtoint(get('port').JsonValue.Value);
         MaxPlayers := strtoint(get('max-players').JsonValue.Value);
@@ -117,7 +140,10 @@ begin
 
         // Make sure required fields are found
         if not ((jsonlisting.Get('motd') = nil) or (jsonlisting.Get('name') = nil)) then
-          Listing := jsonlisting;
+          Listing := jsonlisting
+        else
+         listing := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(StripNonJson(
+          '{"motd":"Set the name and motd in the config!", "name":"Malconfigured Sever"')),0));
 
         jsonauth := TJSONObject(get('auth-server').JsonValue);
 
@@ -129,6 +155,11 @@ begin
   end;
 
   closefile(tF);
+end;
+
+procedure TServerConfig.SetAPIURL(const Value: string);
+begin
+  FAPIURL := Value;
 end;
 
 procedure TServerConfig.SetAuthServer(const Value: TJSONObject);
@@ -154,6 +185,11 @@ end;
 procedure TServerConfig.SetPort(const Value: integer);
 begin
   FPort := Value;
+end;
+
+procedure TServerConfig.SetUID(const Value: string);
+begin
+  FUID := Value;
 end;
 
 procedure TServerConfig.SetWhitelist(const Value: boolean);

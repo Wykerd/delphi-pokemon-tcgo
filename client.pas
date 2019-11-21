@@ -1,3 +1,14 @@
+{
+IMPORTANT DEV NOTES REGARDING DATA FLOW FROM CLIENT TO CLIENT UI
+-- All client events run in a seperate thread and has to be synced to main thread
+   before accessing the UI component!
+
+-- Use this boilerplate to fix any issues it this was ommited
+   TThread.Synchronize(nil, procedure
+    begin
+      // Update the ui in this function
+    end);
+}
 unit client;
 
 interface
@@ -5,7 +16,7 @@ interface
 uses
   Classes, Forms, Dialogs, StdCtrls, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdContext, IdThreadComponent, ComCtrls,
-  Graphics, SysUtils, helpers, DBXJSON, clientUI;
+  Graphics, SysUtils, System.JSON, clientUI, clientState, helpers;
 
 type
   TClient = class (TIdTCPClient)
@@ -32,6 +43,8 @@ type
     procedure SetUI(const Value: TClientUI);
     procedure SetServersLock(const Value: string);
     procedure SetServerIndex(const Value: integer);
+    procedure HandleDeckSelection (index: integer);
+    procedure HandleAuth(data: TJSONObject);
   published
     constructor Create (AOwner: TComponent);
     procedure Start (Host: string; Port: integer; ServerIndex: integer = -1);
@@ -44,9 +57,10 @@ type
     property UI : TClientUI read FUI write SetUI;
     property ServerIndex: integer read FServerIndex write SetServerIndex;
     procedure SendChat (s: string);
+    procedure SendReady;
     // Actions
     procedure UpdateServerListings (Index: integer; Motd: string; Name: string; CustomName: string = '');
-    procedure ExecuteAction (JSON : TJSONObject);
+    procedure ExecuteAction (s : string);
   public
     class function GetCredentials (AuthPath : string)  : TJSONObject;
     class procedure CreateCredentials(sUsername, AuthLock : string); overload;
@@ -60,31 +74,32 @@ implementation
 procedure TClient.Connected(Sender: TObject);
 begin
   FIdThread.Active := true;
-  println('status', 'Connected');
+  threadprint('status', 'Connected');
 end;
 
 procedure TClient.Disconnected(Sender: TObject);
 begin
-  println('status', 'Disconnected');
+  threadprint('status', 'Disconnected');
 end;
 
-procedure TClient.ExecuteAction(JSON: TJSONObject);
+procedure TClient.ExecuteAction(s: string);
 var
   action : string;
-  data: TJSONObject;
+  data, JSON: TJSONObject;
 begin
+  JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(s),0));
   if JSON <> nil then
   begin
     // Check if payload has action
     if JSON.Get('action') = nil then
     begin
-      println('action', 'ERROR: no action in payload!');
+      threadprint('action', 'ERROR: no action in payload!');
       exit;
     end;
-    // Check for data
+    // Check for data [Validate]
     if JSON.Get('data') = nil then
     begin
-      println('action', 'ERROR: no data property in payload');
+      threadprint('action', 'ERROR: no data property in payload');
       exit;
     end;
 
@@ -92,46 +107,45 @@ begin
 
     if data = nil then
     begin
-      println('action', 'ERROR: empty data property in payload');
+      threadprint('action', 'ERROR: empty data property in payload');
       exit;
     end;
     //
     action := JSON.get('action').JsonValue.Value;
 
-    // Run the actions //
-    if action = 'authenticate' then
+    if action = 'authenticate'    then
     begin
-      if data.Get('success') <> nil then
+      HandleAuth(data);
+    end;
+
+
+    if action = 'game-start' then
+    begin
+      TThread.Synchronize(nil, procedure
       begin
-        if data.Get('success').JsonValue.Value = 'true' then
-        begin
-          if data.Get('sid') <> nil then
-          begin
-            println('auth', 'Successfully authenticated');
-            // Add the session to the auth credentials!
-            TJSONObject(Credentials.JsonValue).AddPair(data.Get('sid'));
-            // request the latest server info to update the cache
-            IOHandler.WriteLn('{"action":"info","auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
-            Authenticated := true;
-          end
-          else
-            println('auth', 'Authentication payload does not contain the field "sid"');
-        end
-        else
-          println('auth', 'Could not authenticate');
-      end;
-    end; // end authenticate
+        UI.ShowGameUI;
+      end);
+      UI.GameUI.RenderState(data);
+    end;
+
+    if action = 'game-state' then
+    begin
+      UI.GameUI.RenderState(data);
+    end;
 
     if (action = 'join') OR (action = 'chat') then
     begin
       if data.Get('message') <> nil then
       begin
-        UI.GameUI.IncomingChat(data.Get('message').JsonValue.Value);
+        TThread.Synchronize(nil, procedure
+        begin
+          UI.GameUI.IncomingChat(data.Get('message').JsonValue.Value);
+        end);
       end;
     end;
 
     // Update local server listing cache
-    if action = 'info' then
+    if action = 'listing-info' then
     begin
       if not ((data.Get('motd') = nil) or (data.Get('name') = nil)) then
       begin
@@ -140,11 +154,84 @@ begin
       end;
     end;
 
+    if action = 'game-end' then
+    begin
+      data.ExistCall('win', procedure (s: TJSONPair)
+      begin
+        showmessage(s.JsonValue.Value + ' won');
+      end);
+    end;
+
+    if action = 'error' then
+    begin
+      data.ExistCall('details', procedure (s: TJSONPair)
+      begin
+        showmessage('ERROR: ' + s.JsonValue.Value);
+        Showmessage('The game most likely requires a relaunch to fix this issue!');
+      end);
+    end;
+
+    if action = 'game-use-deck' then
+    begin
+      if data.Exists('success') then
+      begin
+        if data.Get('success').JsonValue.Value = 'true' then
+        begin
+          TThread.Synchronize(nil, procedure
+          begin
+            UI.PreGameUI.Ready := true;
+          end);
+        end
+        else
+        begin
+          if  data.Exists('reason') then
+            TThread.Synchronize(nil, procedure
+            begin
+              UI.PreGameUI.Error('Deck Use Error: ' + data.Get('reason').JsonValue.Value);
+            end);
+        end;
+      end;
+    end;
+
+    if action = 'game-ready' then
+    begin
+      if data.Exists('success') then
+      begin
+        if data.Get('success').JsonValue.Value = 'true' then
+        begin
+          TThread.Synchronize(nil, procedure
+          begin
+            UI.PreGameUI.Print('Waiting for more players...');
+          end);
+        end
+        else
+        begin
+          if data.Exists('reason') then
+          begin
+            TThread.Synchronize(nil, procedure
+            begin
+              UI.PreGameUI.Print('Game Ready Error: ' + data.Get('reason').JsonValue.Value);
+            end);
+          end
+          else
+            TThread.Synchronize(nil, procedure
+            begin
+              UI.PreGameUI.Error('Error: Invalid game-ready JSON from server. Is the server modded?');
+            end);
+        end;
+      end
+      else
+        TThread.Synchronize(nil, procedure
+        begin
+          UI.PreGameUI.Error('Error: Invalid game-ready JSON from server. Is the server modded?');
+        end);
+    end;
+
     // End actions //
   end
   else
   begin
-    println('action', 'ERROR: Invalid JSON payload');
+    threadprint('action', 'ERROR: Invalid JSON payload');
   end;
 end;
 
@@ -190,6 +277,57 @@ begin
 
 end;
 
+procedure TClient.HandleAuth(data: TJSONObject);
+begin
+  if data.Exists('success') then
+  begin
+    if data.Get('success').JsonValue.Value = 'true' then
+    begin
+      if data.Exists('sid') then
+      begin
+        threadprint('auth', 'Successfully authenticated');
+        // Add the session to the auth credentials!
+        TJSONObject(Credentials.JsonValue).AddPair(data.Get('sid'));
+        // request the latest server info to update the cache
+        IOHandler.WriteLn('{"action":"listing-info","auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
+        Authenticated := true;
+        // send the decks to the UI to pick
+        if data.Exists('decks') then
+        begin
+          TThread.Synchronize(nil, procedure
+            begin
+              UI.PreGameUI.Decks := TJSONArray(data.Get('decks').JsonValue);
+            end);
+        end;
+      end
+      else
+        threadprint('auth', 'Authentication payload does not contain the field "sid"');
+    end
+    else
+    begin
+      threadprint('auth', 'Could not authenticate');
+      if data.Exists('reason') then
+      begin
+        TThread.Synchronize(nil, procedure
+          begin
+            UI.PreGameUI.Error('Authentication error: ' + DecodeAuthReason(data.get('reason').JsonValue.Value))
+          end);
+      end
+      else
+        TThread.Synchronize(nil, procedure
+          begin
+            UI.PreGameUI.Error('Authentication error: Unknown error. Is the server modded?');
+          end);
+    end;
+  end;
+end;
+
+procedure TClient.HandleDeckSelection(index: integer);
+begin
+  IOHandler.WriteLn('{"action":"game-use-deck","data":{"index":' + inttostr(index)
+    + '},"auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
+end;
+
 procedure TClient.Authenticate;
 var
   tF : textfile;
@@ -204,7 +342,7 @@ begin
   // Check if the auth file is available
   if not fileExists(AuthLock) then
   begin
-    println('error', 'Could not locate the authentication file! One has to be created in the laucher!');
+    threadprint('error', 'Could not locate the authentication file! One has to be created in the laucher!');
     exit;
   end;
 
@@ -213,7 +351,7 @@ begin
     try
       reset(tF);
     except
-      println('error', 'Error while opening the config file, is it already open?');
+      threadprint('error', 'Error while opening the config file, is it already open?');
     end;
   finally
     while not eof(tF) do
@@ -229,11 +367,11 @@ begin
       JSON := TJsonObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(data),0));
       if JSON.Get('auth') = nil then
       begin
-        println('error', 'Invalid authentication file (no auth object). Create new one in the launcher');
+        threadprint('error', 'Invalid authentication file (no auth object). Create new one in the launcher');
       end
       else if TJSONObject(JSON.Get('auth').JsonValue).get('uid') = nil then
       begin
-        println('error', 'Invalid authentication file (no uid). Create new one in the launcher!');
+        threadprint('error', 'Invalid authentication file (no uid). Create new one in the launcher!');
       end;
 
       JSONRes.AddPair(TJSONPair.Create('action', 'authenticate'));
@@ -241,12 +379,16 @@ begin
 
       // Send the authentication request to the server
       IOHandler.WriteLn(JSONRes.ToString);
-      println('auth', 'Attempting to authenticate with server');
+      threadprint('auth', 'Attempting to authenticate with server');
 
       // Set the credentials for future use;
       Credentials := JSON.Get('auth');
     except
-      println('error', 'An eror occured while reading / sending the authentication payload');
+      threadprint('error', 'An error occured while reading / sending the authentication payload');
+      TThread.Synchronize(nil, procedure
+        begin
+          UI.PreGameUI.Error('Whoops! An error occured during the authentication process.');
+        end);
     end;
   end;
 
@@ -262,11 +404,14 @@ begin
   AuthLock := GetCurrentDir + '\client\auth.json';
   ServersLock := GetCurrentDir + '\client\server-list.json';
   ServerIndex := -1;
-  Authenticated := false;
-  Credentials := nil;
   UI := TClientUI.CreateNew(Self, 0);
   UI.StartTrigger := Start;
   UI.GameUI.OnChat := SendChat;
+  UI.PreGameUI.SelectDeck.OnReady := SendReady;
+  Authenticated := false;
+  UI.PreGameUI.SelectDeck.OnDeckChange := HandleDeckSelection;
+  Credentials := nil;
+  UI.GameUI.IOHandler := self.iohandler;
 end;
 
 // Use an pre-existing UID
@@ -344,17 +489,10 @@ var
   JSON : TJSONObject;
 begin
   req := IOHandler.ReadLn();
-  println('incoming', req);
-
-  // Check to see if it is valid json
-  JSON := TJSONObject(TJSONObject.ParseJSONValue(TEncoding.ASCII.GetBytes(req),0));
 
   // Synchronize with main thread
-  TThread.Synchronize(nil,
-  procedure
-  begin
-    ExecuteAction(JSON);
-  end);
+  threadprint('incoming', req);
+  ExecuteAction(req);
 end;
 
 procedure TClient.SendChat(s: string);
@@ -377,9 +515,19 @@ begin
   IOHandler.WriteLn(JSONReq.ToString);
 end;
 
+procedure TClient.SendReady;
+begin
+  IOHandler.WriteLn('{"action":"game-ready","data":{"state":"true"},"auth":' + TJSONObject(Credentials.JsonValue).ToString + '}');
+end;
+
 procedure TClient.SetAuthenticated(const Value: boolean);
 begin
   FAuthenticated := Value;
+
+  TThread.Synchronize(nil, procedure
+    begin
+      UI.PreGameUI.Authenticated := FAuthenticated;
+    end);
 end;
 
 procedure TClient.SetAuthLock(const Value: string);
@@ -390,6 +538,7 @@ end;
 procedure TClient.SetCredentials(const Value: TJSONPair);
 begin
   FCredentials := Value;
+  UI.GameUI.Credentials := value;
 end;
 
 procedure TClient.SetDebug(const Value: TRichEdit);
@@ -417,15 +566,34 @@ begin
   Self.Host := Host;
   Self.Port := Port;
   Self.ServerIndex := ServerIndex;
-  Connect;
-  Authenticate;
+
+  // Non blocking way to connect to server
+  TAnonymousThread.Create(procedure
+  begin
+    try
+      Connect;
+      TThread.Synchronize(nil, procedure
+        begin
+          UI.PreGameUI.Connected := true;
+          UI.GameUI.IOHandler := self.iohandler;
+        end);
+        Authenticate;
+    except
+      on e: Exception do
+      try
+        UI.PreGameUI.Error(e.Message);
+      except
+        showmessage(e.Message);
+      end;
+    end;
+  end).Start;
 end;
 
 procedure TClient.threadprint(t, s: string);
 begin
   // Queue the action to be preformed in the main thread as it is not
   // thread safe.
-  TThread.Queue(nil,
+  TThread.Synchronize(nil,
     procedure
     begin
       Debug.Lines.Add('[' + uppercase(t) + '] ' + s);
@@ -444,7 +612,6 @@ begin
   AssignFile(tf, ServersLock);
 
   try
-
     reset(tf);
   finally
     while not eof(tf) do
@@ -480,21 +647,21 @@ begin
               Writeln(tf, JSON.ToString);
               println('file', 'Updated ' + ServersLock);
 
-            end;
+            end; // presence check end
 
-          end;
+          end; //jsonlisting.listing <> nil
 
-        end;
+        end; //jsonlisting.name <> nil
 
-      end;
+      end; // json.servers <> nil
 
-    end;
+    end; // end json <> nil
 
-  end;
+  end; // finally end
 
   closefile(tF);
 
-  //JSON.Free;
+  JSON.Free;
 end;
 
 end.
